@@ -25,6 +25,11 @@
   --color-surface-2: oklch(14% 0.03 250);
   --color-surface-3: oklch(18% 0.03 250);
 
+  --color-primary: #EFF31B;
+  --color-primary-dark: #d8e64b;
+
+  --color-dark-bg: #000000;
+
   /* Text */
   --color-text-primary: oklch(96% 0.01 250);
   --color-text-secondary: oklch(72% 0.03 250);
@@ -41,6 +46,18 @@
   --radius-xl: 1rem;
   --radius-2xl: 1.5rem;
   --radius-3xl: 2rem;
+
+  /* Blurs */
+  --blur-4xl: 80px;
+  --blur-5xl: 120px;
+  --blur-6xl: 160px;
+
+  /* Sizes for orbs */
+  --spacing-125: 31.25rem;
+  --spacing-128: 32rem;
+  --spacing-150: 37.5rem;
+  --spacing-160: 40rem;
+  --spacing-175: 43.75rem;
 
   /* Shadows */
   --shadow-glow-brand: 0 0 60px -10px oklch(55% 0.22 250 / 0.35);
@@ -141,6 +158,17 @@ body {
   animation: shimmer 2.5s linear infinite;
 }
 .animate-spin-slow { animation: spin-slow 20s linear infinite; }
+.animate-spin-reverse { animation: spin-slow 30s linear infinite reverse; }
+
+/* ── Grid lines ────────────────────────────────────── */
+.grid-lines {
+  background-image: 
+    linear-gradient(var(--color-border-subtle) 1px, transparent 1px),
+    linear-gradient(90deg, var(--color-border-subtle) 1px, transparent 1px);
+  background-size: 80px 80px;
+  mask-image: radial-gradient(ellipse 80% 60% at 50% 50%, black, transparent);
+  -webkit-mask-image: radial-gradient(ellipse 80% 60% at 50% 50%, black, transparent);
+}
 
 /* ── Focus ring ────────────────────────────────────── */
 :focus-visible {
