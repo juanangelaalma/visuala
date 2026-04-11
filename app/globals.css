@@ -74,6 +74,7 @@
 html {
   scroll-behavior: smooth;
   color-scheme: dark;
+  overflow-x: hidden;
 }
 
 body {
@@ -175,4 +176,19 @@ body {
   outline: 2px solid oklch(55% 0.22 250);
   outline-offset: 3px;
   border-radius: 4px;
+}
+
+.bg-hero {
+  background-image: url("/hero.webp");
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+
+.bg-hero::before {
+  content: '';
+  background-color: rgba(0, 0, 0, 0.5);
+  position: absolute;
+  inset: 0;
+  z-index: -1;
 }

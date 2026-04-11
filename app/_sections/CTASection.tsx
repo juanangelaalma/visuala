@@ -12,18 +12,18 @@ export default function CTASection() {
         aria-hidden="true"
         className="pointer-events-none absolute inset-0 -z-10"
       >
-        <div className="absolute left-1/2 top-1/2 h-[700px] w-[700px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-brand-500/15 blur-[150px]" />
-        <div className="absolute left-1/2 top-1/2 h-96 w-96 -translate-x-1/2 -translate-y-1/2 rounded-full bg-accent-500/10 blur-[100px]" />
+        <div className="absolute left-1/2 top-1/2 h-175 w-175 -translate-x-1/2 -translate-y-1/2 rounded-full bg-brand-500/15 blur-6xl" />
+        <div className="absolute left-1/2 top-1/2 h-96 w-96 -translate-x-1/2 -translate-y-1/2 rounded-full bg-accent-500/10 blur-4xl" />
       </div>
 
       {/* Decorative ring */}
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute left-1/2 top-1/2 h-[500px] w-[500px] -translate-x-1/2 -translate-y-1/2 rounded-full border border-brand-500/10 animate-spin-slow"
+        className="pointer-events-none absolute left-1/2 top-1/2 h-125 w-125 -translate-x-1/2 -translate-y-1/2 rounded-full border border-brand-500/10 animate-spin-slow"
       />
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute left-1/2 top-1/2 h-[700px] w-[700px] -translate-x-1/2 -translate-y-1/2 rounded-full border border-brand-500/5 animate-spin-slow [animation-duration:30s] [animation-direction:reverse]"
+        className="pointer-events-none absolute left-1/2 top-1/2 h-175 w-175 -translate-x-1/2 -translate-y-1/2 rounded-full border border-brand-500/5 animate-spin-reverse"
       />
 
       <div className="relative mx-auto max-w-3xl px-6 text-center lg:px-8">

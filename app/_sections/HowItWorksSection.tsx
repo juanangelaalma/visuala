@@ -39,7 +39,7 @@ export default function HowItWorksSection() {
       {/* Decorative element */}
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute right-0 top-1/2 h-96 w-96 -translate-y-1/2 translate-x-1/2 rounded-full bg-brand-500/10 blur-[100px]"
+        className="pointer-events-none absolute right-0 top-1/2 h-96 w-96 -translate-y-1/2 translate-x-1/2 rounded-full bg-brand-500/10 blur-4xl"
       />
 
       <div className="mx-auto max-w-7xl px-6 lg:px-8">
