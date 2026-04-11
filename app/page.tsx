@@ -20,16 +20,16 @@ export default function HomePage() {
         <HeroSection />
         <ValuePropSection />
         <DemoSection />
-        <LogoBand />
+        {/* <LogoBand />
         <FeaturesSection />
         <HowItWorksSection />
         <TestimonialsSection />
         <PricingSection />
         <FAQSection />
-        <CTASection />
+        <CTASection /> */}
       </main>
 
-      <Footer />
+      {/* <Footer /> */}
     </>
   );
 }
