@@ -3,6 +3,7 @@ import Footer from "./_components/Footer";
 import HeroSection from "./_sections/HeroSection";
 import ValuePropSection from "./_sections/ValuePropSection";
 import DemoSection from "./_sections/DemoSection";
+import MoreDemoSection from "./_sections/MoreDemoSection";
 import LogoBand from "./_sections/LogoBand";
 import FeaturesSection from "./_sections/FeaturesSection";
 import HowItWorksSection from "./_sections/HowItWorksSection";
@@ -20,6 +21,7 @@ export default function HomePage() {
         <HeroSection />
         <ValuePropSection />
         <DemoSection />
+        <MoreDemoSection />
         {/* <LogoBand />
         <FeaturesSection />
         <HowItWorksSection />
