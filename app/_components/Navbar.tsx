@@ -15,10 +15,7 @@ export default function Navbar() {
 
   return (
     <header
-      className={`fixed inset-x-0 top-0 z-50 transition-all duration-300 border-b ${scrolled
-        ? "bg-black/40 backdrop-blur-xl border-border-subtle py-4"
-        : "bg-transparent border-transparent py-5"
-        }`}
+      className="fixed inset-x-0 top-0 z-50 transition-all duration-300 border-b bg-black/40 backdrop-blur-xl border-border-subtle py-4"
     >
       <nav
         className="flex base-container items-center justify-between px-4 sm:px-6 lg:px-0"
