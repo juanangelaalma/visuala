@@ -6,6 +6,7 @@ import DemoSection from "./_sections/DemoSection";
 import MoreDemoSection from "./_sections/MoreDemoSection";
 import CategoriesSection from "./_sections/CategoriesSection";
 import LogoBand from "./_sections/LogoBand";
+import FeatureShowcaseSection from "./_sections/FeatureShowcaseSection";
 import FeaturesSection from "./_sections/FeaturesSection";
 import HowItWorksSection from "./_sections/HowItWorksSection";
 import TestimonialsSection from "./_sections/TestimonialsSection";
@@ -24,6 +25,7 @@ export default function HomePage() {
         <DemoSection />
         <MoreDemoSection />
         <CategoriesSection />
+        <FeatureShowcaseSection />
         {/* <LogoBand />
         <FeaturesSection />
         <HowItWorksSection />
