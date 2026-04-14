@@ -3,7 +3,7 @@ import Image from "next/image";
 export default function DemoSection() {
     return (
         <section className="bg-black py-20 px-4 md:px-8 flex flex-col items-center w-full sm:px-6 lg:px-32">
-            <div className="relative w-full max-w-10xl rounded-[16px] overflow-hidden aspect-[16/10] md:aspect-video bg-surface-1">
+            <div className="relative w-full base-container rounded-[16px] overflow-hidden aspect-[16/10] md:aspect-video bg-surface-1">
                 <Image
                     src="/demo.webp"
                     alt="Demo visual"

@@ -192,3 +192,14 @@ body {
   inset: 0;
   z-index: -1;
 }
+
+.base-container {
+  max-width: 1440px;
+  margin: 0 auto;
+}
+
+@media (min-width: 1024px) {
+  .base-container {
+    padding: 0 40px !important;
+  }
+}
