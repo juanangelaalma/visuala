@@ -4,6 +4,7 @@ import HeroSection from "./_sections/HeroSection";
 import ValuePropSection from "./_sections/ValuePropSection";
 import DemoSection from "./_sections/DemoSection";
 import MoreDemoSection from "./_sections/MoreDemoSection";
+import CategoriesSection from "./_sections/CategoriesSection";
 import LogoBand from "./_sections/LogoBand";
 import FeaturesSection from "./_sections/FeaturesSection";
 import HowItWorksSection from "./_sections/HowItWorksSection";
@@ -22,6 +23,7 @@ export default function HomePage() {
         <ValuePropSection />
         <DemoSection />
         <MoreDemoSection />
+        <CategoriesSection />
         {/* <LogoBand />
         <FeaturesSection />
         <HowItWorksSection />

@@ -21,7 +21,7 @@ export default function Navbar() {
         }`}
     >
       <nav
-        className="mx-auto flex max-w-10xl items-center justify-between px-4 sm:px-6 lg:px-20"
+        className="flex base-container items-center justify-between px-4 sm:px-6 lg:px-0"
         aria-label="Main navigation"
       >
         <Brand />
