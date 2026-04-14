@@ -13,13 +13,13 @@ const categories = [
 
 export default function CategoriesSection() {
     return (
-        <section className="bg-primary py-16 md:py-24 px-4 md:px-8 w-full flex flex-col gap-10">
+        <section className="bg-primary py-16 md:py-24 pl-4 pr-0 lg:px-4 md:px-8 w-full flex flex-col gap-10">
             <div className="base-container w-full mx-auto flex flex-col gap-10">
                 <h2 className="text-4xl md:text-5xl font-medium text-black leading-tight tracking-tight">
                     What do you want<br />to create?
                 </h2>
 
-                <div className="grid grid-flow-col auto-cols-[70%] sm:auto-cols-[45%] md:auto-cols-[30%] lg:grid-flow-row lg:grid-cols-5 gap-4 md:gap-[7.5px] w-full pb-4 overflow-x-auto lg:overflow-x-visible snap-x snap-mandatory [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+                <div className="grid grid-flow-col auto-cols-[70%] sm:auto-cols-[45%]  lg:grid-flow-row lg:grid-cols-5 gap-4 md:gap-[7.5px] w-full pb-4 overflow-x-auto lg:overflow-x-visible snap-x snap-mandatory [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] pr-4 md:pr-0">
                     {categories.map((cat, index) => (
                         <div
                             key={index}
