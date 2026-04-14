@@ -161,6 +161,12 @@ body {
 .animate-spin-slow { animation: spin-slow 20s linear infinite; }
 .animate-spin-reverse { animation: spin-slow 30s linear infinite reverse; }
 
+@keyframes badge-pop {
+  0%   { opacity: 0; transform: rotate(15deg) scale(0.7); }
+  60%  { transform: rotate(15deg) scale(1.08); }
+  100% { opacity: 1; transform: rotate(15deg) scale(1); }
+}
+
 /* ── Grid lines ────────────────────────────────────── */
 .grid-lines {
   background-image: 
