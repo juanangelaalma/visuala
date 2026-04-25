@@ -1,35 +1,17 @@
+import React from "react";
 
-const defaultCheck = (
+const checkIcon = (color: string) => (
   <svg
     width="16"
     height="16"
     viewBox="0 0 24 24"
     fill="none"
     xmlns="http://www.w3.org/2000/svg"
-    className="mt-0.5 shrink-0"
+    className="mt-1 shrink-0"
   >
     <path
       d="M20 6L9 17L4 12"
-      stroke="#E5FF00"
-      strokeWidth="3"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    />
-  </svg>
-);
-
-const darkCheck = (
-  <svg
-    width="16"
-    height="16"
-    viewBox="0 0 24 24"
-    fill="none"
-    xmlns="http://www.w3.org/2000/svg"
-    className="mt-0.5 shrink-0"
-  >
-    <path
-      d="M20 6L9 17L4 12"
-      stroke="#111111"
+      stroke={color}
       strokeWidth="3"
       strokeLinecap="round"
       strokeLinejoin="round"
@@ -44,7 +26,7 @@ const plans = [
     price: "Rp899k",
     credits: "250 credits",
     conversion: "100 images or 25 videos",
-    bonus: "🎁 First month: 500 credits",
+    bonus: "First month: 500 credits",
     features: [
       "Commercial use for all generated assets",
       "Live chat & email support",
@@ -58,7 +40,7 @@ const plans = [
     price: "Rp3,9jt",
     credits: "1,000 credits",
     conversion: "400 images or 100 videos",
-    bonus: "🎁 First month: 2,000 credits",
+    bonus: "First month: 2,000 credits",
     features: [
       "Commercial use for all generated assets",
       "Priority support",
@@ -73,7 +55,7 @@ const plans = [
     price: "Rp6,9jt",
     credits: "2,500 credits",
     conversion: "1,000 images or 250 videos",
-    bonus: "🎁 First month: 5,000 credits",
+    bonus: "First month: 5,000 credits",
     features: [
       "Commercial use for all generated assets",
       "Dedicated support",
@@ -86,92 +68,106 @@ const plans = [
 
 export default function PricingSection() {
   return (
-    <section className="bg-[#111111] py-24 sm:py-32 px-4 w-full">
-      <div className="mx-auto max-w-6xl">
+    <section className="bg-[#161616] py-24 px-4 w-full overflow-hidden">
+      <div className="mx-auto max-w-[1280px]">
         {/* Launch Offer Badge */}
         <div className="flex justify-center mb-10">
-          <div className="bg-[#E5FF00] text-black font-bold text-xs sm:text-sm px-6 py-3 rounded-full flex items-center gap-2">
+          <div className="bg-[#EFF31B] text-black font-bold text-base px-10 py-4 rounded-full flex items-center gap-2 uppercase tracking-[0.8px]">
             <span>🎉</span>
-            LAUNCH OFFER: GET 2x CREDITS ON YOUR FIRST MONTH
+            Launch offer: Get 2× credits on your first month
           </div>
         </div>
 
         {/* Section Header */}
         <div className="text-center mb-16">
-          <h2 className="text-4xl sm:text-5xl font-medium text-white tracking-tight mb-4">
+          <h2 className="text-[48px] leading-[1.1] font-medium text-white mb-6">
             Price that scales with you
           </h2>
-          <p className="text-gray-400 text-lg mb-2">Premium Quality at Every Tier.</p>
-          <p className="text-gray-500 text-sm">
-            4 images = 10 credits <span className="mx-2">•</span> 1 video = 10 credits
-          </p>
+          <div className="space-y-1">
+            <p className="text-[#bababa] text-[20px] leading-[1.8]">
+              Premium Quality at Every Tier.
+            </p>
+            <div className="flex items-center justify-center gap-4 text-[#777] text-base leading-[2.2]">
+              <span>4 images = 10 credits</span>
+              <span>•</span>
+              <span>1 video = 10 credits</span>
+            </div>
+          </div>
         </div>
 
-        {/* Pricing Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-16 max-w-5xl mx-auto items-start">
+        {/* Pricing Cards Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-16 items-stretch">
           {plans.map((plan) => {
             const isLight = plan.theme === "light";
 
             return (
               <div
                 key={plan.id}
-                className={`relative rounded-3xl p-8 flex flex-col h-full border ${isLight
-                  ? "bg-white border-[#E5FF00] shadow-[0_0_40px_rgba(229,255,0,0.15)]"
-                  : "bg-black border-[#333]"
-                  }`}
+                className={`relative rounded-[24px] p-[34px] flex flex-col h-full border-2 transition-all duration-300 ${
+                  isLight
+                    ? "bg-gradient-to-br from-white to-[#f9fafb] border-[#EFF31B] shadow-[0_25px_50px_-12px_rgba(239,243,27,0.2)]"
+                    : "bg-gradient-to-br from-black/80 to-black border-white/20 backdrop-blur-[4px]"
+                }`}
               >
                 {plan.mostPopular && (
-                  <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-[#E5FF00] text-black text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-wider">
+                  <div className="absolute -top-[12px] left-1/2 -translate-x-1/2 bg-[#EFF31B] text-black text-xs font-medium px-[12px] py-[4.5px] rounded-full whitespace-nowrap">
                     Most Popular
                   </div>
                 )}
 
-                <div className="mb-8">
+                <div className="mb-4">
                   <h3
-                    className={`text-xl font-medium mb-4 ${isLight ? "text-black" : "text-white"
-                      }`}
+                    className={`text-2xl mb-4 tracking-[-0.6px] ${
+                      isLight ? "text-black" : "text-white"
+                    }`}
                   >
                     {plan.name}
                   </h3>
                   <div
-                    className={`text-4xl font-semibold mb-6 ${isLight ? "text-black" : "text-white"
-                      }`}
+                    className={`text-[44px] font-medium mb-6 leading-none tracking-[-0.8px] ${
+                      isLight ? "text-black" : "text-white"
+                    }`}
                   >
                     {plan.price}
                   </div>
-                  <div
-                    className={`font-medium mb-1 ${isLight ? "text-black" : "text-white"
+                  <div className="space-y-2 mb-6">
+                    <p
+                      className={`text-[18px] font-medium tracking-[-0.27px] ${
+                        isLight ? "text-black" : "text-white"
                       }`}
-                  >
-                    {plan.credits}
-                  </div>
-                  <div
-                    className={`text-sm mb-6 ${isLight ? "text-gray-500" : "text-gray-500"
+                    >
+                      {plan.credits}
+                    </p>
+                    <p
+                      className={`text-sm tracking-[-0.14px] ${
+                        isLight ? "text-black/60" : "text-white/60"
                       }`}
-                  >
-                    {plan.conversion}
+                    >
+                      {plan.conversion}
+                    </p>
                   </div>
 
                   <div
-                    className={`inline-block px-4 py-2 rounded-full text-xs font-medium mb-8 ${isLight
-                      ? "bg-gray-100 text-black border border-gray-200"
-                      : "bg-[#252A0A] text-[#E5FF00] border border-[#3E4A10]"
-                      }`}
+                    className={`inline-flex items-center gap-2 px-[13px] py-[9px] rounded-full text-sm font-medium border ${
+                      isLight
+                        ? "bg-black/10 text-black/70 border-black/20"
+                        : "bg-[#EFF31B]/20 text-[#EFF31B] border-[#EFF31B]/30"
+                    }`}
                   >
-                    {plan.bonus}
+                    <span className="text-base">🎁</span>
+                    <span className="tracking-[-0.14px]">{plan.bonus}</span>
                   </div>
                 </div>
 
-                <div className="grow">
-                  <ul className="space-y-4 mb-8">
+                <div className="grow mt-8">
+                  <ul className="space-y-3 mb-10">
                     {plan.features.map((feature, i) => (
-                      <li key={i} className="flex items-start gap-3">
-                        <div className="mt-0.5">
-                          {isLight ? darkCheck : defaultCheck}
-                        </div>
+                      <li key={i} className="flex items-start gap-2">
+                        {checkIcon(isLight ? "black" : "#EFF31B")}
                         <span
-                          className={`text-sm ${isLight ? "text-gray-700" : "text-gray-300"
-                            }`}
+                          className={`text-sm leading-5 tracking-[-0.14px] ${
+                            isLight ? "text-black/80" : "text-white/80"
+                          }`}
                         >
                           {feature}
                         </span>
@@ -181,10 +177,11 @@ export default function PricingSection() {
                 </div>
 
                 <button
-                  className={`w-full py-4 rounded-xl text-sm font-semibold transition-colors ${isLight
-                    ? "bg-[#111] text-white hover:bg-black"
-                    : "bg-white text-black hover:bg-gray-100"
-                    }`}
+                  className={`w-full py-[14px] px-8 rounded-full text-base font-medium transition-all duration-200 active:scale-[0.98] shadow-lg ${
+                    isLight
+                      ? "bg-gradient-to-r from-black to-[#101828] text-white"
+                      : "bg-gradient-to-r from-white to-[#f3f4f6] text-black"
+                  }`}
                 >
                   Start free trial
                 </button>
@@ -194,18 +191,20 @@ export default function PricingSection() {
         </div>
 
         {/* Enterprise Bottom Banner */}
-        <div className="max-w-5xl mx-auto rounded-3xl border border-[#333] bg-[#1A1A1A] p-8 md:p-10 flex flex-col md:flex-row items-center justify-between gap-6">
-          <div className="text-center md:text-left">
-            <h3 className="text-2xl font-medium text-white mb-2">
-              Need more? Let&apos;s talk about enterprise options
-            </h3>
-            <p className="text-gray-400">
-              Get custom plans, dedicated support, and exclusive features tailored to your brand&apos;s creative needs.
-            </p>
+        <div className="rounded-[24px] border-2 border-white/20 bg-gradient-to-r from-white/5 to-white/10 p-[34px] backdrop-blur-[4px]">
+          <div className="flex flex-col md:flex-row items-center justify-between gap-8">
+            <div className="text-center md:text-left">
+              <h3 className="text-[28px] font-normal text-white mb-2 tracking-[-0.7px]">
+                Need more? Let's talk about enterprise options
+              </h3>
+              <p className="text-white/70 text-[18px] tracking-[-0.27px]">
+                Get custom plans, dedicated support, and exclusive features tailored to your brand's creative needs.
+              </p>
+            </div>
+            <button className="whitespace-nowrap px-[34px] py-[14px] rounded-full border-2 border-white text-white hover:bg-white/10 transition-colors font-semibold text-base uppercase tracking-[-0.16px]">
+              Talk to sales
+            </button>
           </div>
-          <button className="whitespace-nowrap px-8 py-3 rounded-full border border-gray-400 text-white hover:bg-white/5 transition-colors font-medium text-sm">
-            TALK TO SALES
-          </button>
         </div>
       </div>
     </section>

@@ -10,10 +10,10 @@ export default function ArtisticBoard() {
     const items = categoryData[activeTab] || categoryData["UGC"];
 
     return (
-        <div className="base-container mx-auto flex flex-col gap-10 md:gap-14">
+        <div className="base-container mx-auto flex flex-col gap-10">
             {/* Header Block */}
-            <div className="flex flex-col gap-6">
-                <h2 className="text-[48px] font-medium leading-[52.8px] tracking-tight text-white max-w-4xl">
+            <div className="flex flex-col gap-10">
+                <h2 className="text-[32px] md:text-[48px] font-medium leading-tight md:leading-[52.8px] tracking-tight text-white max-w-4xl">
                     Explore ideas from<br />
                     <span className="text-primary">hundreds</span> of <span className="text-primary">artistic</span><br />
                     directions
