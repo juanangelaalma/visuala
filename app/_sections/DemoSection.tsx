@@ -3,7 +3,7 @@ import Image from "next/image";
 export default function DemoSection() {
     return (
         <section className="bg-black py-20 px-4 md:px-8 flex flex-col items-center w-full sm:px-6 lg:px-32">
-            <div className="relative w-full base-container rounded-[16px] overflow-hidden aspect-[16/10] md:aspect-video bg-surface-1">
+            <div className="relative w-full base-container rounded-[16px] overflow-hidden aspect-16/10 md:aspect-video bg-surface-1">
                 <Image
                     src="/demo.webp"
                     alt="Demo visual"
@@ -12,8 +12,8 @@ export default function DemoSection() {
                 />
 
                 {/* Bottom left tag */}
-                <div className="absolute bottom-4 left-4 md:bottom-6 md:left-6 bg-black/50 backdrop-blur-md px-3 py-1.5 md:px-4 md:py-2 rounded-full z-10 text-white/90">
-                    <span className="text-[10px] md:text-[12px] font-light tracking-wide">all shots created on VISUALA</span>
+                <div className="absolute bottom-4 left-4 md:bottom-6 md:left-6 bg-black/50 backdrop-blur-md py-2.5 px-6 rounded-full z-10 text-white">
+                    <span className="text-[14] font-display font-normal tracking-wide">all shots created on VISUALA</span>
                 </div>
 
                 {/* Bottom right volume icon */}
@@ -27,10 +27,10 @@ export default function DemoSection() {
             </div>
 
             <div className="mt-16 text-center tracking-tight flex flex-col items-center gap-y-3">
-                <p className="text-white text-[28px] md:text-[40px] font-light leading-snug">
+                <p className="text-white font-display text-[28px] md:text-[40px] font-light leading-snug">
                     Create jaw-dropping
                 </p>
-                <div className="text-white text-[28px] md:text-[40px] font-light leading-snug mt-2 flex items-center flex-col gap-y-3 md:flex-row">
+                <div className="text-white font-display text-[28px] md:text-[40px] font-light leading-snug mt-2 flex items-center flex-col gap-y-3 md:flex-row">
                     <div className="bg-primary text-black px-3 py-1 mr-2 font-normal inline-block"
                         style={{ transform: 'rotate(-2deg)' }}
                     >

@@ -7,7 +7,7 @@ export default function ReimagineBanner() {
         style={{ transform: 'rotate(-2deg)' }}
       >
         {/* Teks */}
-        <h1 className="text-4xl md:text-6xl leading-none md:leading-[70px] font-extrabold text-black tracking-tight uppercase m-0"
+        <h1 className="text-4xl md:text-6xl leading-none font-sans font-bold md:leading-[70px] text-black tracking-tight uppercase m-0"
           style={{ transform: 'rotate(2deg)' }}
         >
           REIMAGINE

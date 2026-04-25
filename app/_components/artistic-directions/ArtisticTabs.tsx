@@ -15,7 +15,7 @@ export default function ArtisticTabs({ categories, activeTab, onTabChange }: Art
                     <button
                         key={cat}
                         onClick={() => onTabChange(cat)}
-                        className={`relative cursor-pointer px-1 py-2 text-[14px] md:text-[16px] uppercase tracking-wider transition-colors duration-300 font-medium ${isActive ? "text-white" : "text-[#777] hover:text-white"
+                        className={`relative cursor-pointer px-1 py-2 text-[14px] md:text-[16px] tracking-wider transition-colors duration-300 font-sans-secondary font-medium ${isActive ? "text-white" : "text-[#777] hover:text-white"
                             }`}
                     >
                         {cat}

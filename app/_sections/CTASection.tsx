@@ -1,6 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
-import bgImage from "../__assets/showcase/image 1.webp";
+import bgImage from "../__assets/image/background-cta.png";
 
 export default function CTASection() {
   return (
@@ -23,7 +23,7 @@ export default function CTASection() {
           AI just got cool.
         </h2>
 
-        <div className="flex flex-col gap-[39px] text-[18px] md:text-[24px] text-white/70 font-normal max-w-[672px] leading-[1.2] tracking-[-0.6px]">
+        <div className="flex flex-col gap-[39px] text-[18px] md:text-[24px] text-white/70 font-light max-w-[672px] leading-[39px] tracking-[-0.6px]">
           <p>
             Built by actual creative directors who got<br className="hidden md:block" /> tired of AI that looked like AI.
           </p>

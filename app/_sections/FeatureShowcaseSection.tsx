@@ -34,15 +34,16 @@ export default function FeatureShowcaseSection() {
                             "
                         >
                             <span className="block font-semibold">Generate</span>
-                            <span className="block relative w-fit">
+                            <span className="block relative w-fit font-display">
                                 <div
                                     className="
                                         absolute -top-[50%] md:-top-[60%] left-[80%] md:left-[80%] ml-2 md:ml-4
                                         bg-[#DE0909] text-white
                                         px-2 md:px-4 py-1 md:py-2
-                                        font-black text-[12px] md:text-[24px]
+                                        text-[12px] md:text-[24px]
                                         tracking-widest uppercase
                                         font-semibold
+                                        font-display
                                         select-none pointer-events-none
                                         shadow-lg
                                         flex items-center justify-center
@@ -68,14 +69,14 @@ export default function FeatureShowcaseSection() {
                                     {tag}
                                 </span>
                                 {i < tags.length - 1 && (
-                                    <span className="text-white/30 text-xs">•</span>
+                                    <span className="text-white text-xs">•</span>
                                 )}
                             </span>
                         ))}
                     </div>
 
                     {/* Subtitle */}
-                    <p className="text-white/40 text-[14px] md:text-[16px] font-normal tracking-wide max-w-full mt-2">
+                    <p className="text-white/40 text-[14px] md:text-[16px] font-light tracking-wide max-w-full mt-2">
                         AI-powered authentic content that converts. Perfect for your brand&apos;s social proof.
                     </p>
                 </div>

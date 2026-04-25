@@ -15,7 +15,7 @@ export default function CategoriesSection() {
     return (
         <section className="bg-primary py-16 md:py-24 pl-4 pr-0 lg:px-4 md:px-8 w-full flex flex-col gap-10">
             <div className="base-container w-full mx-auto flex flex-col gap-10">
-                <h2 className="text-4xl md:text-5xl font-medium text-black leading-tight tracking-tight">
+                <h2 className="text-5xl font-display font-medium text-black leading-tight tracking-tight">
                     What do you want<br />to create?
                 </h2>
 
@@ -23,7 +23,7 @@ export default function CategoriesSection() {
                     {categories.map((cat, index) => (
                         <div
                             key={index}
-                            className="relative w-full aspect-[259/459] snap-center rounded-[12px] overflow-hidden group hover:shadow-lg transition-shadow cursor-pointer"
+                            className="relative w-full aspect-259/459 snap-center rounded-[12px] overflow-hidden group hover:shadow-lg transition-shadow cursor-pointer"
                         >
                             <Image
                                 src={cat.image}
@@ -34,7 +34,7 @@ export default function CategoriesSection() {
                             <div className="absolute inset-0 bg-black/20 group-hover:bg-black/30 transition-colors duration-500" />
 
                             <div className="absolute inset-0 flex items-center justify-center p-4">
-                                <h3 className="text-white text-xl md:text-2xl font-normal tracking-wider uppercase text-center drop-shadow-md">
+                                <h3 className="text-white text-[34px] font-normal tracking-wider uppercase text-center drop-shadow-md">
                                     {cat.title}
                                 </h3>
                             </div>

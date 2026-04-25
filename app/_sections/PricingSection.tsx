@@ -72,7 +72,7 @@ export default function PricingSection() {
       <div className="mx-auto max-w-[1280px]">
         {/* Launch Offer Badge */}
         <div className="flex justify-center mb-10">
-          <div className="bg-[#EFF31B] text-black font-bold text-base px-10 py-4 rounded-full flex items-center gap-2 uppercase tracking-[0.8px]">
+          <div className="bg-primary text-black font-bold text-base px-10 font-sans-secondary py-4 rounded-full flex items-center gap-2 uppercase tracking-[0.8px]">
             <span>🎉</span>
             Launch offer: Get 2× credits on your first month
           </div>
@@ -80,7 +80,7 @@ export default function PricingSection() {
 
         {/* Section Header */}
         <div className="text-center mb-16">
-          <h2 className="text-[48px] leading-[1.1] font-medium text-white mb-6">
+          <h2 className="text-[48px] leading-[1.1] font-normal text-white mb-6 font-display">
             Price that scales with you
           </h2>
           <div className="space-y-1">
@@ -124,7 +124,7 @@ export default function PricingSection() {
                     {plan.name}
                   </h3>
                   <div
-                    className={`text-[44px] font-medium mb-6 leading-none tracking-[-0.8px] ${
+                    className={`text-[32px] font-medium font-display mb-6 leading-none tracking-[-0.8px] ${
                       isLight ? "text-black" : "text-white"
                     }`}
                   >
@@ -166,7 +166,7 @@ export default function PricingSection() {
                         {checkIcon(isLight ? "black" : "#EFF31B")}
                         <span
                           className={`text-sm leading-5 tracking-[-0.14px] ${
-                            isLight ? "text-black/80" : "text-white/80"
+                            isLight ? "text-black/80" : "text-white/60"
                           }`}
                         >
                           {feature}
@@ -197,7 +197,7 @@ export default function PricingSection() {
               <h3 className="text-[28px] font-normal text-white mb-2 tracking-[-0.7px]">
                 Need more? Let's talk about enterprise options
               </h3>
-              <p className="text-white/70 text-[18px] tracking-[-0.27px]">
+              <p className="text-white/70 text-[18px] tracking-[-0.27px] font-light">
                 Get custom plans, dedicated support, and exclusive features tailored to your brand's creative needs.
               </p>
             </div>

@@ -16,7 +16,7 @@ export default function HeroSection() {
       {/* Heading */}
       <h1
         id="hero-heading"
-        className="animate-fade-up mx-auto max-w-4xl text-4xl font-extrabold tracking-tight md:text-6xl [animation-delay:100ms]"
+        className="animate-fade-up mx-auto max-w-4xl text-4xl font-semibold tracking-tight md:text-6xl [animation-delay:100ms] font-display"
       >
         VIBEY ADS WITH AI,
       </h1>
@@ -24,8 +24,8 @@ export default function HeroSection() {
       <ReimagineBanner />
       {/* CTAs */}
       <div className="flex flex-col w-full md:flex-row space-y-3 md:space-y-0 md:space-x-3 md:justify-center">
-        <StartFreeTrialButton className="z-10 w-full uppercase py-[16px] md:w-auto" />
-        <OutlineButton className="z-10 w-full uppercase py-[16px] backdrop-blur-md md:w-auto">TALK TO SALES</OutlineButton>
+        <StartFreeTrialButton className="z-10 w-full uppercase md:w-auto" />
+        <OutlineButton className="z-10 w-full font-sans-secondary text-[16px] font-semibold uppercase backdrop-blur-md md:w-auto">TALK TO SALES</OutlineButton>
       </div>
 
       <PromoBar />
