@@ -5,17 +5,10 @@ import Brand from "./Brand";
 import AuthButtons from "./AuthButton";
 
 export default function Navbar() {
-  const [scrolled, setScrolled] = useState(false);
-
-  useEffect(() => {
-    const handleScroll = () => setScrolled(window.scrollY > 20);
-    window.addEventListener("scroll", handleScroll, { passive: true });
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
 
   return (
     <header
-      className="fixed inset-x-0 top-0 z-50 transition-all duration-300 border-b bg-black/40 backdrop-blur-xl border-border-subtle py-4"
+      className="absolute inset-x-0 top-0 z-50 transition-all duration-300 bg-black/70 backdrop-blur-xl py-4"
     >
       <nav
         className="flex base-container items-center justify-between px-4 sm:px-6 lg:px-0"

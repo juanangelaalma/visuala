@@ -5,13 +5,9 @@ import ValuePropSection from "./_sections/ValuePropSection";
 import DemoSection from "./_sections/DemoSection";
 import MoreDemoSection from "./_sections/MoreDemoSection";
 import CategoriesSection from "./_sections/CategoriesSection";
-import LogoBand from "./_sections/LogoBand";
 import FeatureShowcaseSection from "./_sections/FeatureShowcaseSection";
-import FeaturesSection from "./_sections/FeaturesSection";
-import HowItWorksSection from "./_sections/HowItWorksSection";
-import TestimonialsSection from "./_sections/TestimonialsSection";
+import ArtisticDirectionsSection from "./_sections/ArtisticDirectionsSection";
 import PricingSection from "./_sections/PricingSection";
-import FAQSection from "./_sections/FAQSection";
 import CTASection from "./_sections/CTASection";
 
 export default function HomePage() {
@@ -26,16 +22,12 @@ export default function HomePage() {
         <MoreDemoSection />
         <CategoriesSection />
         <FeatureShowcaseSection />
-        {/* <LogoBand />
-        <FeaturesSection />
-        <HowItWorksSection />
-        <TestimonialsSection />
+        <ArtisticDirectionsSection />
         <PricingSection />
-        <FAQSection />
-        <CTASection /> */}
+        <CTASection />
       </main>
 
-      {/* <Footer /> */}
+      <Footer />
     </>
   );
 }

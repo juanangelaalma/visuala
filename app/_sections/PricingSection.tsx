@@ -1,192 +1,211 @@
-import Link from "next/link";
+import React from "react";
+
+const checkIcon = (color: string) => (
+  <svg
+    width="16"
+    height="16"
+    viewBox="0 0 24 24"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+    className="mt-1 shrink-0"
+  >
+    <path
+      d="M20 6L9 17L4 12"
+      stroke={color}
+      strokeWidth="3"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+  </svg>
+);
 
 const plans = [
   {
-    id: "plan-starter",
+    id: "starter",
     name: "Starter",
-    description: "Perfect for freelancers and solo designers.",
-    price: { monthly: 0, yearly: 0 },
-    cta: "Get started free",
-    ctaHref: "/signup",
-    highlighted: false,
+    price: "Rp899k",
+    credits: "250 credits",
+    conversion: "100 images or 25 videos",
+    bonus: "First month: 500 credits",
     features: [
-      "Up to 3 projects",
-      "1 editor seat",
-      "Community design system",
-      "Basic export (PNG, SVG)",
-      "7-day version history",
+      "Commercial use for all generated assets",
+      "Live chat & email support",
+      "Access to all styles",
     ],
+    theme: "dark" as const,
   },
   {
-    id: "plan-pro",
-    name: "Pro",
-    description: "For growing teams that need more power and collaboration.",
-    price: { monthly: 29, yearly: 23 },
-    cta: "Start 14-day free trial",
-    ctaHref: "/signup?plan=pro",
-    highlighted: true,
-    badge: "Most popular",
+    id: "professional",
+    name: "Professional",
+    price: "Rp3,9jt",
+    credits: "1,000 credits",
+    conversion: "400 images or 100 videos",
+    bonus: "First month: 2,000 credits",
     features: [
-      "Unlimited projects",
-      "Up to 10 editor seats",
-      "Custom design system",
-      "Code export (React, Tailwind)",
-      "Unlimited version history",
-      "Real-time collaboration",
-      "AI design assistant",
+      "Commercial use for all generated assets",
       "Priority support",
+      "Custom styles to your brand (coming soon)",
     ],
+    mostPopular: true,
+    theme: "light" as const,
   },
   {
-    id: "plan-enterprise",
-    name: "Enterprise",
-    description: "Custom plans for large organisations with advanced needs.",
-    price: { monthly: null, yearly: null },
-    cta: "Contact sales",
-    ctaHref: "/contact",
-    highlighted: false,
+    id: "business",
+    name: "Business",
+    price: "Rp6,9jt",
+    credits: "2,500 credits",
+    conversion: "1,000 images or 250 videos",
+    bonus: "First month: 5,000 credits",
     features: [
-      "Everything in Pro",
-      "Unlimited seats",
-      "SSO / SAML integration",
-      "Audit logs & compliance",
-      "Dedicated account manager",
-      "Custom SLA",
-      "On-premise option",
+      "Commercial use for all generated assets",
+      "Dedicated support",
+      "Custom styles to your brand (coming soon)",
+      "API Access (coming soon)",
     ],
+    theme: "dark" as const,
   },
 ];
 
 export default function PricingSection() {
   return (
-    <section
-      id="pricing"
-      aria-labelledby="pricing-heading"
-      className="relative py-24 sm:py-32"
-    >
-      {/* Background glow */}
-      <div
-        aria-hidden="true"
-        className="pointer-events-none absolute left-1/2 top-1/2 h-150 w-150 -translate-x-1/2 -translate-y-1/2 rounded-full bg-brand-600/10 blur-6xl"
-      />
-
-      <div className="relative mx-auto max-w-7xl px-6 lg:px-8">
-        {/* Header */}
-        <div className="mx-auto max-w-2xl text-center">
-          <p className="mb-4 text-sm font-semibold uppercase tracking-widest text-brand-400">
-            Pricing
-          </p>
-          <h2
-            id="pricing-heading"
-            className="text-4xl font-extrabold tracking-tight sm:text-5xl"
-          >
-            Simple,{" "}
-            <span className="gradient-text">transparent pricing</span>
-          </h2>
-          <p className="mt-6 text-lg text-text-secondary">
-            Start free. Scale as you grow. No hidden fees, ever.
-          </p>
+    <section className="bg-[#161616] py-24 px-4 w-full overflow-hidden">
+      <div className="mx-auto max-w-[1280px]">
+        {/* Launch Offer Badge */}
+        <div className="flex justify-center mb-10">
+          <div className="bg-primary text-black font-bold text-base px-10 font-sans-secondary py-4 rounded-full flex items-center gap-2 uppercase tracking-[0.8px]">
+            <span>🎉</span>
+            Launch offer: Get 2× credits on your first month
+          </div>
         </div>
 
-        {/* Plans */}
-        <div className="mx-auto mt-20 grid max-w-5xl grid-cols-1 gap-8 lg:grid-cols-3">
-          {plans.map((plan) => (
-            <div
-              key={plan.id}
-              id={plan.id}
-              className={`glass-card relative flex flex-col rounded-2xl p-8 transition-all duration-300 ${
-                plan.highlighted
-                  ? "border-brand-500/50 shadow-glow-brand ring-1 ring-brand-500/50 hover:-translate-y-2"
-                  : "hover:-translate-y-1 hover:border-border-default"
-              }`}
-            >
-              {plan.badge && (
-                <div
-                  className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-brand-500 px-4 py-1 text-xs font-semibold text-white"
-                  aria-label={`${plan.name} plan is ${plan.badge}`}
-                >
-                  {plan.badge}
-                </div>
-              )}
+        {/* Section Header */}
+        <div className="text-center mb-16">
+          <h2 className="text-[48px] leading-[1.1] font-normal text-white mb-6 font-display">
+            Price that scales with you
+          </h2>
+          <div className="space-y-1">
+            <p className="text-[#bababa] text-[20px] leading-[1.8]">
+              Premium Quality at Every Tier.
+            </p>
+            <div className="flex items-center justify-center gap-4 text-[#777] text-base leading-[2.2]">
+              <span>4 images = 10 credits</span>
+              <span>•</span>
+              <span>1 video = 10 credits</span>
+            </div>
+          </div>
+        </div>
 
-              <div>
-                <h3 className="text-lg font-semibold text-text-primary">
-                  {plan.name}
-                </h3>
-                <p className="mt-1 text-sm text-text-muted">
-                  {plan.description}
-                </p>
+        {/* Pricing Cards Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-16 items-stretch">
+          {plans.map((plan) => {
+            const isLight = plan.theme === "light";
 
-                <div className="mt-6 flex items-baseline gap-1">
-                  {plan.price.monthly === null ? (
-                    <span className="text-4xl font-extrabold text-text-primary">
-                      Custom
-                    </span>
-                  ) : plan.price.monthly === 0 ? (
-                    <span className="text-4xl font-extrabold text-text-primary">
-                      Free
-                    </span>
-                  ) : (
-                    <>
-                      <span className="text-4xl font-extrabold text-text-primary">
-                        ${plan.price.monthly}
-                      </span>
-                      <span className="text-sm text-text-muted">/mo per seat</span>
-                    </>
-                  )}
-                </div>
-              </div>
-
-              {/* CTA */}
-              <Link
-                href={plan.ctaHref}
-                id={`${plan.id}-cta`}
-                className={`mt-8 block rounded-xl px-6 py-3 text-center text-sm font-semibold transition-all ${
-                  plan.highlighted
-                    ? "bg-brand-500 text-white shadow-glow-brand hover:bg-brand-400"
-                    : "bg-surface-2 text-text-primary hover:bg-surface-3"
+            return (
+              <div
+                key={plan.id}
+                className={`relative rounded-[24px] p-[34px] flex flex-col h-full border-2 transition-all duration-300 ${
+                  isLight
+                    ? "bg-gradient-to-br from-white to-[#f9fafb] border-[#EFF31B] shadow-[0_25px_50px_-12px_rgba(239,243,27,0.2)]"
+                    : "bg-gradient-to-br from-black/80 to-black border-white/20 backdrop-blur-[4px]"
                 }`}
               >
-                {plan.cta}
-              </Link>
+                {plan.mostPopular && (
+                  <div className="absolute -top-[12px] left-1/2 -translate-x-1/2 bg-[#EFF31B] text-black text-xs font-medium px-[12px] py-[4.5px] rounded-full whitespace-nowrap">
+                    Most Popular
+                  </div>
+                )}
 
-              {/* Features */}
-              <ul
-                className="mt-8 flex flex-col gap-3"
-                role="list"
-                aria-label={`${plan.name} plan features`}
-              >
-                {plan.features.map((feature) => (
-                  <li
-                    key={feature}
-                    className="flex items-start gap-3 text-sm text-text-secondary"
+                <div className="mb-4">
+                  <h3
+                    className={`text-2xl mb-4 tracking-[-0.6px] ${
+                      isLight ? "text-black" : "text-white"
+                    }`}
                   >
-                    <svg
-                      className="mt-0.5 h-4 w-4 shrink-0 text-accent-400"
-                      viewBox="0 0 16 16"
-                      fill="currentColor"
-                      aria-hidden="true"
+                    {plan.name}
+                  </h3>
+                  <div
+                    className={`text-[32px] font-medium font-display mb-6 leading-none tracking-[-0.8px] ${
+                      isLight ? "text-black" : "text-white"
+                    }`}
+                  >
+                    {plan.price}
+                  </div>
+                  <div className="space-y-2 mb-6">
+                    <p
+                      className={`text-[18px] font-medium tracking-[-0.27px] ${
+                        isLight ? "text-black" : "text-white"
+                      }`}
                     >
-                      <path
-                        fillRule="evenodd"
-                        clipRule="evenodd"
-                        d="M12.416 3.376a.75.75 0 0 1 .208 1.04l-5 7.5a.75.75 0 0 1-1.154.114l-3-3a.75.75 0 0 1 1.06-1.06l2.353 2.353 4.493-6.74a.75.75 0 0 1 1.04-.207Z"
-                      />
-                    </svg>
-                    {feature}
-                  </li>
-                ))}
-              </ul>
-            </div>
-          ))}
+                      {plan.credits}
+                    </p>
+                    <p
+                      className={`text-sm tracking-[-0.14px] ${
+                        isLight ? "text-black/60" : "text-white/60"
+                      }`}
+                    >
+                      {plan.conversion}
+                    </p>
+                  </div>
+
+                  <div
+                    className={`inline-flex items-center gap-2 px-[13px] py-[9px] rounded-full text-sm font-medium border ${
+                      isLight
+                        ? "bg-black/10 text-black/70 border-black/20"
+                        : "bg-[#EFF31B]/20 text-[#EFF31B] border-[#EFF31B]/30"
+                    }`}
+                  >
+                    <span className="text-base">🎁</span>
+                    <span className="tracking-[-0.14px]">{plan.bonus}</span>
+                  </div>
+                </div>
+
+                <div className="grow mt-8">
+                  <ul className="space-y-3 mb-10">
+                    {plan.features.map((feature, i) => (
+                      <li key={i} className="flex items-start gap-2">
+                        {checkIcon(isLight ? "black" : "#EFF31B")}
+                        <span
+                          className={`text-sm leading-5 tracking-[-0.14px] ${
+                            isLight ? "text-black/80" : "text-white/60"
+                          }`}
+                        >
+                          {feature}
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+
+                <button
+                  className={`w-full py-[14px] px-8 rounded-full text-base font-medium transition-all duration-200 active:scale-[0.98] shadow-lg ${
+                    isLight
+                      ? "bg-gradient-to-r from-black to-[#101828] text-white"
+                      : "bg-gradient-to-r from-white to-[#f3f4f6] text-black"
+                  }`}
+                >
+                  Start free trial
+                </button>
+              </div>
+            );
+          })}
         </div>
 
-        {/* Money-back note */}
-        <p className="mt-12 text-center text-sm text-text-muted">
-          All paid plans include a{" "}
-          <strong className="text-text-secondary">30-day money-back guarantee</strong>
-          . No questions asked.
-        </p>
+        {/* Enterprise Bottom Banner */}
+        <div className="rounded-[24px] border-2 border-white/20 bg-gradient-to-r from-white/5 to-white/10 p-[34px] backdrop-blur-[4px]">
+          <div className="flex flex-col md:flex-row items-center justify-between gap-8">
+            <div className="text-center md:text-left">
+              <h3 className="text-[28px] font-normal text-white mb-2 tracking-[-0.7px]">
+                Need more? Let's talk about enterprise options
+              </h3>
+              <p className="text-white/70 text-[18px] tracking-[-0.27px] font-light">
+                Get custom plans, dedicated support, and exclusive features tailored to your brand's creative needs.
+              </p>
+            </div>
+            <button className="whitespace-nowrap px-[34px] py-[14px] rounded-full border-2 border-white text-white hover:bg-white/10 transition-colors font-semibold text-base uppercase tracking-[-0.16px]">
+              Talk to sales
+            </button>
+          </div>
+        </div>
       </div>
     </section>
   );

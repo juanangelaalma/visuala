@@ -1,102 +1,54 @@
+import Image from "next/image";
 import Link from "next/link";
+import bgImage from "../__assets/image/background-cta.png";
 
 export default function CTASection() {
   return (
-    <section
-      id="cta"
-      aria-labelledby="cta-heading"
-      className="relative overflow-hidden py-24 sm:py-32"
-    >
-      {/* Background glow */}
-      <div
-        aria-hidden="true"
-        className="pointer-events-none absolute inset-0 -z-10"
-      >
-        <div className="absolute left-1/2 top-1/2 h-175 w-175 -translate-x-1/2 -translate-y-1/2 rounded-full bg-brand-500/15 blur-6xl" />
-        <div className="absolute left-1/2 top-1/2 h-96 w-96 -translate-x-1/2 -translate-y-1/2 rounded-full bg-accent-500/10 blur-4xl" />
+    <section className="relative w-full min-h-[900px] flex items-center justify-center overflow-hidden">
+      {/* Background Image with 10px blur and dark overlay matching Figma */}
+      <div className="absolute inset-0 z-0 scale-110">
+        <Image
+          src={bgImage}
+          alt="Abstract Background"
+          fill
+          className="object-cover blur-[10px]"
+          quality={90}
+        />
+        <div className="absolute inset-0 bg-black/50" />
       </div>
 
-      {/* Decorative ring */}
-      <div
-        aria-hidden="true"
-        className="pointer-events-none absolute left-1/2 top-1/2 h-125 w-125 -translate-x-1/2 -translate-y-1/2 rounded-full border border-brand-500/10 animate-spin-slow"
-      />
-      <div
-        aria-hidden="true"
-        className="pointer-events-none absolute left-1/2 top-1/2 h-175 w-175 -translate-x-1/2 -translate-y-1/2 rounded-full border border-brand-500/5 animate-spin-reverse"
-      />
-
-      <div className="relative mx-auto max-w-3xl px-6 text-center lg:px-8">
-        {/* Badge */}
-        <div className="mb-8 inline-flex items-center gap-2 rounded-full bg-brand-500/10 px-4 py-2 text-sm font-medium text-brand-300 ring-1 ring-brand-500/20">
-          <span className="animate-pulse-glow inline-block h-1.5 w-1.5 rounded-full bg-accent-400" />
-          Free forever on Starter — No credit card required
-        </div>
-
-        <h2
-          id="cta-heading"
-          className="text-4xl font-extrabold tracking-tight sm:text-5xl lg:text-6xl"
-        >
-          Ready to build{" "}
-          <span className="gradient-text">something great?</span>
+      {/* Content */}
+      <div className="relative z-10 max-w-[1024px] px-12 py-20 mx-auto text-center flex flex-col items-center gap-8">
+        <h2 className="text-[40px] md:text-[60px] font-medium text-white tracking-[-1.5px] uppercase leading-tight">
+          AI just got cool.
         </h2>
 
-        <p className="mx-auto mt-6 max-w-xl text-lg leading-relaxed text-text-secondary">
-          Join over 12,000 design teams already using Visuala to ship faster,
-          collaborate better, and build design systems that scale.
-        </p>
+        <div className="flex flex-col gap-[39px] text-[18px] md:text-[24px] text-white/70 font-light max-w-[672px] leading-[39px] tracking-[-0.6px]">
+          <p>
+            Built by actual creative directors who got<br className="hidden md:block" /> tired of AI that looked like AI.
+          </p>
 
-        <div className="mt-10 flex flex-col items-center justify-center gap-4 sm:flex-row">
-          <Link
-            href="/signup"
-            id="cta-primary"
-            className="group relative overflow-hidden rounded-xl bg-brand-500 px-10 py-4 text-base font-semibold text-white shadow-glow-brand transition-all hover:bg-brand-400 hover:scale-105 active:scale-100"
-          >
-            <span className="relative z-10">Start for free — no card needed</span>
-            <span
-              aria-hidden="true"
-              className="animate-shimmer absolute inset-0 opacity-0 transition-opacity group-hover:opacity-100"
-            />
-          </Link>
-          <Link
-            href="/contact"
-            id="cta-secondary"
-            className="rounded-xl px-10 py-4 text-base font-semibold text-text-secondary ring-1 ring-border-default transition-all hover:bg-surface-2 hover:text-text-primary"
-          >
-            Talk to sales
-          </Link>
+          <p>
+            Trained on what works, not what&apos;s easy. Every<br className="hidden md:block" />
+            output is filtered through the lens of taste—<br className="hidden md:block" />
+            that ineffable quality that separates scroll-<br className="hidden md:block" />
+            stopping content from digital wallpaper.
+          </p>
+
+          <p>
+            Great brands don&apos;t compromise on creative.<br className="hidden md:block" />
+            Neither should their tools.
+          </p>
         </div>
 
-        {/* Trust signals */}
-        <ul
-          className="mt-10 flex flex-wrap items-center justify-center gap-x-8 gap-y-3 text-sm text-text-muted"
-          role="list"
-          aria-label="Trust signals"
-        >
-          {[
-            "SOC 2 Type II",
-            "GDPR compliant",
-            "SSO / SAML",
-            "99.9% uptime SLA",
-            "Cancel anytime",
-          ].map((item) => (
-            <li key={item} className="flex items-center gap-2">
-              <svg
-                className="h-4 w-4 text-accent-400"
-                viewBox="0 0 16 16"
-                fill="currentColor"
-                aria-hidden="true"
-              >
-                <path
-                  fillRule="evenodd"
-                  clipRule="evenodd"
-                  d="M12.416 3.376a.75.75 0 0 1 .208 1.04l-5 7.5a.75.75 0 0 1-1.154.114l-3-3a.75.75 0 0 1 1.06-1.06l2.353 2.353 4.493-6.74a.75.75 0 0 1 1.04-.207Z"
-                />
-              </svg>
-              {item}
-            </li>
-          ))}
-        </ul>
+        <div className="pt-8">
+          <Link
+            href="/signup"
+            className="inline-flex items-center justify-center bg-white text-black font-semibold text-[16px] uppercase tracking-[0.8px] px-8 py-4 rounded-full transition-all hover:scale-105 active:scale-95"
+          >
+            Join the Party
+          </Link>
+        </div>
       </div>
     </section>
   );
