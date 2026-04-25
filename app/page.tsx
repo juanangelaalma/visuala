@@ -7,6 +7,8 @@ import MoreDemoSection from "./_sections/MoreDemoSection";
 import CategoriesSection from "./_sections/CategoriesSection";
 import FeatureShowcaseSection from "./_sections/FeatureShowcaseSection";
 import ArtisticDirectionsSection from "./_sections/ArtisticDirectionsSection";
+import PricingSection from "./_sections/PricingSection";
+import CTASection from "./_sections/CTASection";
 
 export default function HomePage() {
   return (
@@ -21,8 +23,11 @@ export default function HomePage() {
         <CategoriesSection />
         <FeatureShowcaseSection />
         <ArtisticDirectionsSection />
+        <PricingSection />
+        <CTASection />
       </main>
 
+      <Footer />
     </>
   );
 }

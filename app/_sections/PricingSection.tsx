@@ -1,192 +1,212 @@
-import Link from "next/link";
+
+const defaultCheck = (
+  <svg
+    width="16"
+    height="16"
+    viewBox="0 0 24 24"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+    className="mt-0.5 shrink-0"
+  >
+    <path
+      d="M20 6L9 17L4 12"
+      stroke="#E5FF00"
+      strokeWidth="3"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+  </svg>
+);
+
+const darkCheck = (
+  <svg
+    width="16"
+    height="16"
+    viewBox="0 0 24 24"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+    className="mt-0.5 shrink-0"
+  >
+    <path
+      d="M20 6L9 17L4 12"
+      stroke="#111111"
+      strokeWidth="3"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+  </svg>
+);
 
 const plans = [
   {
-    id: "plan-starter",
+    id: "starter",
     name: "Starter",
-    description: "Perfect for freelancers and solo designers.",
-    price: { monthly: 0, yearly: 0 },
-    cta: "Get started free",
-    ctaHref: "/signup",
-    highlighted: false,
+    price: "Rp899k",
+    credits: "250 credits",
+    conversion: "100 images or 25 videos",
+    bonus: "🎁 First month: 500 credits",
     features: [
-      "Up to 3 projects",
-      "1 editor seat",
-      "Community design system",
-      "Basic export (PNG, SVG)",
-      "7-day version history",
+      "Commercial use for all generated assets",
+      "Live chat & email support",
+      "Access to all styles",
     ],
+    theme: "dark" as const,
   },
   {
-    id: "plan-pro",
-    name: "Pro",
-    description: "For growing teams that need more power and collaboration.",
-    price: { monthly: 29, yearly: 23 },
-    cta: "Start 14-day free trial",
-    ctaHref: "/signup?plan=pro",
-    highlighted: true,
-    badge: "Most popular",
+    id: "professional",
+    name: "Professional",
+    price: "Rp3,9jt",
+    credits: "1,000 credits",
+    conversion: "400 images or 100 videos",
+    bonus: "🎁 First month: 2,000 credits",
     features: [
-      "Unlimited projects",
-      "Up to 10 editor seats",
-      "Custom design system",
-      "Code export (React, Tailwind)",
-      "Unlimited version history",
-      "Real-time collaboration",
-      "AI design assistant",
+      "Commercial use for all generated assets",
       "Priority support",
+      "Custom styles to your brand (coming soon)",
     ],
+    mostPopular: true,
+    theme: "light" as const,
   },
   {
-    id: "plan-enterprise",
-    name: "Enterprise",
-    description: "Custom plans for large organisations with advanced needs.",
-    price: { monthly: null, yearly: null },
-    cta: "Contact sales",
-    ctaHref: "/contact",
-    highlighted: false,
+    id: "business",
+    name: "Business",
+    price: "Rp6,9jt",
+    credits: "2,500 credits",
+    conversion: "1,000 images or 250 videos",
+    bonus: "🎁 First month: 5,000 credits",
     features: [
-      "Everything in Pro",
-      "Unlimited seats",
-      "SSO / SAML integration",
-      "Audit logs & compliance",
-      "Dedicated account manager",
-      "Custom SLA",
-      "On-premise option",
+      "Commercial use for all generated assets",
+      "Dedicated support",
+      "Custom styles to your brand (coming soon)",
+      "API Access (coming soon)",
     ],
+    theme: "dark" as const,
   },
 ];
 
 export default function PricingSection() {
   return (
-    <section
-      id="pricing"
-      aria-labelledby="pricing-heading"
-      className="relative py-24 sm:py-32"
-    >
-      {/* Background glow */}
-      <div
-        aria-hidden="true"
-        className="pointer-events-none absolute left-1/2 top-1/2 h-150 w-150 -translate-x-1/2 -translate-y-1/2 rounded-full bg-brand-600/10 blur-6xl"
-      />
+    <section className="bg-[#111111] py-24 sm:py-32 px-4 w-full">
+      <div className="mx-auto max-w-6xl">
+        {/* Launch Offer Badge */}
+        <div className="flex justify-center mb-10">
+          <div className="bg-[#E5FF00] text-black font-bold text-xs sm:text-sm px-6 py-3 rounded-full flex items-center gap-2">
+            <span>🎉</span>
+            LAUNCH OFFER: GET 2x CREDITS ON YOUR FIRST MONTH
+          </div>
+        </div>
 
-      <div className="relative mx-auto max-w-7xl px-6 lg:px-8">
-        {/* Header */}
-        <div className="mx-auto max-w-2xl text-center">
-          <p className="mb-4 text-sm font-semibold uppercase tracking-widest text-brand-400">
-            Pricing
-          </p>
-          <h2
-            id="pricing-heading"
-            className="text-4xl font-extrabold tracking-tight sm:text-5xl"
-          >
-            Simple,{" "}
-            <span className="gradient-text">transparent pricing</span>
+        {/* Section Header */}
+        <div className="text-center mb-16">
+          <h2 className="text-4xl sm:text-5xl font-medium text-white tracking-tight mb-4">
+            Price that scales with you
           </h2>
-          <p className="mt-6 text-lg text-text-secondary">
-            Start free. Scale as you grow. No hidden fees, ever.
+          <p className="text-gray-400 text-lg mb-2">Premium Quality at Every Tier.</p>
+          <p className="text-gray-500 text-sm">
+            4 images = 10 credits <span className="mx-2">•</span> 1 video = 10 credits
           </p>
         </div>
 
-        {/* Plans */}
-        <div className="mx-auto mt-20 grid max-w-5xl grid-cols-1 gap-8 lg:grid-cols-3">
-          {plans.map((plan) => (
-            <div
-              key={plan.id}
-              id={plan.id}
-              className={`glass-card relative flex flex-col rounded-2xl p-8 transition-all duration-300 ${
-                plan.highlighted
-                  ? "border-brand-500/50 shadow-glow-brand ring-1 ring-brand-500/50 hover:-translate-y-2"
-                  : "hover:-translate-y-1 hover:border-border-default"
-              }`}
-            >
-              {plan.badge && (
-                <div
-                  className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-brand-500 px-4 py-1 text-xs font-semibold text-white"
-                  aria-label={`${plan.name} plan is ${plan.badge}`}
-                >
-                  {plan.badge}
-                </div>
-              )}
+        {/* Pricing Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-16 max-w-5xl mx-auto items-start">
+          {plans.map((plan) => {
+            const isLight = plan.theme === "light";
 
-              <div>
-                <h3 className="text-lg font-semibold text-text-primary">
-                  {plan.name}
-                </h3>
-                <p className="mt-1 text-sm text-text-muted">
-                  {plan.description}
-                </p>
-
-                <div className="mt-6 flex items-baseline gap-1">
-                  {plan.price.monthly === null ? (
-                    <span className="text-4xl font-extrabold text-text-primary">
-                      Custom
-                    </span>
-                  ) : plan.price.monthly === 0 ? (
-                    <span className="text-4xl font-extrabold text-text-primary">
-                      Free
-                    </span>
-                  ) : (
-                    <>
-                      <span className="text-4xl font-extrabold text-text-primary">
-                        ${plan.price.monthly}
-                      </span>
-                      <span className="text-sm text-text-muted">/mo per seat</span>
-                    </>
-                  )}
-                </div>
-              </div>
-
-              {/* CTA */}
-              <Link
-                href={plan.ctaHref}
-                id={`${plan.id}-cta`}
-                className={`mt-8 block rounded-xl px-6 py-3 text-center text-sm font-semibold transition-all ${
-                  plan.highlighted
-                    ? "bg-brand-500 text-white shadow-glow-brand hover:bg-brand-400"
-                    : "bg-surface-2 text-text-primary hover:bg-surface-3"
-                }`}
+            return (
+              <div
+                key={plan.id}
+                className={`relative rounded-3xl p-8 flex flex-col h-full border ${isLight
+                  ? "bg-white border-[#E5FF00] shadow-[0_0_40px_rgba(229,255,0,0.15)]"
+                  : "bg-black border-[#333]"
+                  }`}
               >
-                {plan.cta}
-              </Link>
+                {plan.mostPopular && (
+                  <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-[#E5FF00] text-black text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-wider">
+                    Most Popular
+                  </div>
+                )}
 
-              {/* Features */}
-              <ul
-                className="mt-8 flex flex-col gap-3"
-                role="list"
-                aria-label={`${plan.name} plan features`}
-              >
-                {plan.features.map((feature) => (
-                  <li
-                    key={feature}
-                    className="flex items-start gap-3 text-sm text-text-secondary"
+                <div className="mb-8">
+                  <h3
+                    className={`text-xl font-medium mb-4 ${isLight ? "text-black" : "text-white"
+                      }`}
                   >
-                    <svg
-                      className="mt-0.5 h-4 w-4 shrink-0 text-accent-400"
-                      viewBox="0 0 16 16"
-                      fill="currentColor"
-                      aria-hidden="true"
-                    >
-                      <path
-                        fillRule="evenodd"
-                        clipRule="evenodd"
-                        d="M12.416 3.376a.75.75 0 0 1 .208 1.04l-5 7.5a.75.75 0 0 1-1.154.114l-3-3a.75.75 0 0 1 1.06-1.06l2.353 2.353 4.493-6.74a.75.75 0 0 1 1.04-.207Z"
-                      />
-                    </svg>
-                    {feature}
-                  </li>
-                ))}
-              </ul>
-            </div>
-          ))}
+                    {plan.name}
+                  </h3>
+                  <div
+                    className={`text-4xl font-semibold mb-6 ${isLight ? "text-black" : "text-white"
+                      }`}
+                  >
+                    {plan.price}
+                  </div>
+                  <div
+                    className={`font-medium mb-1 ${isLight ? "text-black" : "text-white"
+                      }`}
+                  >
+                    {plan.credits}
+                  </div>
+                  <div
+                    className={`text-sm mb-6 ${isLight ? "text-gray-500" : "text-gray-500"
+                      }`}
+                  >
+                    {plan.conversion}
+                  </div>
+
+                  <div
+                    className={`inline-block px-4 py-2 rounded-full text-xs font-medium mb-8 ${isLight
+                      ? "bg-gray-100 text-black border border-gray-200"
+                      : "bg-[#252A0A] text-[#E5FF00] border border-[#3E4A10]"
+                      }`}
+                  >
+                    {plan.bonus}
+                  </div>
+                </div>
+
+                <div className="grow">
+                  <ul className="space-y-4 mb-8">
+                    {plan.features.map((feature, i) => (
+                      <li key={i} className="flex items-start gap-3">
+                        <div className="mt-0.5">
+                          {isLight ? darkCheck : defaultCheck}
+                        </div>
+                        <span
+                          className={`text-sm ${isLight ? "text-gray-700" : "text-gray-300"
+                            }`}
+                        >
+                          {feature}
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+
+                <button
+                  className={`w-full py-4 rounded-xl text-sm font-semibold transition-colors ${isLight
+                    ? "bg-[#111] text-white hover:bg-black"
+                    : "bg-white text-black hover:bg-gray-100"
+                    }`}
+                >
+                  Start free trial
+                </button>
+              </div>
+            );
+          })}
         </div>
 
-        {/* Money-back note */}
-        <p className="mt-12 text-center text-sm text-text-muted">
-          All paid plans include a{" "}
-          <strong className="text-text-secondary">30-day money-back guarantee</strong>
-          . No questions asked.
-        </p>
+        {/* Enterprise Bottom Banner */}
+        <div className="max-w-5xl mx-auto rounded-3xl border border-[#333] bg-[#1A1A1A] p-8 md:p-10 flex flex-col md:flex-row items-center justify-between gap-6">
+          <div className="text-center md:text-left">
+            <h3 className="text-2xl font-medium text-white mb-2">
+              Need more? Let&apos;s talk about enterprise options
+            </h3>
+            <p className="text-gray-400">
+              Get custom plans, dedicated support, and exclusive features tailored to your brand&apos;s creative needs.
+            </p>
+          </div>
+          <button className="whitespace-nowrap px-8 py-3 rounded-full border border-gray-400 text-white hover:bg-white/5 transition-colors font-medium text-sm">
+            TALK TO SALES
+          </button>
+        </div>
       </div>
     </section>
   );

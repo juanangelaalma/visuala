@@ -1,50 +1,41 @@
 import Link from "next/link";
 
-const footerLinks = {
-  Product: [
-    { label: "Features", href: "#features" },
-    { label: "Pricing", href: "#pricing" },
-    { label: "Changelog", href: "/changelog" },
-    { label: "Roadmap", href: "/roadmap" },
-  ],
-  Company: [
-    { label: "About", href: "/about" },
-    { label: "Blog", href: "/blog" },
-    { label: "Careers", href: "/careers" },
-    { label: "Contact", href: "/contact" },
-  ],
-  Legal: [
-    { label: "Privacy Policy", href: "/privacy" },
-    { label: "Terms of Service", href: "/terms" },
-    { label: "Cookie Policy", href: "/cookies" },
-  ],
-};
-
 const socialLinks = [
   {
-    label: "Twitter / X",
-    href: "https://twitter.com/visuala_io",
+    label: "X",
+    href: "https://twitter.com/visuala",
     icon: (
-      <svg viewBox="0 0 24 24" fill="currentColor" className="h-5 w-5" aria-hidden="true">
+      <svg viewBox="0 0 24 24" fill="currentColor" className="h-5 w-5 hover:opacity-70 transition-opacity">
         <path d="M18.901 1.153h3.68l-8.04 9.19L24 22.846h-7.406l-5.8-7.584-6.638 7.584H.474l8.6-9.83L0 1.154h7.594l5.243 6.932ZM17.61 20.644h2.039L6.486 3.24H4.298Z" />
       </svg>
     ),
   },
   {
-    label: "GitHub",
-    href: "https://github.com/visuala-io",
+    label: "Instagram",
+    href: "https://instagram.com/visuala",
     icon: (
-      <svg viewBox="0 0 24 24" fill="currentColor" className="h-5 w-5" aria-hidden="true">
-        <path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12" />
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="h-[22px] w-[22px] hover:opacity-70 transition-opacity">
+        <rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect>
+        <path d="M16 11.37A4 4 0 1112.63 8 4 4 0 0116 11.37z"></path>
+        <line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line>
       </svg>
     ),
   },
   {
-    label: "LinkedIn",
-    href: "https://linkedin.com/company/visuala-io",
+    label: "TikTok",
+    href: "https://tiktok.com/@visuala",
     icon: (
-      <svg viewBox="0 0 24 24" fill="currentColor" className="h-5 w-5" aria-hidden="true">
-        <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z" />
+      <svg viewBox="0 0 24 24" fill="currentColor" className="h-5 w-5 hover:opacity-70 transition-opacity">
+        <path d="M12.525.02c1.31-.02 2.61-.01 3.91-.02.08 1.53.63 3.09 1.75 4.17 1.12 1.11 2.7 1.62 4.24 1.79v4.03c-1.44-.05-2.89-.35-4.2-.97-.57-.26-1.1-.59-1.62-1.01-.01 2.21.03 4.43-.02 6.64-.13 3.32-2.14 6.37-5.26 7.21-3.6 1-7.42-.87-8.68-4.32-1.2-3.2 1.1-6.73 4.41-7.22 1.18-.18 2.37-.02 3.5.38v4.06c-1.39-.42-3.05-.18-3.95 1.05-.88 1.19-.66 3.12.54 3.97 1.57 1.11 4.12.39 4.67-1.49.33-1.1.25-2.28.25-3.41V.01h.46z" />
+      </svg>
+    ),
+  },
+  {
+    label: "Facebook",
+    href: "https://facebook.com/visuala",
+    icon: (
+      <svg viewBox="0 0 24 24" fill="currentColor" className="h-[22px] w-[22px] hover:opacity-70 transition-opacity">
+        <path d="M22.675 0h-21.35c-.732 0-1.325.593-1.325 1.325v21.351c0 .731.593 1.324 1.325 1.324h11.495v-9.294h-3.128v-3.622h3.128v-2.671c0-3.1 1.893-4.788 4.659-4.788 1.325 0 2.463.099 2.795.143v3.24l-1.918.001c-1.504 0-1.795.715-1.795 1.763v2.312h3.587l-.467 3.622h-3.12v9.293h6.116c.73 0 1.323-.593 1.323-1.325v-21.35c0-.732-.593-1.325-1.325-1.325z" />
       </svg>
     ),
   },
@@ -52,24 +43,27 @@ const socialLinks = [
 
 export default function Footer() {
   return (
-    <footer className="border-t border-border-subtle bg-surface-1" role="contentinfo">
-      <div className="mx-auto max-w-7xl px-6 py-16 lg:px-8">
-        <div className="grid grid-cols-2 gap-8 md:grid-cols-5">
-          {/* Brand */}
-          <div className="col-span-2">
-            <Link href="/" className="flex items-center gap-2 text-xl font-bold" aria-label="Visuala home">
-              <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-linear-to-br from-brand-400 to-accent-500 text-white">
-                <svg width="18" height="18" viewBox="0 0 18 18" fill="none" aria-hidden="true">
-                  <path d="M9 2L16 14H2L9 2Z" fill="currentColor" fillOpacity="0.9" />
-                </svg>
+    <footer className="bg-[#E5FF00] w-full mt-auto" role="contentinfo">
+      <div className="mx-auto max-w-7xl px-6 lg:px-8 py-16 md:py-24">
+
+        {/* Top Section */}
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-12 gap-10 md:gap-0">
+
+          {/* Brand/Logo Area */}
+          <Link href="/" className="group" aria-label="Visuala home">
+            <div className="relative font-black text-5xl sm:text-[64px] tracking-tighter text-black leading-none flex items-center">
+              <span className="relative inline-block pr-1">
+                <div className="absolute top-[40%] -left-3 sm:-left-4 w-7 sm:w-10 h-[6px] sm:h-[8px] bg-black z-10 transition-transform group-hover:scale-x-110" />
+                V
               </span>
-              <span className="gradient-text">Visuala</span>
-            </Link>
-            <p className="mt-4 max-w-xs text-sm leading-relaxed text-text-muted">
-              The design intelligence platform that helps teams build and ship
-              beautiful products — faster.
-            </p>
-            <div className="mt-6 flex gap-4">
+              ISUALA
+            </div>
+          </Link>
+
+          {/* Social Links */}
+          <div className="flex flex-col items-start md:items-end gap-3">
+            <span className="text-black font-semibold text-[15px]">Follow Us</span>
+            <div className="flex gap-4 items-center text-black">
               {socialLinks.map(({ label, href, icon }) => (
                 <a
                   key={label}
@@ -77,42 +71,37 @@ export default function Footer() {
                   target="_blank"
                   rel="noopener noreferrer"
                   aria-label={label}
-                  className="rounded-lg p-2 text-text-muted transition-colors hover:bg-surface-2 hover:text-text-primary"
+                  className="flex items-center justify-center p-1"
                 >
                   {icon}
                 </a>
               ))}
             </div>
           </div>
-
-          {/* Links */}
-          {Object.entries(footerLinks).map(([group, links]) => (
-            <div key={group}>
-              <h3 className="mb-4 text-sm font-semibold text-text-primary">{group}</h3>
-              <ul className="flex flex-col gap-3" role="list">
-                {links.map(({ label, href }) => (
-                  <li key={label}>
-                    <Link
-                      href={href}
-                      className="text-sm text-text-muted transition-colors hover:text-text-primary"
-                    >
-                      {label}
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          ))}
         </div>
 
-        <div className="mt-16 flex flex-col items-center justify-between gap-4 border-t border-border-subtle pt-8 sm:flex-row">
-          <p className="text-sm text-text-muted">
-            © {new Date().getFullYear()} Visuala, Inc. All rights reserved.
+        {/* Divider */}
+        <div className="h-px w-full bg-black/10 mb-8" />
+
+        {/* Bottom Section */}
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6">
+          <p className="text-black/80 font-medium text-[13px] sm:text-sm">
+            © Visuala AI Inc. All rights reserved.
           </p>
-          <p className="text-sm text-text-muted">
-            Made with ❤️ for design teams worldwide
-          </p>
+
+          <div className="flex flex-wrap items-center gap-6 sm:gap-8 text-black/80 font-medium text-[13px] sm:text-sm">
+            <Link href="/terms" className="hover:text-black hover:underline underline-offset-4 transition-colors">
+              Terms & Services
+            </Link>
+            <Link href="/privacy" className="hover:text-black hover:underline underline-offset-4 transition-colors">
+              Privacy Policy
+            </Link>
+            <Link href="/prohibited-use" className="hover:text-black hover:underline underline-offset-4 transition-colors">
+              Prohibited Use Policy
+            </Link>
+          </div>
         </div>
+
       </div>
     </footer>
   );
