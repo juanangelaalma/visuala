@@ -44,7 +44,7 @@ const socialLinks = [
 
 export default function Footer() {
   return (
-    <footer className="bg-[#EFF31B] border-t border-white/10 w-full mt-auto relative" role="contentinfo">
+    <footer className="bg-[#EFF31B] border-t border-white/10 w-full mt-auto relative pb-12" role="contentinfo">
       <div className="mx-auto w-full max-w-[1536px] px-6 lg:px-[80px] py-12">
         {/* Top Section */}
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-10 md:gap-0">
