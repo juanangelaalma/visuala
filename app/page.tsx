@@ -29,7 +29,7 @@ export default function HomePage() {
       </main>
 
       <Footer />
-      <GradualBlur preset="page-footer" height="3rem" />
+      <GradualBlur preset="page-footer" height="5rem" exponential={true} strength={1.5} />
     </>
   );
 }
