@@ -212,3 +212,28 @@ body {
     padding: 0 40px !important;
   }
 }
+
+/* ── ReimagineBanner word rotator ─────────────────── */
+.reimagine-banner__words {
+  display: block;
+  height: 100%;
+}
+
+.reimagine-banner__word {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  animation: spin_words 8s infinite;
+}
+
+@keyframes spin_words {
+  10% { transform: translateY(-112%); }
+  25% { transform: translateY(-100%); }
+  35% { transform: translateY(-212%); }
+  50% { transform: translateY(-200%); }
+  60% { transform: translateY(-312%); }
+  75% { transform: translateY(-300%); }
+  85% { transform: translateY(-412%); }
+  100% { transform: translateY(-400%); }
+}
