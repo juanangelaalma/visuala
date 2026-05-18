@@ -1,4 +1,5 @@
 import React from "react";
+import StartFreeTrialButton from "../_components/StartFreeTrialButton";
 
 const checkIcon = (color: string) => (
   <svg
@@ -103,11 +104,10 @@ export default function PricingSection() {
             return (
               <div
                 key={plan.id}
-                className={`relative rounded-[24px] p-[34px] flex flex-col h-full border-2 transition-all duration-300 ${
-                  isLight
-                    ? "bg-gradient-to-br from-white to-[#f9fafb] border-[#EFF31B] shadow-[0_25px_50px_-12px_rgba(239,243,27,0.2)]"
-                    : "bg-gradient-to-br from-black/80 to-black border-white/20 backdrop-blur-[4px]"
-                }`}
+                className={`relative rounded-[24px] p-[34px] flex flex-col h-full border-2 transition-all duration-300 ${isLight
+                  ? "bg-gradient-to-br from-white to-[#f9fafb] border-[#EFF31B] shadow-[0_25px_50px_-12px_rgba(239,243,27,0.2)]"
+                  : "bg-gradient-to-br from-black/80 to-black border-white/20 backdrop-blur-[4px]"
+                  }`}
               >
                 {plan.mostPopular && (
                   <div className="absolute -top-[12px] left-1/2 -translate-x-1/2 bg-[#EFF31B] text-black text-xs font-medium px-[12px] py-[4.5px] rounded-full whitespace-nowrap">
@@ -117,42 +117,37 @@ export default function PricingSection() {
 
                 <div className="mb-4">
                   <h3
-                    className={`text-2xl mb-4 tracking-[-0.6px] ${
-                      isLight ? "text-black" : "text-white"
-                    }`}
+                    className={`text-2xl mb-4 tracking-[-0.6px] ${isLight ? "text-black" : "text-white"
+                      }`}
                   >
                     {plan.name}
                   </h3>
                   <div
-                    className={`text-[32px] font-medium font-display mb-6 leading-none tracking-[-0.8px] ${
-                      isLight ? "text-black" : "text-white"
-                    }`}
+                    className={`text-[32px] font-medium font-display mb-6 leading-none tracking-[-0.8px] ${isLight ? "text-black" : "text-white"
+                      }`}
                   >
                     {plan.price}
                   </div>
                   <div className="space-y-2 mb-6">
                     <p
-                      className={`text-[18px] font-medium tracking-[-0.27px] ${
-                        isLight ? "text-black" : "text-white"
-                      }`}
+                      className={`text-[18px] font-medium tracking-[-0.27px] ${isLight ? "text-black" : "text-white"
+                        }`}
                     >
                       {plan.credits}
                     </p>
                     <p
-                      className={`text-sm tracking-[-0.14px] ${
-                        isLight ? "text-black/60" : "text-white/60"
-                      }`}
+                      className={`text-sm tracking-[-0.14px] ${isLight ? "text-black/60" : "text-white/60"
+                        }`}
                     >
                       {plan.conversion}
                     </p>
                   </div>
 
                   <div
-                    className={`inline-flex items-center gap-2 px-[13px] py-[9px] rounded-full text-sm font-medium border ${
-                      isLight
-                        ? "bg-black/10 text-black/70 border-black/20"
-                        : "bg-[#EFF31B]/20 text-[#EFF31B] border-[#EFF31B]/30"
-                    }`}
+                    className={`inline-flex items-center gap-2 px-[13px] py-[9px] rounded-full text-sm font-medium border ${isLight
+                      ? "bg-black/10 text-black/70 border-black/20"
+                      : "bg-[#EFF31B]/20 text-[#EFF31B] border-[#EFF31B]/30"
+                      }`}
                   >
                     <span className="text-base">🎁</span>
                     <span className="tracking-[-0.14px]">{plan.bonus}</span>
@@ -165,9 +160,8 @@ export default function PricingSection() {
                       <li key={i} className="flex items-start gap-2">
                         {checkIcon(isLight ? "black" : "#EFF31B")}
                         <span
-                          className={`text-sm leading-5 tracking-[-0.14px] ${
-                            isLight ? "text-black/80" : "text-white/60"
-                          }`}
+                          className={`text-sm leading-5 tracking-[-0.14px] ${isLight ? "text-black/80" : "text-white/60"
+                            }`}
                         >
                           {feature}
                         </span>
@@ -176,15 +170,16 @@ export default function PricingSection() {
                   </ul>
                 </div>
 
-                <button
-                  className={`w-full py-[14px] px-8 rounded-full text-base font-medium transition-all duration-200 active:scale-[0.98] shadow-lg ${
-                    isLight
-                      ? "bg-gradient-to-r from-black to-[#101828] text-white"
-                      : "bg-gradient-to-r from-white to-[#f3f4f6] text-black"
-                  }`}
-                >
-                  Start free trial
-                </button>
+                {isLight ? (
+
+                  <StartFreeTrialButton className="shadow-[0_12px_32px_rgba(0,0,0,0.22)]" />
+                ) : (
+                  <button
+                    className="w-full py-[14px] px-8 rounded-full text-base font-medium transition-all duration-200 active:scale-[0.98] shadow-lg bg-gradient-to-r from-white to-[#f3f4f6] text-black"
+                  >
+                    Start free trial
+                  </button>
+                )}
               </div>
             );
           })}
