@@ -170,16 +170,14 @@ export default function PricingSection() {
                   </ul>
                 </div>
 
-                {isLight ? (
-
-                  <StartFreeTrialButton className="shadow-[0_12px_32px_rgba(0,0,0,0.22)]" />
-                ) : (
-                  <button
-                    className="w-full py-[14px] px-8 rounded-full text-base font-medium transition-all duration-200 active:scale-[0.98] shadow-lg bg-gradient-to-r from-white to-[#f3f4f6] text-black"
-                  >
-                    Start free trial
-                  </button>
-                )}
+                <button
+                  className={`relative z-0 overflow-hidden w-full py-[14px] px-8 rounded-full text-base font-medium transition-all duration-300 shadow-[0_12px_32px_rgba(0,0,0,0.22)] ${isLight
+                    ? "text-white hover:text-black before:absolute before:inset-0 before:-z-10 before:bg-linear-to-r before:from-black before:to-[#101828] before:transition-opacity before:duration-300 hover:before:opacity-0 after:absolute after:inset-0 after:-z-10 after:bg-primary after:opacity-0 after:transition-opacity after:duration-300 hover:after:opacity-100"
+                    : "bg-linear-to-r from-white to-[#f3f4f6] text-black"
+                    }`}
+                >
+                  Start free trial
+                </button>
               </div>
             );
           })}
@@ -202,6 +200,6 @@ export default function PricingSection() {
           </div>
         </div>
       </div>
-    </section>
+    </section >
   );
 }

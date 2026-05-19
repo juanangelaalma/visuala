@@ -6,7 +6,7 @@ interface StartFreeTrialButtonProps {
 
 export default function StartFreeTrialButton({ className }: StartFreeTrialButtonProps) {
     return (
-        <Button className={`px-6 py-3 text-[16px] font-sans-secondary whitespace-nowrap ${className || ""}`}>
+        <Button className={`font-sans-secondary whitespace-nowrap ${className || ""}`}>
             Start free trial
         </Button>
     )

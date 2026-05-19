@@ -122,9 +122,9 @@ export default function FeatureShowcaseSection() {
 
                 {/* ── CTA Button ──────────────────────────────── */}
                 <div className="flex justify-center mt-10">
-                    <div className="relative group transition-all duration-300 hover:scale-105 active:scale-95">
+                    <div className="relative group transition-all duration-300">
                         {/* Gradient Glow */}
-                        <div className="absolute inset-0 bg-gradient-to-r from-primary to-white rounded-full blur-[15px] opacity-60 group-hover:opacity-60 group-hover:blur-[25px] transition-all duration-300" />
+                        <div className="absolute inset-0 bg-gradient-to-r from-primary to-white rounded-full blur-[15px] opacity-60 transition-all duration-300" />
 
                         <button
                             id="generate-ugc-video-btn"
