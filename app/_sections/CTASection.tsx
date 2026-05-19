@@ -44,7 +44,7 @@ export default function CTASection() {
         <div className="pt-8">
           <Link
             href="/signup"
-            className="inline-flex items-center justify-center bg-white text-black font-semibold text-[16px] uppercase tracking-[0.8px] px-8 py-4 rounded-full transition-all hover:scale-105 active:scale-95"
+            className="inline-flex items-center justify-center bg-white text-black font-semibold text-[16px] uppercase tracking-[0.8px] px-8 py-4 rounded-full"
           >
             Join the Party
           </Link>

@@ -24,7 +24,7 @@ export default function HeroSection() {
       <ReimagineBanner />
       {/* CTAs */}
       <div className="flex flex-col w-full md:flex-row space-y-3 md:space-y-0 md:space-x-3 md:justify-center">
-        <StartFreeTrialButton className="z-10 w-full uppercase md:w-auto" />
+        <StartFreeTrialButton className="z-10 px-6 py-3 text-[16px] w-full uppercase md:w-auto" />
         <OutlineButton className="z-10 w-full font-sans-secondary text-[16px] font-semibold uppercase backdrop-blur-md md:w-auto">TALK TO SALES</OutlineButton>
       </div>
 
