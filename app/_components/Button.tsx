@@ -1,9 +1,17 @@
 interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
-    variant?: 'primary' | 'outline';
+    variant?: 'primary' | 'outline' | 'custom';
     children: React.ReactNode;
 }
 
 const Button = ({ variant = 'primary', children, className, ...props }: ButtonProps) => {
+    if (variant === 'custom') {
+        return (
+            <button className={className} {...props}>
+                {children}
+            </button>
+        );
+    }
+
     const baseStyles = "rounded-full py-2 px-4 font-semibold transition-all duration-200 cursor-pointer text-base leading-6";
 
     const variants = {
@@ -21,4 +29,4 @@ const Button = ({ variant = 'primary', children, className, ...props }: ButtonPr
     );
 };
 
-export default Button;
+export default Button;
