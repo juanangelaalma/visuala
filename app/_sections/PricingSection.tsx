@@ -1,6 +1,6 @@
 import React from "react";
-import Button from "../_components/Button";
-import StartFreeTrialButton from "../_components/StartFreeTrialButton";
+import PrimaryCtaButton from "../_components/PrimaryCtaButton";
+import { OutlineButton } from "../_components/OutlineButton";
 
 const checkIcon = (color: string) => (
   <svg
@@ -171,16 +171,15 @@ export default function PricingSection() {
                   </ul>
                 </div>
 
-                <Button
-                  variant="custom"
-                  className={`w-full py-[14px] px-8 rounded-full text-base font-semibold transition-all duration-300 cursor-pointer ${
-                    isLight
-                      ? "bg-black text-white hover:bg-primary hover:text-black shadow-[0_12px_32px_rgba(0,0,0,0.22)]"
-                      : "bg-white text-black hover:bg-primary"
-                  }`}
+                <PrimaryCtaButton
+                  tone={isLight ? "dark" : "light"}
+                  className={`w-full py-[14px] px-8 text-base font-semibold ${isLight
+                    ? "shadow-[0_12px_32px_rgba(0,0,0,0.22)]"
+                    : ""
+                    }`}
                 >
                   Start free trial
-                </Button>
+                </PrimaryCtaButton>
               </div>
             );
           })}
@@ -197,9 +196,10 @@ export default function PricingSection() {
                 Get custom plans, dedicated support, and exclusive features tailored to your brand's creative needs.
               </p>
             </div>
-            <button className="whitespace-nowrap px-[34px] py-[14px] rounded-full border-[1.5px] border-white text-white hover:bg-white/10 transition-colors font-semibold text-base uppercase tracking-[-0.16px]">
+            {/* <button className="whitespace-nowrap px-[34px] py-[14px] rounded-full border-[1.5px] border-white text-white hover:bg-white/10 transition-colors font-semibold text-base uppercase tracking-[-0.16px]">
               Talk to sales
-            </button>
+            </button> */}
+            <OutlineButton className="px-[34px] py-[14px] uppercase">Talk to sales</OutlineButton>
           </div>
         </div>
       </div>
