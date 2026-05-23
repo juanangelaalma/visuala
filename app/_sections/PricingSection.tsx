@@ -194,7 +194,7 @@ export default function PricingSection() {
                 Get custom plans, dedicated support, and exclusive features tailored to your brand's creative needs.
               </p>
             </div>
-            <button className="whitespace-nowrap px-[34px] py-[14px] rounded-full border-2 border-white text-white hover:bg-white/10 transition-colors font-semibold text-base uppercase tracking-[-0.16px]">
+            <button className="whitespace-nowrap px-[34px] py-[14px] rounded-full border-[1.5px] border-white text-white hover:bg-white/10 transition-colors font-semibold text-base uppercase tracking-[-0.16px]">
               Talk to sales
             </button>
           </div>
