@@ -196,6 +196,42 @@ body {
   -webkit-mask-image: radial-gradient(ellipse 80% 60% at 50% 50%, black, transparent);
 }
 
+/* ── Infinite Marquee ─────────────────────────────── */
+@keyframes marquee-scroll {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+.marquee-wrapper {
+  overflow: hidden;
+}
+
+.marquee-track {
+  animation: marquee-scroll 30s linear infinite;
+  will-change: transform;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  transform: translate3d(0, 0, 0);
+  perspective: 1000px;
+}
+
+/* Pause on hover */
+.marquee-wrapper:hover .marquee-track {
+  animation-play-state: paused;
+}
+
+/* Reduce motion for accessibility */
+@media (prefers-reduced-motion: reduce) {
+  .marquee-track {
+    animation: none;
+  }
+}
+
+
 /* ── Focus ring ────────────────────────────────────── */
 :focus-visible {
   outline: 2px solid oklch(55% 0.22 250);
