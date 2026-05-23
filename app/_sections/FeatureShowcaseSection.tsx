@@ -1,4 +1,5 @@
 import Image from "next/image";
+import InfiniteMarquee from "../_components/InfiniteMarquee";
 import PrimaryCtaButton from "../_components/PrimaryCtaButton";
 import img1 from "../__assets/showcase/image 1.webp";
 import img2 from "../__assets/showcase/image 2.webp";
@@ -18,9 +19,6 @@ const cards = [
     { src: img2, alt: "Fashion UGC video – elegant model", rotate: "1deg", translateY: "0px" },
     { src: img3, alt: "Beauty UGC video – close-up model", rotate: "-2.5deg", translateY: "16px" },
 ];
-
-/* Duplicate cards 4× so the track is wide enough for seamless infinite loop */
-const marqueeCards = [...cards, ...cards, ...cards, ...cards];
 
 export default function FeatureShowcaseSection() {
     return (
@@ -92,18 +90,15 @@ export default function FeatureShowcaseSection() {
                     <div className="absolute -right-1 md:right-0 top-0 bottom-0 w-[60px] md:w-[192px] bg-gradient-to-l from-black via-black/80 to-transparent z-10 h-[110%] pointer-events-none" />
 
                     {/* Scrolling track — animates via CSS keyframes */}
-                    <div
-                        className="
-                            marquee-track
-                            flex items-center gap-4 md:gap-10
-                            h-full
-                            w-max
-                        "
-                        aria-label="Scrolling showcase of UGC video examples"
-                    >
-                        {marqueeCards.map((card, i) => (
+                    <InfiniteMarquee
+                        items={cards}
+                        ariaLabel="Scrolling showcase of UGC video examples"
+                        className="h-full"
+                        trackClassName="h-full items-center"
+                        groupClassName="flex h-full items-center gap-4 pr-4 md:gap-10 md:pr-10"
+                        renderItem={(card, i) => (
                             <div
-                                key={i}
+                                key={`${card.alt}-${i}`}
                                 className="
                                     relative
                                     w-[240px] md:w-[350px] lg:w-[450px]
@@ -127,8 +122,8 @@ export default function FeatureShowcaseSection() {
                                 {/* Subtle inner shadow overlay */}
                                 <div className="absolute inset-0 rounded-[16px] shadow-[inset_0_0_0_1px_rgba(255,255,255,0.08)]" />
                             </div>
-                        ))}
-                    </div>
+                        )}
+                    />
                 </div>
 
                 {/* ── CTA Button ──────────────────────────────── */}
