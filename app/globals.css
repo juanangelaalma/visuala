@@ -245,21 +245,6 @@ body {
   border-radius: 4px;
 }
 
-.bg-hero {
-  background-image: url("/hero.webp");
-  background-size: cover;
-  background-position: center;
-  background-repeat: no-repeat;
-}
-
-.bg-hero::before {
-  content: '';
-  background-color: rgba(0, 0, 0, 0.5);
-  position: absolute;
-  inset: 0;
-  z-index: -1;
-}
-
 .base-container {
   max-width: 1440px;
   margin: 0 auto;
