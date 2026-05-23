@@ -1,4 +1,5 @@
 import React from "react";
+import Button from "../_components/Button";
 import StartFreeTrialButton from "../_components/StartFreeTrialButton";
 
 const checkIcon = (color: string) => (
@@ -170,14 +171,15 @@ export default function PricingSection() {
                   </ul>
                 </div>
 
-                <button
-                  className={`relative z-0 overflow-hidden w-full py-[14px] px-8 rounded-full text-base font-medium transition-all duration-300 shadow-[0_12px_32px_rgba(0,0,0,0.22)] ${isLight
-                    ? "text-white hover:text-black before:absolute before:inset-0 before:-z-10 before:bg-linear-to-r before:from-black before:to-[#101828] before:transition-opacity before:duration-300 hover:before:opacity-0 after:absolute after:inset-0 after:-z-10 after:bg-primary after:opacity-0 after:transition-opacity after:duration-300 hover:after:opacity-100"
+                <Button
+                  variant="custom"
+                  className={`relative z-0 overflow-hidden w-full py-[14px] px-8 cursor-pointer rounded-full text-base font-medium transition-all duration-300 shadow-[0_12px_32px_rgba(0,0,0,0.22)] hover:before:opacity-0 after:absolute after:inset-0 after:-z-10 after:bg-primary after:opacity-0 after:transition-opacity after:duration-300 hover:after:opacity-100 ${isLight
+                    ? "text-white hover:text-black before:absolute before:inset-0 before:-z-10 before:bg-linear-to-r before:from-black before:to-[#101828] before:transition-opacity before:duration-300"
                     : "bg-linear-to-r from-white to-[#f3f4f6] text-black"
                     }`}
                 >
                   Start free trial
-                </button>
+                </Button>
               </div>
             );
           })}
