@@ -1,5 +1,5 @@
 import Image from "next/image";
-import Link from "next/link";
+import PrimaryCtaButton from "../_components/PrimaryCtaButton";
 import bgImage from "../__assets/image/background-cta.png";
 
 export default function CTASection() {
@@ -42,12 +42,9 @@ export default function CTASection() {
         </div>
 
         <div className="pt-8">
-          <Link
-            href="/signup"
-            className="inline-flex items-center justify-center bg-white text-black font-semibold text-[16px] uppercase tracking-[0.8px] px-8 py-4 rounded-full"
-          >
+          <PrimaryCtaButton href="/signup">
             Join the Party
-          </Link>
+          </PrimaryCtaButton>
         </div>
       </div>
     </section>
