@@ -54,7 +54,7 @@ export default function FeatureShowcaseSection() {
                                 >
                                     New Feature!
                                 </div>
-                                <span className="text-primary">Ultrarealistic</span>
+                                <span className="text-primary tracking-wide">Ultrarealistic</span>
                                 {/* "NEW FEATURE!" badge — rotated red pill */}
                             </span>
                             <span className="block font-semibold">UGC Videos</span>
