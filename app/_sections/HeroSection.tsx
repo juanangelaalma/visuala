@@ -1,17 +1,18 @@
-import Link from "next/link";
 import ReimagineBanner from "../_components/ReimagineBanner";
-import AuthButtons from "../_components/AuthButton";
 import StartFreeTrialButton from "../_components/StartFreeTrialButton";
 import { OutlineButton } from "../_components/OutlineButton";
 import PromoBar from "../_components/PromoBar";
+import HeroBackgroundVideo from "./HeroBackgroundVideo";
 
 export default function HeroSection() {
   return (
     <section
       id="hero"
       aria-labelledby="hero-heading"
-      className="noise-overlay relative isolate flex min-h-dvh flex-col items-center justify-center overflow-hidden px-6 pt-24 pb-16 text-center lg:px-8 h-[1024px] bg-hero max-w-10xl"
+      className="noise-overlay relative isolate flex min-h-dvh flex-col items-center justify-center overflow-hidden px-6 pt-24 pb-16 text-center lg:px-8 h-[1024px] max-w-10xl"
     >
+      <HeroBackgroundVideo />
+      <div className="absolute inset-0 -z-10 bg-black/50" />
 
       {/* Heading */}
       <h1
