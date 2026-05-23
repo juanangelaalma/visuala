@@ -13,10 +13,13 @@ const tags = [
 ];
 
 const cards = [
-    { src: img1, alt: "Beauty UGC video – skincare model", rotate: "-2.5deg", translateY: "16px", delay: "0ms" },
-    { src: img2, alt: "Fashion UGC video – elegant model", rotate: "1deg", translateY: "0px", delay: "80ms" },
-    { src: img3, alt: "Beauty UGC video – close-up model", rotate: "-2.5deg", translateY: "16px", delay: "160ms" },
+    { src: img1, alt: "Beauty UGC video – skincare model", rotate: "-2.5deg", translateY: "16px" },
+    { src: img2, alt: "Fashion UGC video – elegant model", rotate: "1deg", translateY: "0px" },
+    { src: img3, alt: "Beauty UGC video – close-up model", rotate: "-2.5deg", translateY: "16px" },
 ];
+
+/* Duplicate cards 4× so the track is wide enough for seamless infinite loop */
+const marqueeCards = [...cards, ...cards, ...cards, ...cards];
 
 export default function FeatureShowcaseSection() {
     return (
@@ -81,37 +84,44 @@ export default function FeatureShowcaseSection() {
                     </p>
                 </div>
 
-                {/* ── Cards row ───────────────────────────────── */}
-                <div className="relative mt-6 w-full h-[500px] md:h-[850px] mx-auto">
-                    {/* Fade out gradients (outside the scroll container to stay fixed on edges) */}
+                {/* ── Infinite Marquee Carousel ──────────────── */}
+                <div className="marquee-wrapper group relative mt-6 w-full h-[500px] md:h-[850px] mx-auto">
+                    {/* Fade-out edge gradients */}
                     <div className="absolute -left-1 md:left-0 top-0 bottom-0 w-[60px] md:w-[192px] bg-gradient-to-r from-black via-black/60 to-transparent z-10 h-[110%] pointer-events-none" />
                     <div className="absolute -right-1 md:right-0 top-0 bottom-0 w-[60px] md:w-[192px] bg-gradient-to-l from-black via-black/80 to-transparent z-10 h-[110%] pointer-events-none" />
 
-                    <div className="flex justify-start items-center gap-4 md:gap-10 w-full h-full pl-[16px] overflow-x-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
-                        {cards.map((card, i) => (
+                    {/* Scrolling track — animates via CSS keyframes */}
+                    <div
+                        className="
+                            marquee-track
+                            flex items-center gap-4 md:gap-10
+                            h-full
+                            w-max
+                        "
+                        aria-label="Scrolling showcase of UGC video examples"
+                    >
+                        {marqueeCards.map((card, i) => (
                             <div
                                 key={i}
                                 className="
                                     relative
-                                    w-[240px] md:w-[100%] max-w-[450px]
+                                    w-[240px] md:w-[350px] lg:w-[450px]
                                     aspect-[450/800]
                                     rounded-[16px]
                                     overflow-hidden
                                     flex-shrink-0
-                                    group
-                                    transition-all duration-500 ease-out
+                                    transition-transform duration-500 ease-out
                                 "
                                 style={{
                                     transform: `rotate(${card.rotate}) translateY(${card.translateY})`,
-                                    transitionDelay: card.delay,
                                 }}
                             >
                                 <Image
                                     src={card.src}
                                     alt={card.alt}
                                     fill
-                                    className="object-cover transition-transform duration-700 group-hover:scale-105"
-                                    sizes="(max-width: 768px) 33vw, 260px"
+                                    className="object-cover"
+                                    sizes="(max-width: 768px) 240px, (max-width: 1024px) 350px, 450px"
                                 />
                                 {/* Subtle inner shadow overlay */}
                                 <div className="absolute inset-0 rounded-[16px] shadow-[inset_0_0_0_1px_rgba(255,255,255,0.08)]" />
@@ -162,3 +172,4 @@ export default function FeatureShowcaseSection() {
         </section>
     );
 }
+
