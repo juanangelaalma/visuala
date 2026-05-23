@@ -1,14 +1,14 @@
-import Image from "next/image";
-import img1 from "../__assets/demo/1.webp";
-import img2 from "../__assets/demo/2.webp";
-import img3 from "../__assets/demo/3.webp";
+import InfiniteMarquee from "../_components/InfiniteMarquee";
+import CategoryVideoTile from "./CategoryVideoTile";
 
 const categories = [
-    { title: "GENERAL", image: "/demo.webp" },
-    { title: "UGC", image: "/hero.webp" },
-    { title: "BEAUTY", image: img1 },
-    { title: "FASHION", image: img2 },
-    { title: "FOOD", image: img3 },
+    { title: "GENERAL", src: "/videos/categories/general.mp4" },
+    { title: "BEAUTY", src: "/videos/categories/beauty.mp4" },
+    { title: "FASHION", src: "/videos/categories/fashion.mp4" },
+    { title: "FITNES", src: "/videos/categories/fitnes.mp4" },
+    { title: "FOOD", src: "/videos/categories/food.mp4" },
+    { title: "OTOMOTIF", src: "/videos/categories/otomotif.mp4" },
+    { title: "UGC", src: "/videos/categories/ugc.mp4" },
 ];
 
 export default function CategoriesSection() {
@@ -19,28 +19,22 @@ export default function CategoriesSection() {
                     What do you want<br />to create?
                 </h2>
 
-                <div className="grid grid-flow-col auto-cols-[70%] sm:auto-cols-[45%]  lg:grid-flow-row lg:grid-cols-5 gap-4 md:gap-[7.5px] w-full pb-4 overflow-x-auto lg:overflow-x-visible snap-x snap-mandatory [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] pr-4 md:pr-0">
-                    {categories.map((cat, index) => (
+                <InfiniteMarquee
+                    items={categories}
+                    ariaLabel="Scrolling categories video examples"
+                    duration="36s"
+                    className="w-full pb-4 pr-4 md:pr-0"
+                    trackClassName="items-center"
+                    groupClassName="flex items-center gap-4 pr-4 md:gap-[7.5px] md:pr-[7.5px]"
+                    renderItem={(cat) => (
                         <div
-                            key={index}
-                            className="relative w-full aspect-259/459 snap-center rounded-[12px] overflow-hidden group hover:shadow-lg transition-shadow cursor-pointer"
+                            key={cat.title}
+                            className="relative aspect-259/459 w-[70vw] flex-none cursor-pointer overflow-hidden rounded-[12px] transition-shadow hover:shadow-lg sm:w-[45vw] lg:w-[259px] group"
                         >
-                            <Image
-                                src={cat.image}
-                                alt={cat.title}
-                                fill
-                                className="object-cover transition-transform duration-700 group-hover:scale-105"
-                            />
-                            <div className="absolute inset-0 bg-black/20 group-hover:bg-black/30 transition-colors duration-500" />
-
-                            <div className="absolute inset-0 flex items-center justify-center p-4">
-                                <h3 className="text-white text-[34px] font-normal tracking-wider uppercase text-center drop-shadow-md">
-                                    {cat.title}
-                                </h3>
-                            </div>
+                            <CategoryVideoTile src={cat.src} title={cat.title} />
                         </div>
-                    ))}
-                </div>
+                    )}
+                />
             </div>
         </section>
     );
