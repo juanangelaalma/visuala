@@ -161,8 +161,24 @@ body {
   background-size: 200% 100%;
   animation: shimmer 2.5s linear infinite;
 }
+.skeleton-shimmer {
+  overflow: hidden;
+  background: oklch(100% 0 0 / 0.1);
+}
+.skeleton-shimmer::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  transform: translateX(-100%);
+  background: linear-gradient(90deg, transparent, oklch(100% 0 0 / 0.18), transparent);
+  animation: skeleton-shimmer 1.6s ease-in-out infinite;
+}
 .animate-spin-slow { animation: spin-slow 20s linear infinite; }
 .animate-spin-reverse { animation: spin-slow 30s linear infinite reverse; }
+
+@keyframes skeleton-shimmer {
+  100% { transform: translateX(100%); }
+}
 
 @keyframes badge-pop {
   0%   { opacity: 0; transform: rotate(15deg) scale(0.7); }
