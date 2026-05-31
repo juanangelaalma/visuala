@@ -1,6 +1,12 @@
 "use client";
 
-import { useEffect, useRef, useState, type VideoHTMLAttributes } from "react";
+import {
+    useCallback,
+    useEffect,
+    useMemo,
+    useState,
+    type VideoHTMLAttributes,
+} from "react";
 
 type BaseVideoProps = Omit<
     VideoHTMLAttributes<HTMLVideoElement>,
@@ -31,13 +37,19 @@ export default function BaseVideo({
     wrapperClassName = "relative block h-full w-full overflow-hidden",
     ...videoProps
 }: BaseVideoProps) {
-    const videoRef = useRef<HTMLVideoElement>(null);
+    const [videoNode, setVideoNode] = useState<HTMLVideoElement | null>(null);
+    const videoRef = useCallback((node: HTMLVideoElement | null) => {
+        setVideoNode(node);
+    }, []);
+
     const [shouldLoad, setShouldLoad] = useState(!lazy);
     const [loadedSrc, setLoadedSrc] = useState<string | null>(null);
+
+    const isHlsSource = useMemo(() => src.endsWith(".m3u8"), [src]);
     const isReady = loadedSrc === src;
 
     useEffect(() => {
-        const video = videoRef.current;
+        const video = videoNode;
 
         if (!video || !lazy) {
             return;
@@ -58,16 +70,19 @@ export default function BaseVideo({
         loadObserver.observe(video);
 
         return () => loadObserver.disconnect();
-    }, [lazy, loadRootMargin]);
+    }, [lazy, loadRootMargin, videoNode]);
 
     useEffect(() => {
-        const video = videoRef.current;
+        const video = videoNode;
 
         if (!video || !shouldLoad) {
             return;
         }
 
-        video.load();
+        // If the source is an HLS manifest, we let hls.js handle attaching media and loading.
+        if (!isHlsSource) {
+            video.load();
+        }
 
         const playObserver = new IntersectionObserver(
             ([entry]) => {
@@ -86,7 +101,45 @@ export default function BaseVideo({
         playObserver.observe(video);
 
         return () => playObserver.disconnect();
-    }, [playThreshold, shouldLoad]);
+    }, [isHlsSource, playThreshold, shouldLoad, videoNode]);
+
+    useEffect(() => {
+        const video = videoNode;
+
+        if (!video || !shouldLoad || !isHlsSource) {
+            return;
+        }
+
+        let isCancelled = false;
+        let cleanup: (() => void) | undefined;
+
+        void (async () => {
+            const mod = await import("hls.js");
+            const Hls = mod.default;
+
+            if (isCancelled) return;
+
+            if (!Hls.isSupported()) {
+                // Safari/iOS can play HLS natively.
+                if (video.canPlayType("application/vnd.apple.mpegurl")) {
+                    video.src = src;
+                    video.load();
+                }
+                return;
+            }
+
+            const hls = new Hls({ startLevel: -1 });
+            hls.loadSource(src);
+            hls.attachMedia(video);
+
+            cleanup = () => hls.destroy();
+        })();
+
+        return () => {
+            isCancelled = true;
+            cleanup?.();
+        };
+    }, [isHlsSource, shouldLoad, src, videoNode]);
 
     return (
         <span className={wrapperClassName}>
@@ -98,7 +151,7 @@ export default function BaseVideo({
             ) : null}
             <video
                 ref={videoRef}
-                src={shouldLoad ? src : undefined}
+                src={shouldLoad && !isHlsSource ? src : undefined}
                 className={className}
                 muted
                 loop
