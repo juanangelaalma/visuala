@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 
+import BaseVideo from "../_components/BaseVideo";
+
 const heroVideos = [
     "/videos/heroes/car_mountain.mp4",
     "/videos/heroes/drone.mp4",
@@ -12,8 +14,11 @@ const heroVideos = [
 export default function HeroBackgroundVideo() {
     const [activeIndex, setActiveIndex] = useState(0);
     const [isBlinking, setIsBlinking] = useState(false);
-    const activeSrc = heroVideos[activeIndex];
-    const nextSrc = heroVideos[(activeIndex + 1) % heroVideos.length];
+    const activeFallbackSrc = heroVideos[activeIndex];
+    const nextFallbackSrc = heroVideos[(activeIndex + 1) % heroVideos.length];
+
+    const activeSrc = activeFallbackSrc.replace(/\.mp4$/, ".m3u8");
+    const nextSrc = nextFallbackSrc.replace(/\.mp4$/, ".m3u8");
 
     function showNextVideo() {
         setIsBlinking(true);
@@ -29,18 +34,30 @@ export default function HeroBackgroundVideo() {
 
     return (
         <>
-            <video
+            <BaseVideo
                 key={activeSrc}
                 className="absolute inset-0 -z-20 h-full w-full object-cover"
+                wrapperClassName="absolute inset-0 -z-20 h-full w-full"
                 src={activeSrc}
+                fallbackSrc={activeFallbackSrc}
                 autoPlay
                 muted
                 playsInline
                 preload="metadata"
-                aria-hidden="true"
+                ariaLabel="Hero background video"
+                loop={false}
                 onEnded={showNextVideo}
             />
-            <video src={nextSrc} preload="auto" muted playsInline className="hidden" aria-hidden="true" />
+            <BaseVideo
+                src={nextSrc}
+                fallbackSrc={nextFallbackSrc}
+                preload="auto"
+                muted
+                playsInline
+                ariaLabel="Next hero background video"
+                className="hidden"
+                wrapperClassName="hidden"
+            />
             <div
                 aria-hidden="true"
                 className={`absolute inset-0 -z-[15] bg-black transition-opacity duration-500 ease-in-out ${isBlinking ? "opacity-100" : "opacity-0"}`}

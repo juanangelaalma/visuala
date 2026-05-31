@@ -12,7 +12,14 @@ type BaseVideoProps = Omit<
     VideoHTMLAttributes<HTMLVideoElement>,
     "aria-label" | "className" | "preload" | "src"
 > & {
+    /**
+     * Video source URL. Can be .mp4 or an HLS manifest (.m3u8).
+     */
     src: string;
+    /**
+     * Optional fallback (usually an .mp4) if HLS playback is not supported or fails.
+     */
+    fallbackSrc?: string;
     ariaLabel: string;
     className?: string;
     lazy?: boolean;
@@ -26,6 +33,7 @@ type BaseVideoProps = Omit<
 
 export default function BaseVideo({
     src,
+    fallbackSrc,
     ariaLabel,
     className,
     lazy = false,
@@ -119,27 +127,49 @@ export default function BaseVideo({
 
             if (isCancelled) return;
 
+            const applyFallback = () => {
+                if (fallbackSrc) {
+                    video.src = fallbackSrc;
+                    video.load();
+                }
+            };
+
             if (!Hls.isSupported()) {
                 // Safari/iOS can play HLS natively.
                 if (video.canPlayType("application/vnd.apple.mpegurl")) {
                     video.src = src;
                     video.load();
+                } else {
+                    applyFallback();
                 }
                 return;
             }
 
             const hls = new Hls({ startLevel: -1 });
+
+            const onError = (_event: unknown, data: { fatal?: boolean }) => {
+                if (!data?.fatal) return;
+
+                // Try a plain mp4 fallback if provided.
+                hls.destroy();
+                applyFallback();
+            };
+
+            hls.on(Hls.Events.ERROR, onError);
             hls.loadSource(src);
             hls.attachMedia(video);
 
-            cleanup = () => hls.destroy();
+            cleanup = () => {
+                hls.off(Hls.Events.ERROR, onError);
+                hls.destroy();
+            };
         })();
 
         return () => {
             isCancelled = true;
             cleanup?.();
         };
-    }, [isHlsSource, shouldLoad, src, videoNode]);
+    }, [fallbackSrc, isHlsSource, shouldLoad, src, videoNode]);
 
     return (
         <span className={wrapperClassName}>
