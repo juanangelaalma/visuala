@@ -2,14 +2,16 @@ import BaseVideo from "../_components/BaseVideo";
 
 type CategoryVideoTileProps = {
     src: string;
+    fallbackSrc?: string;
     title: string;
 };
 
-export default function CategoryVideoTile({ src, title }: CategoryVideoTileProps) {
+export default function CategoryVideoTile({ src, fallbackSrc, title }: CategoryVideoTileProps) {
     return (
         <>
             <BaseVideo
                 src={src}
+                fallbackSrc={fallbackSrc}
                 ariaLabel={`${title} category video`}
                 wrapperClassName="absolute inset-0 h-full w-full"
                 className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"

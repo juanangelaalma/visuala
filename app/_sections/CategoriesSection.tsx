@@ -31,7 +31,11 @@ export default function CategoriesSection() {
                             key={cat.title}
                             className="relative aspect-259/459 w-[70vw] flex-none cursor-pointer overflow-hidden rounded-[12px] transition-shadow hover:shadow-lg sm:w-[45vw] lg:w-[259px] group"
                         >
-                            <CategoryVideoTile src={cat.src} title={cat.title} />
+                            <CategoryVideoTile
+                                src={cat.src.replace(/\.mp4$/, ".m3u8")}
+                                fallbackSrc={cat.src}
+                                title={cat.title}
+                            />
                         </div>
                     )}
                 />
