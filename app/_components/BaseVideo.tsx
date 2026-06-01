@@ -4,6 +4,7 @@ import {
     useCallback,
     useEffect,
     useMemo,
+    useRef,
     useState,
     type VideoHTMLAttributes,
 } from "react";
@@ -52,6 +53,7 @@ export default function BaseVideo({
 
     const [shouldLoad, setShouldLoad] = useState(!lazy);
     const [loadedSrc, setLoadedSrc] = useState<string | null>(null);
+    const shouldPlayRef = useRef(false);
 
     const isHlsSource = useMemo(() => src.endsWith(".m3u8"), [src]);
     const isReady = loadedSrc === src;
@@ -95,12 +97,14 @@ export default function BaseVideo({
         const playObserver = new IntersectionObserver(
             ([entry]) => {
                 if (entry.isIntersecting) {
+                    shouldPlayRef.current = true;
                     void video.play().catch(() => {
                         // Browser autoplay settings can block playback; the video remains ready.
                     });
                     return;
                 }
 
+                shouldPlayRef.current = false;
                 video.pause();
             },
             { threshold: playThreshold }
@@ -131,7 +135,20 @@ export default function BaseVideo({
                 if (fallbackSrc) {
                     video.src = fallbackSrc;
                     video.load();
+                    if (shouldPlayRef.current) {
+                        void video.play().catch(() => {
+                            // Browser autoplay settings can block playback; the video remains ready.
+                        });
+                    }
                 }
+            };
+
+            const playIfVisible = () => {
+                if (!shouldPlayRef.current) return;
+
+                void video.play().catch(() => {
+                    // Browser autoplay settings can block playback; the video remains ready.
+                });
             };
 
             if (!Hls.isSupported()) {
@@ -139,6 +156,10 @@ export default function BaseVideo({
                 if (video.canPlayType("application/vnd.apple.mpegurl")) {
                     video.src = src;
                     video.load();
+                    video.addEventListener("loadedmetadata", playIfVisible, { once: true });
+                    cleanup = () => {
+                        video.removeEventListener("loadedmetadata", playIfVisible);
+                    };
                 } else {
                     applyFallback();
                 }
@@ -157,11 +178,13 @@ export default function BaseVideo({
             };
 
             hls.on(Hls.Events.ERROR, onError);
+            hls.on(Hls.Events.MANIFEST_PARSED, playIfVisible);
             hls.loadSource(src);
             hls.attachMedia(video);
 
             cleanup = () => {
                 hls.off(Hls.Events.ERROR, onError);
+                hls.off(Hls.Events.MANIFEST_PARSED, playIfVisible);
                 hls.destroy();
             };
         })();
