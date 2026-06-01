@@ -1,3 +1,5 @@
+import BaseVideo from "../_components/BaseVideo";
+
 const features = [
   {
     id: "feature-ai-design",
@@ -12,6 +14,7 @@ const features = [
       "Generate component variants, suggest accessible colors, and write design tokens automatically — powered by a model trained on design patterns.",
     color: "from-brand-500/20 to-brand-400/10",
     accentColor: "text-brand-400",
+    videoSrc: "/videos/features/Elegant_woman_wearing_white_blazer_202605281645.mp4",
   },
   {
     id: "feature-design-system",
@@ -25,6 +28,7 @@ const features = [
       "One source of truth for your entire team. Tokens, components, and documentation live together and stay perfectly in sync.",
     color: "from-accent-500/20 to-accent-400/10",
     accentColor: "text-accent-400",
+    videoSrc: "/videos/features/Unboxing.mp4",
   },
   {
     id: "feature-collaboration",
@@ -38,6 +42,7 @@ const features = [
       "See cursors, comments, and edits as they happen. Multiplayer design that eliminates endless Slack threads and version confusion.",
     color: "from-purple-500/20 to-purple-400/10",
     accentColor: "text-purple-400",
+    videoSrc: "/videos/features/Hands_lifting_smartphone_out_box_202605281645.mp4",
   },
   {
     id: "feature-handoff",
@@ -51,6 +56,7 @@ const features = [
       "Auto-generate React, Tailwind, and CSS-in-JS code from any design. Developers get specs, assets, and style guides instantly.",
     color: "from-orange-500/20 to-orange-400/10",
     accentColor: "text-orange-400",
+    videoSrc: "/videos/features/Woman_applying_facial_serum_202605281645.mp4",
   },
   {
     id: "feature-analytics",
@@ -64,6 +70,7 @@ const features = [
       "Understand which components are used most, spot inconsistencies, and track how your design system evolves over time.",
     color: "from-cyan-500/20 to-cyan-400/10",
     accentColor: "text-cyan-400",
+    videoSrc: "/videos/features/Elegant_woman_wearing_white_blazer_202605281645.mp4",
   },
   {
     id: "feature-integrations",
@@ -77,6 +84,7 @@ const features = [
       "Connect with Figma, GitHub, Jira, Storybook, and the tools your team already loves. No workflow disruption.",
     color: "from-pink-500/20 to-pink-400/10",
     accentColor: "text-pink-400",
+    videoSrc: "/videos/features/Hands_lifting_smartphone_out_box_202605281645.mp4",
   },
 ];
 
@@ -139,6 +147,15 @@ export default function FeaturesSection() {
               <p className="text-sm leading-relaxed text-text-secondary">
                 {feature.description}
               </p>
+
+              <div className="mt-6 aspect-video overflow-hidden rounded-xl border border-white/10 bg-surface-2">
+                <BaseVideo
+                  src={feature.videoSrc}
+                  ariaLabel={`${feature.title} feature video`}
+                  className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
+                  lazy
+                />
+              </div>
             </article>
           ))}
         </div>
