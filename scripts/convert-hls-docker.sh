@@ -136,7 +136,9 @@ convert_file() {
         -hls_time 4 \
         -hls_playlist_type vod \
         -hls_flags independent_segments \
-        -hls_segment_filename "$target_dir/%v/segment_%03d.ts" \
+        -hls_segment_type fmp4 \
+        -hls_fmp4_init_filename "init.mp4" \
+        -hls_segment_filename "$target_dir/%v/segment_%03d.m4s" \
         -master_pl_name index.m3u8 \
         -var_stream_map "$var_stream_map" \
         "$target_dir/%v/playlist.m3u8"
