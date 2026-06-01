@@ -6,7 +6,8 @@
     "dev": "next dev --webpack",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "hls:convert": "bash scripts/convert-hls-docker.sh"
   },
   "dependencies": {
     "gsap": "^3.15.0",

@@ -17,8 +17,8 @@ export default function HeroBackgroundVideo() {
     const activeFallbackSrc = heroVideos[activeIndex];
     const nextFallbackSrc = heroVideos[(activeIndex + 1) % heroVideos.length];
 
-    const activeSrc = activeFallbackSrc.replace(/\.mp4$/, ".m3u8");
-    const nextSrc = nextFallbackSrc.replace(/\.mp4$/, ".m3u8");
+    const activeSrc = activeFallbackSrc.replace(/\.mp4$/, "/index.m3u8");
+    const nextSrc = nextFallbackSrc.replace(/\.mp4$/, "/index.m3u8");
 
     function showNextVideo() {
         setIsBlinking(true);

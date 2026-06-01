@@ -1,9 +1,6 @@
-import Image from "next/image";
+import BaseVideo from "../_components/BaseVideo";
 import InfiniteMarquee from "../_components/InfiniteMarquee";
 import PrimaryCtaButton from "../_components/PrimaryCtaButton";
-import img1 from "../__assets/showcase/image 1.webp";
-import img2 from "../__assets/showcase/image 2.webp";
-import img3 from "../__assets/showcase/image 3.webp";
 
 const tags = [
     "TESTIMONIALS",
@@ -15,9 +12,30 @@ const tags = [
 ];
 
 const cards = [
-    { src: img1, alt: "Beauty UGC video – skincare model", rotate: "-2.5deg", translateY: "16px" },
-    { src: img2, alt: "Fashion UGC video – elegant model", rotate: "1deg", translateY: "0px" },
-    { src: img3, alt: "Beauty UGC video – close-up model", rotate: "-2.5deg", translateY: "16px" },
+    {
+        src: "/videos/features/Woman_applying_facial_serum_202605281645.mp4",
+        label: "Beauty UGC video - skincare model",
+        rotate: "-2.5deg",
+        translateY: "16px",
+    },
+    {
+        src: "/videos/features/Elegant_woman_wearing_white_blazer_202605281645.mp4",
+        label: "Fashion UGC video - elegant model",
+        rotate: "1deg",
+        translateY: "0px",
+    },
+    {
+        src: "/videos/features/Unboxing.mp4",
+        label: "Beauty UGC video - product unboxing",
+        rotate: "-2.5deg",
+        translateY: "16px",
+    },
+    {
+        src: "/videos/features/Hands_lifting_smartphone_out_box_202605281645.mp4",
+        label: "UGC video - smartphone unboxing",
+        rotate: "1deg",
+        translateY: "0px",
+    },
 ];
 
 export default function FeatureShowcaseSection() {
@@ -93,12 +111,12 @@ export default function FeatureShowcaseSection() {
                     <InfiniteMarquee
                         items={cards}
                         ariaLabel="Scrolling showcase of UGC video examples"
-                        className="h-full"
+                        className="h-full cursor-pointer"
                         trackClassName="h-full items-center"
                         groupClassName="flex h-full items-center gap-4 pr-4 md:gap-10 md:pr-10"
                         renderItem={(card, i) => (
                             <div
-                                key={`${card.alt}-${i}`}
+                                key={`${card.label}-${i}`}
                                 className="
                                     relative
                                     w-[240px] md:w-[350px] lg:w-[450px]
@@ -112,12 +130,13 @@ export default function FeatureShowcaseSection() {
                                     transform: `rotate(${card.rotate}) translateY(${card.translateY})`,
                                 }}
                             >
-                                <Image
-                                    src={card.src}
-                                    alt={card.alt}
-                                    fill
-                                    className="object-cover"
-                                    sizes="(max-width: 768px) 240px, (max-width: 1024px) 350px, 450px"
+                                <BaseVideo
+                                    src={card.src.replace(/\.mp4$/, "/index.m3u8")}
+                                    ariaLabel={card.label}
+                                    fallbackSrc={card.src}
+                                    wrapperClassName="absolute inset-0 h-full w-full"
+                                    className="absolute inset-0 h-full w-full object-cover"
+                                    lazy
                                 />
                                 {/* Subtle inner shadow overlay */}
                                 <div className="absolute inset-0 rounded-[16px] shadow-[inset_0_0_0_1px_rgba(255,255,255,0.08)]" />

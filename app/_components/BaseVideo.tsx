@@ -151,6 +151,7 @@ export default function BaseVideo({
                 if (!data?.fatal) return;
 
                 // Try a plain mp4 fallback if provided.
+                console.log("Hls error -> fallback to mp4", videoNode)
                 hls.destroy();
                 applyFallback();
             };
