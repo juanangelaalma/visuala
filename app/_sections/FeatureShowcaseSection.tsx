@@ -1,4 +1,4 @@
-import BaseVideo from "../_components/BaseVideo";
+import FeatureShowcaseVideoCard from "./FeatureShowcaseVideoCard";
 import InfiniteMarquee from "../_components/InfiniteMarquee";
 import PrimaryCtaButton from "../_components/PrimaryCtaButton";
 
@@ -130,16 +130,9 @@ export default function FeatureShowcaseSection() {
                                     transform: `rotate(${card.rotate}) translateY(${card.translateY})`,
                                 }}
                             >
-                                <BaseVideo
-                                    src={card.src.replace(/\.mp4$/, "/index.m3u8")}
-                                    ariaLabel={card.label}
-                                    fallbackSrc={card.src}
-                                    wrapperClassName="absolute inset-0 h-full w-full"
-                                    className="absolute inset-0 h-full w-full object-cover"
-                                    lazy
-                                />
+                                <FeatureShowcaseVideoCard src={card.src} label={card.label} />
                                 {/* Subtle inner shadow overlay */}
-                                <div className="absolute inset-0 rounded-[16px] shadow-[inset_0_0_0_1px_rgba(255,255,255,0.08)]" />
+                                <div className="pointer-events-none absolute inset-0 rounded-[16px] shadow-[inset_0_0_0_1px_rgba(255,255,255,0.08)]" />
                             </div>
                         )}
                     />
