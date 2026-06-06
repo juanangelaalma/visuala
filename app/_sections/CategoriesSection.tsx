@@ -2,7 +2,6 @@ import InfiniteMarquee from "../_components/InfiniteMarquee";
 import CategoryVideoTile from "./CategoryVideoTile";
 
 const categories = [
-    { title: "GENERAL", src: "/videos/categories/general.mp4" },
     { title: "BEAUTY", src: "/videos/categories/beauty.mp4" },
     { title: "FASHION", src: "/videos/categories/fashion.mp4" },
     { title: "FITNES", src: "/videos/categories/fitnes.mp4" },
