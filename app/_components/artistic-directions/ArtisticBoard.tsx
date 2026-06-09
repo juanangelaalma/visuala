@@ -28,7 +28,7 @@ export default function ArtisticBoard() {
             </div>
 
             {/* Grid Content */}
-            <ArtisticGrid activeTab={activeTab} items={items} />
+            <ArtisticGrid items={items} />
         </div>
     );
 }

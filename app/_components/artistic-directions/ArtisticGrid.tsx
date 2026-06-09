@@ -2,18 +2,16 @@ import { ItemType } from "./data";
 import ArtisticCard from "./ArtisticCard";
 
 interface ArtisticGridProps {
-    activeTab: string;
     items: ItemType[];
 }
 
-export default function ArtisticGrid({ activeTab, items }: ArtisticGridProps) {
+export default function ArtisticGrid({ items }: ArtisticGridProps) {
     return (
         <div
-            key={activeTab} // Using key to re-trigger the animation when category changes
-            className="grid grid-cols-2 md:grid-cols-4 gap-5 animate-fade-up"
+            className="grid grid-cols-2 md:grid-cols-4 gap-5"
         >
             {items.map((item, index) => (
-                <ArtisticCard key={`${activeTab}-${index}`} item={item} />
+                <ArtisticCard key={`${item.label}-${index}`} item={item} />
             ))}
         </div>
     );
