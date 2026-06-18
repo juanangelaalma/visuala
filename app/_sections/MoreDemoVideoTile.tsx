@@ -9,7 +9,7 @@ export default function MoreDemoVideoTile({ src, label }: MoreDemoVideoTileProps
     return (
         <BaseVideo
             src={src}
-            className="h-full w-full object-cover scale-[1.30]"
+            className="h-full w-full object-cover scale-125"
             ariaLabel={label}
             lazy
         />

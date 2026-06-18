@@ -1,27 +1,22 @@
-import React from "react";
+import Badge from "../_components/Badge";
 import PrimaryCtaButton from "../_components/PrimaryCtaButton";
 import { OutlineButton } from "../_components/OutlineButton";
 
-const checkIcon = (color: string) => (
-  <svg
-    width="16"
-    height="16"
-    viewBox="0 0 24 24"
-    fill="none"
-    xmlns="http://www.w3.org/2000/svg"
-    className="mt-1 shrink-0"
-  >
-    <path
-      d="M20 6L9 17L4 12"
-      stroke={color}
-      strokeWidth="3"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    />
-  </svg>
-);
+type PlanTheme = "dark" | "light";
 
-const plans = [
+type Plan = {
+  id: string;
+  name: string;
+  price: string;
+  credits: string;
+  conversion: string;
+  bonus: string;
+  features: string[];
+  theme: PlanTheme;
+  mostPopular?: boolean;
+};
+
+const plans: Plan[] = [
   {
     id: "starter",
     name: "Starter",
@@ -34,7 +29,7 @@ const plans = [
       "Live chat & email support",
       "Access to all styles",
     ],
-    theme: "dark" as const,
+    theme: "dark",
   },
   {
     id: "professional",
@@ -49,7 +44,7 @@ const plans = [
       "Custom styles to your brand (coming soon)",
     ],
     mostPopular: true,
-    theme: "light" as const,
+    theme: "light",
   },
   {
     id: "business",
@@ -64,145 +59,135 @@ const plans = [
       "Custom styles to your brand (coming soon)",
       "API Access (coming soon)",
     ],
-    theme: "dark" as const,
+    theme: "dark",
   },
 ];
 
+const planThemeClassNames = {
+  light: {
+    card: "border-primary bg-gradient-to-br from-white to-neutral-150 shadow-pricing-featured",
+    title: "text-black",
+    muted: "text-black/60",
+    feature: "text-black/80",
+    bonus: "border-black/20 bg-black/10 text-black/70",
+    check: "black",
+    cta: "dark",
+  },
+  dark: {
+    card: "border-white/20 bg-gradient-to-br from-black/80 to-black backdrop-blur-sm",
+    title: "text-white",
+    muted: "text-white/60",
+    feature: "text-white/60",
+    bonus: "border-primary/30 bg-primary/20 text-primary",
+    check: "var(--color-primary)",
+    cta: "light",
+  },
+} as const;
+
+function CheckIcon({ color }: { color: string }) {
+  return (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" className="mt-1 shrink-0">
+      <path d="M20 6L9 17L4 12" stroke={color} strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+function PricingCard({ plan }: { plan: Plan }) {
+  const theme = planThemeClassNames[plan.theme];
+
+  return (
+    <article className={`relative flex h-full flex-col rounded-3xl border-2 p-card-pad transition-all duration-300 ${theme.card}`}>
+      {plan.mostPopular ? (
+        <Badge className="absolute -top-3 left-1/2 -translate-x-1/2 bg-primary px-3 py-badge-y text-xs font-medium whitespace-nowrap text-black">
+          Most Popular
+        </Badge>
+      ) : null}
+
+      <div className="mb-4">
+        <h3 className={`mb-4 text-2xl tracking-tight ${theme.title}`}>{plan.name}</h3>
+        <p className={`font-display mb-6 text-section-sm leading-none font-medium tracking-tight ${theme.title}`}>
+          {plan.price}
+        </p>
+        <div className="mb-6 space-y-2">
+          <p className={`text-body-lg font-medium tracking-tight ${theme.title}`}>{plan.credits}</p>
+          <p className={`text-sm tracking-tight ${theme.muted}`}>{plan.conversion}</p>
+        </div>
+        <Badge className={`gap-2 border px-3 py-2 text-sm font-medium ${theme.bonus}`}>
+          <span className="text-base">🎁</span>
+          <span className="tracking-tight">{plan.bonus}</span>
+        </Badge>
+      </div>
+
+      <div className="mt-8 grow">
+        <ul className="mb-10 space-y-3">
+          {plan.features.map((feature) => (
+            <li key={feature} className="flex items-start gap-2">
+              <CheckIcon color={theme.check} />
+              <span className={`text-sm leading-5 tracking-tight ${theme.feature}`}>{feature}</span>
+            </li>
+          ))}
+        </ul>
+      </div>
+
+      <PrimaryCtaButton
+        tone={theme.cta}
+        className={`w-full px-8 py-3.5 text-base font-semibold ${plan.theme === "light" ? "shadow-pricing-cta" : ""}`}
+      >
+        Start free trial
+      </PrimaryCtaButton>
+    </article>
+  );
+}
+
+function EnterpriseBanner() {
+  return (
+    <aside className="rounded-3xl border-2 border-white/20 bg-gradient-to-r from-white/5 to-white/10 p-card-pad backdrop-blur-sm">
+      <div className="flex flex-col items-center justify-between gap-8 md:flex-row">
+        <div className="text-center md:text-left">
+          <h3 className="mb-2 text-display-sm font-normal tracking-tight text-white">
+            Need more? Let&apos;s talk about enterprise options
+          </h3>
+          <p className="text-body-lg font-light tracking-tight text-white/70">
+            Get custom plans, dedicated support, and exclusive features tailored to your brand&apos;s creative needs.
+          </p>
+        </div>
+        <OutlineButton className="px-card-pad py-3.5 uppercase">Talk to sales</OutlineButton>
+      </div>
+    </aside>
+  );
+}
+
 export default function PricingSection() {
   return (
-    <section className="bg-[#161616] py-24 px-4 w-full overflow-hidden">
-      <div className="mx-auto max-w-[1280px]">
-        {/* Launch Offer Badge */}
-        <div className="flex justify-center mb-10">
-          <div className="bg-primary text-black font-bold text-base px-10 font-sans-secondary py-4 rounded-full flex items-center gap-2 uppercase tracking-[0.8px]">
+    <section className="w-full overflow-hidden bg-pricing-bg px-4 py-24">
+      <div className="mx-auto max-w-page">
+        <div className="mb-10 flex justify-center">
+          <Badge className="gap-2 bg-primary px-10 py-4 font-sans-secondary text-base font-bold tracking-wide text-black uppercase">
             <span>🎉</span>
             Launch offer: Get 2× credits on your first month
-          </div>
+          </Badge>
         </div>
 
-        {/* Section Header */}
-        <div className="text-center mb-16">
-          <h2 className="text-[48px] leading-[1.1] font-normal text-white mb-6 font-display">
+        <header className="mb-16 text-center">
+          <h2 className="font-display mb-6 text-section-md leading-tight font-normal text-white">
             Price that scales with you
           </h2>
           <div className="space-y-1">
-            <p className="text-[#bababa] text-[20px] leading-[1.8]">
-              Premium Quality at Every Tier.
-            </p>
-            <div className="flex items-center justify-center gap-4 text-[#777] text-base leading-[2.2]">
+            <p className="text-body-xl leading-loose text-neutral-450">Premium Quality at Every Tier.</p>
+            <p className="flex items-center justify-center gap-4 text-base leading-loose text-neutral-500">
               <span>4 images = 10 credits</span>
               <span>•</span>
               <span>1 video = 10 credits</span>
-            </div>
+            </p>
           </div>
+        </header>
+
+        <div className="mb-16 grid grid-cols-1 items-stretch gap-6 md:grid-cols-3">
+          {plans.map((plan) => <PricingCard key={plan.id} plan={plan} />)}
         </div>
 
-        {/* Pricing Cards Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-16 items-stretch">
-          {plans.map((plan) => {
-            const isLight = plan.theme === "light";
-
-            return (
-              <div
-                key={plan.id}
-                className={`relative rounded-[24px] p-[34px] flex flex-col h-full border-2 transition-all duration-300 ${isLight
-                  ? "bg-gradient-to-br from-white to-[#f9fafb] border-[#EFF31B] shadow-[0_25px_50px_-12px_rgba(239,243,27,0.2)]"
-                  : "bg-gradient-to-br from-black/80 to-black border-white/20 backdrop-blur-[4px]"
-                  }`}
-              >
-                {plan.mostPopular && (
-                  <div className="absolute -top-[12px] left-1/2 -translate-x-1/2 bg-[#EFF31B] text-black text-xs font-medium px-[12px] py-[4.5px] rounded-full whitespace-nowrap">
-                    Most Popular
-                  </div>
-                )}
-
-                <div className="mb-4">
-                  <h3
-                    className={`text-2xl mb-4 tracking-[-0.6px] ${isLight ? "text-black" : "text-white"
-                      }`}
-                  >
-                    {plan.name}
-                  </h3>
-                  <div
-                    className={`text-[32px] font-medium font-display mb-6 leading-none tracking-[-0.8px] ${isLight ? "text-black" : "text-white"
-                      }`}
-                  >
-                    {plan.price}
-                  </div>
-                  <div className="space-y-2 mb-6">
-                    <p
-                      className={`text-[18px] font-medium tracking-[-0.27px] ${isLight ? "text-black" : "text-white"
-                        }`}
-                    >
-                      {plan.credits}
-                    </p>
-                    <p
-                      className={`text-sm tracking-[-0.14px] ${isLight ? "text-black/60" : "text-white/60"
-                        }`}
-                    >
-                      {plan.conversion}
-                    </p>
-                  </div>
-
-                  <div
-                    className={`inline-flex items-center gap-2 px-[13px] py-[9px] rounded-full text-sm font-medium border ${isLight
-                      ? "bg-black/10 text-black/70 border-black/20"
-                      : "bg-[#EFF31B]/20 text-[#EFF31B] border-[#EFF31B]/30"
-                      }`}
-                  >
-                    <span className="text-base">🎁</span>
-                    <span className="tracking-[-0.14px]">{plan.bonus}</span>
-                  </div>
-                </div>
-
-                <div className="grow mt-8">
-                  <ul className="space-y-3 mb-10">
-                    {plan.features.map((feature, i) => (
-                      <li key={i} className="flex items-start gap-2">
-                        {checkIcon(isLight ? "black" : "#EFF31B")}
-                        <span
-                          className={`text-sm leading-5 tracking-[-0.14px] ${isLight ? "text-black/80" : "text-white/60"
-                            }`}
-                        >
-                          {feature}
-                        </span>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-
-                <PrimaryCtaButton
-                  tone={isLight ? "dark" : "light"}
-                  className={`w-full py-[14px] px-8 text-base font-semibold ${isLight
-                    ? "shadow-[0_12px_32px_rgba(0,0,0,0.22)]"
-                    : ""
-                    }`}
-                >
-                  Start free trial
-                </PrimaryCtaButton>
-              </div>
-            );
-          })}
-        </div>
-
-        {/* Enterprise Bottom Banner */}
-        <div className="rounded-[24px] border-2 border-white/20 bg-gradient-to-r from-white/5 to-white/10 p-[34px] backdrop-blur-[4px]">
-          <div className="flex flex-col md:flex-row items-center justify-between gap-8">
-            <div className="text-center md:text-left">
-              <h3 className="text-[28px] font-normal text-white mb-2 tracking-[-0.7px]">
-                Need more? Let's talk about enterprise options
-              </h3>
-              <p className="text-white/70 text-[18px] tracking-[-0.27px] font-light">
-                Get custom plans, dedicated support, and exclusive features tailored to your brand's creative needs.
-              </p>
-            </div>
-            {/* <button className="whitespace-nowrap px-[34px] py-[14px] rounded-full border-[1.5px] border-white text-white hover:bg-white/10 transition-colors font-semibold text-base uppercase tracking-[-0.16px]">
-              Talk to sales
-            </button> */}
-            <OutlineButton className="px-[34px] py-[14px] uppercase">Talk to sales</OutlineButton>
-          </div>
-        </div>
+        <EnterpriseBanner />
       </div>
-    </section >
+    </section>
   );
 }

@@ -112,7 +112,7 @@ const getGradientDirection = (position: string): string => {
   return directions[position] || 'to bottom';
 };
 
-const debounce = <T extends (...a: any[]) => void>(fn: T, wait: number) => {
+const debounce = <T extends (...a: unknown[]) => void>(fn: T, wait: number) => {
   let t: ReturnType<typeof setTimeout>;
   return (...a: Parameters<T>) => {
     clearTimeout(t);
@@ -120,30 +120,52 @@ const debounce = <T extends (...a: any[]) => void>(fn: T, wait: number) => {
   };
 };
 
+type ResponsiveDimensionKey = 'height' | 'width';
+type ResponsiveDimensionValue = string | undefined;
+
+const responsiveDimensionKeys = {
+  height: {
+    mobile: 'mobileHeight',
+    tablet: 'tabletHeight',
+    desktop: 'desktopHeight'
+  },
+  width: {
+    mobile: 'mobileWidth',
+    tablet: 'tabletWidth',
+    desktop: 'desktopWidth'
+  }
+} as const;
+
 const useResponsiveDimension = (
   responsive: boolean | undefined,
   config: Partial<GradualBlurProps>,
-  key: keyof GradualBlurProps
-) => {
-  const [val, setVal] = useState<any>(config[key]);
+  key: ResponsiveDimensionKey
+): ResponsiveDimensionValue => {
+  const [val, setVal] = useState<ResponsiveDimensionValue>(config[key]);
+
   useEffect(() => {
     if (!responsive) return;
+
     const calc = () => {
-      const w = window.innerWidth;
-      let v: any = config[key];
-      const cap = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
-      const k = cap(key as string);
-      if (w <= 480 && (config as any)['mobile' + k]) v = (config as any)['mobile' + k];
-      else if (w <= 768 && (config as any)['tablet' + k]) v = (config as any)['tablet' + k];
-      else if (w <= 1024 && (config as any)['desktop' + k]) v = (config as any)['desktop' + k];
-      setVal(v);
+      const width = window.innerWidth;
+      const keys = responsiveDimensionKeys[key];
+      let nextValue: ResponsiveDimensionValue = config[key];
+
+      if (width <= 480 && config[keys.mobile]) nextValue = config[keys.mobile];
+      else if (width <= 768 && config[keys.tablet]) nextValue = config[keys.tablet];
+      else if (width <= 1024 && config[keys.desktop]) nextValue = config[keys.desktop];
+
+      setVal(nextValue);
     };
-    const deb = debounce(calc, 100);
+
+    const debouncedCalc = debounce(calc, 100);
     calc();
-    window.addEventListener('resize', deb);
-    return () => window.removeEventListener('resize', deb);
+    window.addEventListener('resize', debouncedCalc);
+
+    return () => window.removeEventListener('resize', debouncedCalc);
   }, [responsive, config, key]);
-  return responsive ? val : (config as any)[key];
+
+  return responsive ? val : config[key];
 };
 
 const useIntersectionObserver = (ref: React.RefObject<HTMLDivElement | null>, shouldObserve: boolean = false) => {
@@ -256,7 +278,7 @@ const GradualBlur: React.FC<PropsWithChildren<GradualBlurProps>> = props => {
     return baseStyle;
   }, [config, responsiveHeight, responsiveWidth, isVisible]);
 
-  const { hoverIntensity, animated, onAnimationComplete, duration } = config as any;
+  const { hoverIntensity, animated, onAnimationComplete, duration } = config;
   useEffect(() => {
     if (isVisible && animated === 'scroll' && onAnimationComplete) {
       const t = setTimeout(() => onAnimationComplete(), parseFloat(duration) * 1000);
@@ -288,8 +310,6 @@ const GradualBlur: React.FC<PropsWithChildren<GradualBlurProps>> = props => {
 
 const GradualBlurMemo = React.memo(GradualBlur);
 GradualBlurMemo.displayName = 'GradualBlur';
-(GradualBlurMemo as any).PRESETS = PRESETS;
-(GradualBlurMemo as any).CURVE_FUNCTIONS = CURVE_FUNCTIONS;
 export default GradualBlurMemo;
 
 const injectStyles = () => {

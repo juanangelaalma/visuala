@@ -8,14 +8,14 @@ interface ArtisticTabsProps {
 
 export default function ArtisticTabs({ categories, activeTab, onTabChange }: ArtisticTabsProps) {
     return (
-        <div className="flex flex-wrap gap-x-6 md:gap-x-[40px] gap-y-4 items-center mt-2">
+        <div className="flex flex-wrap gap-x-6 md:gap-x-10 gap-y-4 items-center mt-2">
             {categories.map((cat) => {
                 const isActive = activeTab === cat;
                 return (
                     <button
                         key={cat}
                         onClick={() => onTabChange(cat)}
-                        className={`relative cursor-pointer px-1 py-2 text-[14px] md:text-[16px] tracking-wider transition-colors duration-300 font-sans-secondary font-medium ${isActive ? "text-white" : "text-[#777] hover:text-white"
+                        className={`relative cursor-pointer px-1 py-2 text-caption md:text-base tracking-wider transition-colors duration-300 font-sans-secondary font-medium ${isActive ? "text-white" : "text-neutral-500 hover:text-white"
                             }`}
                     >
                         {cat}

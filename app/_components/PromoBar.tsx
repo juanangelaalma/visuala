@@ -1,15 +1,13 @@
 import Image from "next/image";
-import GiftIcon from "../__assets/gift.svg"
+import GiftIcon from "../__assets/gift.svg";
 
 export default function PromoBar() {
     return (
-        <div
-            className="flex items-center gap-3 w-auto absolute bottom-12 border border-white text-white p-2 z-10 rounded-[10px] backdrop-blur-md"
-        >
+        <div className="absolute bottom-12 z-10 flex w-auto items-center gap-3 rounded-lg border border-white p-2 text-white backdrop-blur-md">
             <Image src={GiftIcon} alt="Gift" width={16} height={16} />
-            <p className="text-[16px] font-sans-secondary text-white tracking-wide font-light">
+            <p className="font-sans-secondary text-base font-light tracking-wide text-white">
                 Sign up to 2x your first-month credits
             </p>
         </div>
-    )
+    );
 }

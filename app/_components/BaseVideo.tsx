@@ -13,13 +13,7 @@ type BaseVideoProps = Omit<
     VideoHTMLAttributes<HTMLVideoElement>,
     "aria-label" | "className" | "preload" | "src"
 > & {
-    /**
-     * Video source URL. Can be .mp4 or an HLS manifest (.m3u8).
-     */
     src: string;
-    /**
-     * Optional fallback (usually an .mp4) if HLS playback is not supported or fails.
-     */
     fallbackSrc?: string;
     ariaLabel: string;
     className?: string;
@@ -89,7 +83,6 @@ export default function BaseVideo({
             return;
         }
 
-        // If the source is an HLS manifest, we let hls.js handle attaching media and loading.
         if (!isHlsSource) {
             video.load();
         }
@@ -98,9 +91,7 @@ export default function BaseVideo({
             ([entry]) => {
                 if (entry.isIntersecting) {
                     shouldPlayRef.current = true;
-                    void video.play().catch(() => {
-                        // Browser autoplay settings can block playback; the video remains ready.
-                    });
+                    void video.play().catch(() => undefined);
                     return;
                 }
 
@@ -136,9 +127,7 @@ export default function BaseVideo({
                     video.src = fallbackSrc;
                     video.load();
                     if (shouldPlayRef.current) {
-                        void video.play().catch(() => {
-                            // Browser autoplay settings can block playback; the video remains ready.
-                        });
+                    void video.play().catch(() => undefined);
                     }
                 }
             };
@@ -146,13 +135,10 @@ export default function BaseVideo({
             const playIfVisible = () => {
                 if (!shouldPlayRef.current) return;
 
-                void video.play().catch(() => {
-                    // Browser autoplay settings can block playback; the video remains ready.
-                });
+                    void video.play().catch(() => undefined);
             };
 
             if (!Hls.isSupported()) {
-                // Safari/iOS can play HLS natively.
                 if (video.canPlayType("application/vnd.apple.mpegurl")) {
                     video.src = src;
                     video.load();
@@ -171,8 +157,6 @@ export default function BaseVideo({
             const onError = (_event: unknown, data: { fatal?: boolean }) => {
                 if (!data?.fatal) return;
 
-                // Try a plain mp4 fallback if provided.
-                console.log("Hls error -> fallback to mp4", videoNode)
                 hls.destroy();
                 applyFallback();
             };

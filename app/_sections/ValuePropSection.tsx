@@ -19,10 +19,10 @@ export default function ValuePropSection() {
         />
       </div>
       <div className="relative z-20 flex flex-col justify-center items-center">
-        <h2 className="text-[24px] font-display md:text-[32px] font-normal mb-12 md:mb-16 text-center tracking-wide pointer-events-none">
+        <h2 className="text-body-2xl font-display md:text-section-sm font-normal mb-12 md:mb-16 text-center tracking-wide pointer-events-none">
           Generate stunning product photography and video
         </h2>
-        <p className="text-[20px] font-sans-secondary font-normal md:text-[32px] leading-snug text-center pointer-events-none">
+        <p className="text-body-xl font-sans-secondary font-normal md:text-section-sm leading-snug text-center pointer-events-none">
           simply upload a product photo. Our curated<br className="hidden md:block" />
           AI templates deliver cinematic shots<br className="hidden md:block" />
           Without the production hassle.

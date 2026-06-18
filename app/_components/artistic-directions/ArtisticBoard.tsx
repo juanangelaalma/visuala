@@ -13,7 +13,7 @@ export default function ArtisticBoard() {
         <div className="base-container mx-auto flex flex-col gap-10">
             {/* Header Block */}
             <div className="flex font-display flex-col gap-10">
-                <h2 className="text-[32px] md:text-[48px] font-medium leading-tight md:leading-[52.8px] tracking-tight text-white max-w-4xl">
+                <h2 className="text-section-sm md:text-section-md font-medium leading-tight md:leading-tight tracking-tight text-white max-w-4xl">
                     Explore ideas from<br />
                     <span className="text-primary">hundreds</span> of <span className="text-primary">artistic</span><br />
                     directions

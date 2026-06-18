@@ -7,12 +7,10 @@ interface BrandProps {
 }
 
 export default function Brand({ theme = 'light' }: BrandProps) {
-    // If the default logo is white, "invert" will make it black
     const filterClass = theme === 'dark' ? 'invert' : '';
 
     return (
         <div className="flex items-center group">
-            {/* Short logo: mobile only */}
             <Image
                 src={shortLogo}
                 alt="Visuala"
@@ -20,7 +18,6 @@ export default function Brand({ theme = 'light' }: BrandProps) {
                 height={36}
                 className={`block sm:hidden transition-transform ${filterClass}`}
             />
-            {/* Full logo: sm and above */}
             <Image
                 src={logo}
                 alt="Visuala"

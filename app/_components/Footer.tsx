@@ -44,8 +44,8 @@ const socialLinks = [
 
 export default function Footer() {
   return (
-    <footer className="bg-[#EFF31B] border-t border-white/10 w-full mt-auto relative pb-12" role="contentinfo">
-      <div className="mx-auto w-full max-w-[1536px] px-6 lg:px-[80px] py-12">
+    <footer className="bg-primary border-t border-white/10 w-full mt-auto relative pb-12" role="contentinfo">
+      <div className="mx-auto w-full max-w-screen-2xl px-6 lg:px-20 py-12">
         {/* Top Section */}
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-10 md:gap-0">
           {/* Brand/Logo Area */}
@@ -55,7 +55,7 @@ export default function Footer() {
 
           {/* Social Links */}
           <div className="flex flex-col items-start md:items-end gap-4">
-            <span className="text-black font-normal text-[16px] tracking-[-0.27px]">Follow Us</span>
+            <span className="text-black font-normal text-base tracking-tight">Follow Us</span>
             <div className="flex gap-4 items-center text-black">
               {socialLinks.map(({ label, href, icon }) => (
                 <a
@@ -76,12 +76,12 @@ export default function Footer() {
         {/* Divider */}
         <div className="w-full border-t border-black/10 mt-8 pt-8 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6">
           {/* Copyright */}
-          <p className="text-black font-normal text-[14px] tracking-[-0.14px]">
+          <p className="text-black font-normal text-caption tracking-tight">
             © Visuala AI Inc. All rights reserved.
           </p>
 
           {/* Legal Links */}
-          <div className="flex flex-wrap items-center gap-6 text-black font-normal text-[14px] tracking-[-0.14px]">
+          <div className="flex flex-wrap items-center gap-6 text-black font-normal text-caption tracking-tight">
             <Link href="/terms" className="hover:opacity-70 transition-opacity">
               Terms & Services
             </Link>

@@ -1,13 +1,13 @@
 import Button from "./Button";
 
-interface StartFreeTrialButtonProps {
+type StartFreeTrialButtonProps = {
     className?: string;
-}
+};
 
-export default function StartFreeTrialButton({ className }: StartFreeTrialButtonProps) {
+export default function StartFreeTrialButton({ className = "" }: StartFreeTrialButtonProps) {
     return (
-        <Button className={`font-sans-secondary whitespace-nowrap ${className || ""}`}>
+        <Button className={`font-sans-secondary whitespace-nowrap ${className}`}>
             Start free trial
         </Button>
-    )
+    );
 }

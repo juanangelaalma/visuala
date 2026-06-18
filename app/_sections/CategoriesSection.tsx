@@ -24,11 +24,11 @@ export default function CategoriesSection() {
                     duration="36s"
                     className="w-full pb-4 pr-4 md:pr-0"
                     trackClassName="items-center"
-                    groupClassName="flex items-center gap-4 pr-4 md:gap-[7.5px] md:pr-[7.5px]"
+                    groupClassName="flex items-center gap-4 pr-4 md:gap-2 md:pr-2"
                     renderItem={(cat) => (
                         <div
                             key={cat.title}
-                            className="relative aspect-259/459 w-[70vw] flex-none cursor-pointer overflow-hidden rounded-[12px] transition-shadow hover:shadow-lg sm:w-[45vw] lg:w-[259px] group"
+                            className="relative aspect-259/459 w-3/4 flex-none cursor-pointer overflow-hidden rounded-xl transition-shadow hover:shadow-lg sm:w-1/2 lg:w-64 group"
                         >
                             <CategoryVideoTile
                                 src={cat.src.replace(/\.mp4$/, "/index.m3u8")}

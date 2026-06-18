@@ -60,7 +60,7 @@ export default function HeroBackgroundVideo() {
             />
             <div
                 aria-hidden="true"
-                className={`absolute inset-0 -z-[15] bg-black transition-opacity duration-500 ease-in-out ${isBlinking ? "opacity-100" : "opacity-0"}`}
+                className={`-z-video-transition absolute inset-0 bg-black transition-opacity duration-500 ease-in-out ${isBlinking ? "opacity-100" : "opacity-0"}`}
             />
         </>
     );

@@ -19,7 +19,7 @@ export default function CategoryVideoTile({ src, fallbackSrc, title }: CategoryV
             />
             <div className="absolute inset-0 bg-black/20 transition-colors duration-500 group-hover:bg-black/30" />
             <div className="absolute inset-0 flex items-center justify-center p-4">
-                <h3 className="text-center text-[34px] font-normal uppercase tracking-wider text-white drop-shadow-md">
+                <h3 className="text-center text-category font-normal uppercase tracking-wider text-white drop-shadow-md">
                     {title}
                 </h3>
             </div>

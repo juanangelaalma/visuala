@@ -27,8 +27,15 @@
 
   --color-primary: #EFF31B;
   --color-primary-dark: #d8e64b;
+  --color-danger: #DE0909;
 
   --color-dark-bg: #000000;
+  --color-neutral-150: #f9fafb;
+  --color-neutral-450: #BABABA;
+  --color-neutral-500: #777777;
+  --color-neutral-800: #333333;
+  --color-neutral-825: #3a3a3a;
+  --color-pricing-bg: #161616;
 
   /* Text */
   --color-text-primary: oklch(96% 0.01 250);
@@ -61,10 +68,50 @@
   --spacing-150: 37.5rem;
   --spacing-160: 40rem;
   --spacing-175: 43.75rem;
+  --spacing-cta: 56.25rem;
+  --spacing-page: 80rem;
+  --spacing-copy: 42rem;
+  --spacing-card-pad: 2.125rem;
+  --spacing-badge-y: 0.28125rem;
+  --spacing-demo-tile-w: 28.125rem;
+  --spacing-demo-tile-h: 50rem;
+  --spacing-showcase-edge: 12rem;
+  --spacing-showcase-sm: 15rem;
+  --spacing-showcase-md: 21.875rem;
+  --spacing-showcase-lg: 28.125rem;
+  --spacing-showcase-track-sm: 31.25rem;
+  --spacing-showcase-track-lg: 53.125rem;
+  --spacing-feature-badge-sm-w: 8.125rem;
+  --spacing-feature-badge-sm-h: 2.25rem;
+  --spacing-feature-badge-lg-w: 15.625rem;
+  --spacing-feature-badge-lg-h: 3.875rem;
+
+  /* Typography */
+  --text-hero-sm: 2.625rem;
+  --text-hero-md: 4rem;
+  --text-hero-lg: 6rem;
+  --text-section-sm: 2rem;
+  --text-section-md: 3rem;
+  --text-display-sm: 1.75rem;
+  --text-display-md: 2.5rem;
+  --text-caption: 0.875rem;
+  --text-body-lg: 1.125rem;
+  --text-body-xl: 1.25rem;
+  --text-body-2xl: 1.5rem;
+  --text-category: 2.125rem;
+  --text-xs-label: 0.75rem;
+  --text-feature-sm: 2.625rem;
+  --text-feature-md: 4rem;
+  --text-feature-lg: 6rem;
 
   /* Shadows */
   --shadow-glow-brand: 0 0 60px -10px oklch(55% 0.22 250 / 0.35);
   --shadow-glow-accent: 0 0 40px -10px oklch(65% 0.22 145 / 0.3);
+  --shadow-pricing-featured: 0 25px 50px -12px rgb(239 243 27 / 0.2);
+  --shadow-pricing-cta: 0 12px 32px rgb(0 0 0 / 0.22);
+  --shadow-card-inner: inset 0 0 0 1px rgb(255 255 255 / 0.08);
+  --shadow-label: 0 4px 4px rgb(0 0 0 / 0.25);
+  --drop-shadow-label: 0 4px 4px rgb(0 0 0 / 0.25);
 }
 
 /* ── Base ──────────────────────────────────────────── */
@@ -175,6 +222,7 @@ body {
 }
 .animate-spin-slow { animation: spin-slow 20s linear infinite; }
 .animate-spin-reverse { animation: spin-slow 30s linear infinite reverse; }
+.animate-badge-pop { animation: badge-pop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) 0.3s both; }
 
 @keyframes skeleton-shimmer {
   100% { transform: translateX(100%); }
@@ -248,6 +296,23 @@ body {
 .base-container {
   max-width: 1440px;
   margin: 0 auto;
+}
+
+.-z-video-transition {
+  z-index: -15;
+}
+
+.animation-delay-100 {
+  animation-delay: 100ms;
+}
+
+.scrollbar-hidden {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.scrollbar-hidden::-webkit-scrollbar {
+  display: none;
 }
 
 @media (min-width: 1024px) {
