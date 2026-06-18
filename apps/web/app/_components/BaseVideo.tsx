@@ -40,9 +40,11 @@ export default function BaseVideo({
     wrapperClassName = "relative block h-full w-full overflow-hidden",
     ...videoProps
 }: BaseVideoProps) {
-    const [videoNode, setVideoNode] = useState<HTMLVideoElement | null>(null);
+    const videoElementRef = useRef<HTMLVideoElement | null>(null);
+    const [videoRefVersion, setVideoRefVersion] = useState(0);
     const videoRef = useCallback((node: HTMLVideoElement | null) => {
-        setVideoNode(node);
+        videoElementRef.current = node;
+        setVideoRefVersion((version) => version + 1);
     }, []);
 
     const [shouldLoad, setShouldLoad] = useState(!lazy);
@@ -53,7 +55,7 @@ export default function BaseVideo({
     const isReady = loadedSrc === src;
 
     useEffect(() => {
-        const video = videoNode;
+        const video = videoElementRef.current;
 
         if (!video || !lazy) {
             return;
@@ -74,10 +76,10 @@ export default function BaseVideo({
         loadObserver.observe(video);
 
         return () => loadObserver.disconnect();
-    }, [lazy, loadRootMargin, videoNode]);
+    }, [lazy, loadRootMargin, videoRefVersion]);
 
     useEffect(() => {
-        const video = videoNode;
+        const video = videoElementRef.current;
 
         if (!video || !shouldLoad) {
             return;
@@ -104,10 +106,10 @@ export default function BaseVideo({
         playObserver.observe(video);
 
         return () => playObserver.disconnect();
-    }, [isHlsSource, playThreshold, shouldLoad, videoNode]);
+    }, [isHlsSource, playThreshold, shouldLoad, videoRefVersion]);
 
     useEffect(() => {
-        const video = videoNode;
+        const video = videoElementRef.current;
 
         if (!video || !shouldLoad || !isHlsSource) {
             return;
@@ -127,7 +129,7 @@ export default function BaseVideo({
                     video.src = fallbackSrc;
                     video.load();
                     if (shouldPlayRef.current) {
-                    void video.play().catch(() => undefined);
+                        void video.play().catch(() => undefined);
                     }
                 }
             };
@@ -135,7 +137,7 @@ export default function BaseVideo({
             const playIfVisible = () => {
                 if (!shouldPlayRef.current) return;
 
-                    void video.play().catch(() => undefined);
+                void video.play().catch(() => undefined);
             };
 
             if (!Hls.isSupported()) {
@@ -177,7 +179,7 @@ export default function BaseVideo({
             isCancelled = true;
             cleanup?.();
         };
-    }, [fallbackSrc, isHlsSource, shouldLoad, src, videoNode]);
+    }, [fallbackSrc, isHlsSource, shouldLoad, src, videoRefVersion]);
 
     return (
         <span className={wrapperClassName}>

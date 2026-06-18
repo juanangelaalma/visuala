@@ -1,0 +1,12 @@
+{
+  "name": "@visuala/tailwind",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./theme.css": "./theme.css"
+  },
+  "devDependencies": {
+    "tailwindcss": "^4"
+  }
+}
