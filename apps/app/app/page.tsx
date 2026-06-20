@@ -1,7 +1,10 @@
-import { DashboardSidebar } from "@visuala/ui";
+import { DashboardNavbar, DashboardSidebar } from "@visuala/ui";
 
 export default function Home() {
   return (
-    <DashboardSidebar />
+    <>
+      <DashboardSidebar />
+      <DashboardNavbar />
+    </>
   );
 }

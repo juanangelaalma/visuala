@@ -1,5 +1,8 @@
+"use client";
+
 import Image, { type StaticImageData } from "next/image";
-import type { ReactNode } from "react";
+import { useState, type ReactNode } from "react";
+import Brand from "./Brand";
 
 export type DashboardSidebarItem = {
     id: string;
@@ -26,6 +29,9 @@ export type DashboardSidebarProps = {
     profile?: DashboardSidebarProfile;
     logo?: ReactNode;
     className?: string;
+    collapsed?: boolean;
+    defaultCollapsed?: boolean;
+    onCollapsedChange?: (collapsed: boolean) => void;
     onItemSelect?: (item: DashboardSidebarItem) => void;
     onCollapse?: () => void;
     onProfileClick?: () => void;
@@ -83,24 +89,33 @@ const defaultProfile: DashboardSidebarProfile = {
 };
 
 const sidebarClassNames = {
-    root: "flex min-h-screen w-60 flex-col rounded-2xl bg-pricing-bg px-4 py-6 text-white",
-    header: "mb-8 flex h-7 items-center justify-between",
+    root: "flex min-h-screen flex-col rounded-2xl bg-pricing-bg py-6 text-white transition-all duration-300",
+    rootExpanded: "w-60 px-4",
+    rootCollapsed: "w-20 px-3",
+    header: "relative mb-8 flex h-7 items-center",
+    headerExpanded: "justify-between",
+    headerCollapsed: "justify-center",
     logo: "h-7 w-32 text-white",
     iconButton: "inline-flex h-6 w-6 items-center justify-center text-neutral-450 transition-colors hover:text-white",
+    collapseButton: "inline-flex h-10 w-10 items-center justify-center border-neutral-500 bg-transparent text-neutral-450 transition-colors hover:border-white hover:text-white",
     menu: "flex flex-col gap-4",
     section: "flex flex-col gap-3",
     sectionTitle: "font-sans-secondary text-xs font-medium text-neutral-450",
     itemGroup: "flex flex-col",
-    item: "flex h-13 w-full items-center gap-4 rounded-full px-4 font-display text-sm font-medium transition-colors",
+    item: "flex h-13 w-full items-center rounded-full font-display text-sm font-medium transition-colors",
+    itemExpanded: "gap-4 px-4",
+    itemCollapsed: "justify-center px-0",
     itemActive: "bg-primary text-pricing-bg",
     itemInactive: "bg-pricing-bg text-white hover:bg-surface-3",
     itemIcon: "inline-flex h-6 w-6 shrink-0 items-center justify-center",
     divider: "h-px w-full bg-surface-3",
-    profile: "mt-auto flex h-10 w-full items-center justify-between",
+    profile: "mt-auto flex h-10 w-full items-center",
+    profileExpanded: "justify-between",
+    profileCollapsed: "justify-center",
     profileMain: "flex min-w-0 items-center gap-3",
     avatar: "flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-neutral-800 font-sans text-sm font-semibold text-white",
     avatarImage: "h-10 w-10 rounded-full object-cover",
-    profileText: "min-w-0",
+    profileText: "min-w-0 grid",
     profileName: "truncate font-sans text-sm font-semibold text-white",
     profilePlan: "truncate font-sans text-xs font-medium text-neutral-450",
 } as const;
@@ -119,30 +134,11 @@ function getInitials(name: string) {
         .toUpperCase();
 }
 
-function SidebarLogo() {
-    return (
-        <svg viewBox="0 0 130 27" fill="none" aria-hidden="true" className={sidebarClassNames.logo}>
-            <text
-                x="0"
-                y="20"
-                fill="currentColor"
-                fontFamily="var(--font-display), var(--font-sans), sans-serif"
-                fontSize="21"
-                fontWeight="600"
-                letterSpacing="0"
-            >
-                VISUALA
-            </text>
-        </svg>
-    );
-}
-
-function CollapseIcon() {
+function CollapseIcon({ isCollapsed }: { isCollapsed: boolean }) {
     return (
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" className="h-6 w-6">
             <circle cx="12" cy="12" r="9" />
-            <path d="m13 8-4 4 4 4" />
-            <path d="M15 12H9" />
+            <path d={isCollapsed ? "m11 8 4 4-4 4" : "m13 8-4 4 4 4"} />
         </svg>
     );
 }
@@ -256,27 +252,30 @@ function getDefaultIcon(item: DashboardSidebarItem) {
 function SidebarItem({
     item,
     isActive,
+    isCollapsed,
     onItemSelect,
 }: {
     item: DashboardSidebarItem;
     isActive: boolean;
+    isCollapsed: boolean;
     onItemSelect?: (item: DashboardSidebarItem) => void;
 }) {
     const className = cx(
         sidebarClassNames.item,
+        isCollapsed ? sidebarClassNames.itemCollapsed : sidebarClassNames.itemExpanded,
         isActive ? sidebarClassNames.itemActive : sidebarClassNames.itemInactive,
     );
     const icon = item.icon ?? getDefaultIcon(item);
     const content = (
         <>
             <span className={sidebarClassNames.itemIcon}>{icon}</span>
-            <span className="truncate">{item.label}</span>
+            {isCollapsed ? null : <span className="truncate">{item.label}</span>}
         </>
     );
 
     if (item.href) {
         return (
-            <a href={item.href} className={className} aria-current={isActive ? "page" : undefined}>
+            <a href={item.href} className={className} aria-current={isActive ? "page" : undefined} title={isCollapsed ? item.label : undefined}>
                 {content}
             </a>
         );
@@ -284,13 +283,13 @@ function SidebarItem({
 
     if (onItemSelect) {
         return (
-            <button type="button" className={cx(className, "cursor-pointer text-left")} aria-current={isActive ? "page" : undefined} onClick={() => onItemSelect(item)}>
+            <button type="button" className={cx(className, "cursor-pointer text-left")} aria-current={isActive ? "page" : undefined} title={isCollapsed ? item.label : undefined} onClick={() => onItemSelect(item)}>
                 {content}
             </button>
         );
     }
 
-    return <div className={className}>{content}</div>;
+    return <div className={className} title={isCollapsed ? item.label : undefined}>{content}</div>;
 }
 
 function Avatar({ profile }: { profile: DashboardSidebarProfile }) {
@@ -307,48 +306,69 @@ export default function DashboardSidebar({
     profile = defaultProfile,
     logo,
     className = "",
+    collapsed,
+    defaultCollapsed = false,
+    onCollapsedChange,
     onItemSelect,
     onCollapse,
     onProfileClick,
 }: DashboardSidebarProps) {
+    const [internalCollapsed, setInternalCollapsed] = useState(defaultCollapsed);
+    const isCollapsed = collapsed ?? internalCollapsed;
+
+    function handleCollapse() {
+        const nextCollapsed = !isCollapsed;
+
+        if (collapsed === undefined) {
+            setInternalCollapsed(nextCollapsed);
+        }
+
+        onCollapsedChange?.(nextCollapsed);
+        onCollapse?.();
+    }
+
     const profileContent = (
         <>
             <span className={sidebarClassNames.profileMain}>
                 <Avatar profile={profile} />
-                <span className={sidebarClassNames.profileText}>
-                    <span className={sidebarClassNames.profileName}>{profile.name}</span>
-                    <span className={sidebarClassNames.profilePlan}>{profile.plan}</span>
+                {isCollapsed ? null : (
+                    <span className={sidebarClassNames.profileText}>
+                        <span className={sidebarClassNames.profileName}>{profile.name}</span>
+                        <span className={sidebarClassNames.profilePlan}>{profile.plan}</span>
+                    </span>
+                )}
+            </span>
+            {isCollapsed ? null : (
+                <span className={sidebarClassNames.iconButton}>
+                    <ChevronDownIcon />
                 </span>
-            </span>
-            <span className={sidebarClassNames.iconButton}>
-                <ChevronDownIcon />
-            </span>
+            )}
         </>
     );
 
     return (
-        <aside className={cx(sidebarClassNames.root, className)} aria-label="Dashboard menu">
-            <div className={sidebarClassNames.header}>
-                {logo ?? <SidebarLogo />}
-                {onCollapse ? (
-                    <button type="button" aria-label="Collapse dashboard menu" className={cx(sidebarClassNames.iconButton, "cursor-pointer")} onClick={onCollapse}>
-                        <CollapseIcon />
-                    </button>
-                ) : (
-                    <span className={sidebarClassNames.iconButton} aria-hidden="true">
-                        <CollapseIcon />
-                    </span>
-                )}
+        <aside className={cx(sidebarClassNames.root, isCollapsed ? sidebarClassNames.rootCollapsed : sidebarClassNames.rootExpanded, className)} aria-label="Dashboard menu">
+            <div className={cx(sidebarClassNames.header, isCollapsed ? sidebarClassNames.headerCollapsed : sidebarClassNames.headerExpanded)}>
+                {isCollapsed ? <Brand variant="mark" className="h-7 w-7" /> : logo ?? <Brand variant="full" className={sidebarClassNames.logo} />}
+                <button
+                    type="button"
+                    aria-label={isCollapsed ? "Expand dashboard menu" : "Collapse dashboard menu"}
+                    aria-expanded={!isCollapsed}
+                    className={cx(sidebarClassNames.collapseButton, "cursor-pointer", isCollapsed ? "absolute -right-8" : undefined)}
+                    onClick={handleCollapse}
+                >
+                    <CollapseIcon isCollapsed={isCollapsed} />
+                </button>
             </div>
 
             <nav className={sidebarClassNames.menu} aria-label="Dashboard navigation">
                 {items.map((section, sectionIndex) => (
                     <div key={section.title} className={sidebarClassNames.section}>
                         {sectionIndex > 0 ? <div className={sidebarClassNames.divider} /> : null}
-                        <p className={sidebarClassNames.sectionTitle}>{section.title}</p>
+                        {isCollapsed ? null : <p className={sidebarClassNames.sectionTitle}>{section.title}</p>}
                         <div className={sidebarClassNames.itemGroup}>
                             {section.items.map((item) => (
-                                <SidebarItem key={item.id} item={item} isActive={item.id === activeItemId} onItemSelect={onItemSelect} />
+                                <SidebarItem key={item.id} item={item} isActive={item.id === activeItemId} isCollapsed={isCollapsed} onItemSelect={onItemSelect} />
                             ))}
                         </div>
                     </div>
@@ -356,11 +376,11 @@ export default function DashboardSidebar({
             </nav>
 
             {onProfileClick ? (
-                <button type="button" className={cx(sidebarClassNames.profile, "cursor-pointer text-left")} onClick={onProfileClick}>
+                <button type="button" className={cx(sidebarClassNames.profile, isCollapsed ? sidebarClassNames.profileCollapsed : sidebarClassNames.profileExpanded, "cursor-pointer text-left")} onClick={onProfileClick}>
                     {profileContent}
                 </button>
             ) : (
-                <div className={sidebarClassNames.profile}>{profileContent}</div>
+                <div className={cx(sidebarClassNames.profile, isCollapsed ? sidebarClassNames.profileCollapsed : sidebarClassNames.profileExpanded)}>{profileContent}</div>
             )}
         </aside>
     );

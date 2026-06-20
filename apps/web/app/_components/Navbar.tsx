@@ -1,5 +1,5 @@
+import { Brand } from "@visuala/ui";
 import AuthButtons from "./AuthButton";
-import Brand from "./Brand";
 
 export default function Navbar() {
   return (
