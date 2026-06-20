@@ -32,10 +32,10 @@
   --color-text-muted: oklch(52% 0.025 250);
   --color-border-subtle: oklch(22% 0.03 250);
   --color-border-default: oklch(28% 0.04 250);
-  --font-sans: var(--font-cera), ui-sans-serif, system-ui, sans-serif;
-  --font-sans-secondary: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
-  --font-display: var(--font-clash), sans-serif;
-  --font-serif: var(--font-cotta), serif;
+  --font-sans: var(--font-cera, ui-sans-serif), system-ui, sans-serif;
+  --font-sans-secondary: var(--font-inter, ui-sans-serif), system-ui, sans-serif;
+  --font-display: var(--font-clash, ui-sans-serif), system-ui, sans-serif;
+  --font-serif: var(--font-cotta, ui-serif), serif;
   --radius-xl: 1rem;
   --radius-2xl: 1.5rem;
   --radius-3xl: 2rem;
