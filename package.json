@@ -9,7 +9,10 @@
     "lint": "turbo lint",
     "web:dev": "turbo dev --filter=web",
     "web:build": "turbo build --filter=web",
-    "web:lint": "turbo lint --filter=web"
+    "web:lint": "turbo lint --filter=web",
+    "app:dev": "turbo dev --filter=app",
+    "app:build": "turbo build --filter=app",
+    "app:lint": "turbo lint --filter=app"
   },
   "devDependencies": {
     "turbo": "^2.5.8"
