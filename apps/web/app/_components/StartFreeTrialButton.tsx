@@ -1,4 +1,4 @@
-import Button from "./Button";
+import { Button } from "@visuala/ui";
 
 type StartFreeTrialButtonProps = {
     className?: string;

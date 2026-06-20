@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 
 import BaseVideo from "../_components/BaseVideo";
-import VideoMuteButton from "../_components/VideoMuteButton";
+import { VideoMuteButton } from "@visuala/ui";
 
 type FeatureShowcaseVideoCardProps = {
     src: string;

@@ -1,4 +1,4 @@
-import Section from "../_components/Section";
+import { Section } from "@visuala/ui";
 import ArtisticBoard from "../_components/artistic-directions/ArtisticBoard";
 
 export default function ArtisticDirectionsSection() {

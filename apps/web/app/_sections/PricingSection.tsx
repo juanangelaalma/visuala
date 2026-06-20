@@ -1,4 +1,4 @@
-import Badge from "../_components/Badge";
+import { Badge } from "@visuala/ui";
 import PrimaryCtaButton from "../_components/PrimaryCtaButton";
 import { OutlineButton } from "../_components/OutlineButton";
 

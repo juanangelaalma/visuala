@@ -1,5 +1,5 @@
 import type { AnchorHTMLAttributes, ButtonHTMLAttributes, ReactNode } from "react";
-import Button from "./Button";
+import { Button } from "@visuala/ui";
 
 type PrimaryCtaButtonBaseProps = {
     children: ReactNode;
