@@ -1,5 +1,7 @@
 export { default as Badge } from "./Badge";
 export { default as Button } from "./Button";
+export { default as DashboardFooter } from "./DashboardFooter";
+export type { DashboardFooterLink, DashboardFooterProps } from "./DashboardFooter";
 export { default as DashboardNavbar } from "./DashboardNavbar";
 export type { DashboardNavbarProps } from "./DashboardNavbar";
 export { default as DashboardSidebar } from "./DashboardSidebar";
