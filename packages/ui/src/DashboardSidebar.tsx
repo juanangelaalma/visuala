@@ -1,6 +1,7 @@
 "use client";
 
 import Image, { type StaticImageData } from "next/image";
+import Link from "next/link";
 import { useState, type ReactNode } from "react";
 import Brand from "./Brand";
 
@@ -109,7 +110,7 @@ const sidebarClassNames = {
     itemInactive: "bg-pricing-bg text-white hover:bg-surface-3",
     itemIcon: "inline-flex h-6 w-6 shrink-0 items-center justify-center",
     divider: "h-px w-full bg-surface-3",
-    profile: "mt-auto flex h-10 w-full items-center",
+    profile: "mt-auto flex h-10 w-full items-center mb-4",
     profileExpanded: "justify-between",
     profileCollapsed: "justify-center",
     profileMain: "flex min-w-0 items-center gap-3",
@@ -275,9 +276,9 @@ function SidebarItem({
 
     if (item.href) {
         return (
-            <a href={item.href} className={className} aria-current={isActive ? "page" : undefined} title={isCollapsed ? item.label : undefined}>
+            <Link href={item.href} className={className} aria-current={isActive ? "page" : undefined} title={isCollapsed ? item.label : undefined}>
                 {content}
-            </a>
+            </Link>
         );
     }
 
