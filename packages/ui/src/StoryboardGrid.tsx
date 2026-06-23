@@ -1,4 +1,6 @@
-import StoryboardSceneCard, { type StoryboardScene } from "./StoryboardSceneCard";
+import StoryboardSceneCard, {
+    type StoryboardScene,
+} from "./StoryboardSceneCard";
 
 export type StoryboardGridProps = {
     title?: string;
@@ -13,63 +15,63 @@ const defaultScenes: StoryboardScene[] = [
         id: "opening-hook",
         number: 1,
         title: "SCENE: OPENING (HOOK)",
-        visual: "Visual: Medium shot, karakter menyapa kamera.",
+        visual: "Medium shot, karakter menyapa kamera.",
         dialog: "“Hai! Aku mau share facial wash yg bener-bener gentle di kulitku.”",
         actionLabel: "Save Scene",
     },
     {
         id: "intro-produk",
         title: "SCENE: INTRO PRODUK",
-        visual: "Visual: Menunjukkan produk ke kamera.",
+        visual: "Menunjukkan produk ke kamera.",
         dialog: "“Ini dia Oatmilk Gentle Facial Wash, cleanser andalanku setiap hari.”",
         actionLabel: "Edit Scene",
     },
     {
         id: "product-shot",
         title: "SCENE: PRODUCT SHOT",
-        visual: "Visual: Close up produk dengan nuansa natural (oat & milk).",
+        visual: "Close up produk dengan nuansa natural (oat & milk).",
         dialog: "“Diformulasikan dengan oat, milk & sodium hyaluronate. Super gentle buat semua j... Read More",
         actionLabel: "Edit Scene",
     },
     {
         id: "pemakaian",
         title: "SCENE: PEMAKAIAN",
-        visual: "Visual: Menggunakan facial wash, berbusa lembut.",
+        visual: "Menggunakan facial wash, berbusa lembut.",
         dialog: "“Teksturnya lembut, busanya halus, dan ngga bikin kulit terasa ketarik.”",
         actionLabel: "Edit Scene",
     },
     {
         id: "bilas",
         title: "SCENE: BILAS",
-        visual: "Visual: Membilas wajah dengan air",
+        visual: "Membilas wajah dengan air",
         dialog: "“Mudah dibilas dan bikin wajah terasa bersih tapi tetap lembap.”",
         actionLabel: "Edit Scene",
     },
     {
         id: "hasil",
         title: "SCENE: HASIL",
-        visual: "Visual: Wajah bersih, segar, natural glow.",
+        visual: "Wajah bersih, segar, natural glow.",
         dialog: "“Kulit jadi bersih, lembap, dan nyaman. Cocok banget buat kulit sensitif kayak aku.”",
         actionLabel: "Edit Scene",
     },
     {
         id: "keunggulan",
         title: "SCENE: KEUNGGULAN",
-        visual: "Visual: Infografis keunggulan produk.",
+        visual: "Infografis keunggulan produk.",
         dialog: "“No SLS, no alkohol, no animal testing, dan travel friendly.”",
         actionLabel: "Edit Scene",
     },
     {
         id: "rekomendasi",
         title: "SCENE: REKOMENDASI",
-        visual: "Visual: Close up, merekomendasikan produk.",
+        visual: "Close up, merekomendasikan produk.",
         dialog: "“Untuk kamu yang cari facial wash gentle tapi tetap efektif, wajib coba ini!”",
         actionLabel: "Edit Scene",
     },
     {
         id: "closing",
         title: "SCENE: CLOSING",
-        visual: "Visual: Produk + key message.",
+        visual: "Produk + key message.",
         dialog: "“Oatmilk Gentle Facial Wash, gentle cleanser for all skin type.”",
         actionLabel: "Edit Scene",
     },
@@ -103,7 +105,11 @@ export default function StoryboardGrid({
 
             <div className={storyboardClassNames.grid}>
                 {scenes.map((scene) => (
-                    <StoryboardSceneCard key={scene.id} scene={scene} onAction={onSceneAction} />
+                    <StoryboardSceneCard
+                        key={scene.id}
+                        scene={scene}
+                        onAction={onSceneAction}
+                    />
                 ))}
             </div>
         </section>

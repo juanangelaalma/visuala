@@ -26,7 +26,8 @@ const storyboardSceneCardClassNames = {
     numberBadge: "absolute left-0 top-0 z-10 flex h-10 w-10 items-center justify-center bg-white/50 font-sans-secondary text-2xl font-medium leading-5 text-black",
     contentGroup: "flex flex-col gap-2",
     heading: "font-sans text-sm font-bold leading-5 text-white",
-    body: "font-sans-secondary text-sm font-medium leading-5 text-white",
+    body: "font-sans-secondary text-sm font-medium leading-5 text-gray",
+    span: "text-white",
     dialog: "font-sans-secondary text-sm font-medium italic leading-5 text-white",
     action: "mt-auto h-13 w-52 font-sans-secondary text-base font-semibold",
 } as const;
@@ -61,7 +62,7 @@ export default function StoryboardSceneCard({ scene, onAction, className = "" }:
 
             <div className={storyboardSceneCardClassNames.contentGroup}>
                 <h3 className={storyboardSceneCardClassNames.heading}>{scene.title}</h3>
-                <p className={storyboardSceneCardClassNames.body}>{scene.visual}</p>
+                <p className={storyboardSceneCardClassNames.body}><span className={storyboardSceneCardClassNames.span}>Visual: </span>{scene.visual}</p>
             </div>
 
             <div className={storyboardSceneCardClassNames.contentGroup}>
