@@ -8,44 +8,32 @@ const dashboardSections: DashboardSidebarSection[] = [
   {
     title: "Main",
     items: [
-      { id: "create-story-board", label: "Create Story Board", href: "/" },
-      { id: "home", label: "Home", href: "/home" },
-      { id: "analytics", label: "Analytics", href: "/analytics" },
+      { id: "create-story-board", label: "Create Story Board", href: "/dashboard" },
+      { id: "home", label: "Home", href: "/dashboard/home" },
+      { id: "analytics", label: "Analytics", href: "/dashboard/analytics" },
     ],
   },
   {
     title: "Organize",
     items: [
-      { id: "brands", label: "Brands", href: "/brands" },
-      { id: "campaigns", label: "Campaigns", href: "/campaigns" },
-      { id: "folders", label: "Folders", href: "/folders" },
-      { id: "favorites", label: "Favorites", href: "/favorites" },
+      { id: "brands", label: "Brands", href: "/dashboard/brands" },
+      { id: "campaigns", label: "Campaigns", href: "/dashboard/campaigns" },
+      { id: "folders", label: "Folders", href: "/dashboard/folders" },
+      { id: "favorites", label: "Favorites", href: "/dashboard/favorites" },
     ],
   },
   {
     title: "More",
     items: [
-      { id: "templates", label: "Templates", href: "/templates" },
-      { id: "more-tools", label: "More Tools", href: "/tools" },
-      { id: "profile-settings", label: "Profile Settings", href: "/profile" },
+      { id: "templates", label: "Templates", href: "/dashboard/templates" },
+      { id: "more-tools", label: "More Tools", href: "/dashboard/tools" },
+      { id: "profile-settings", label: "Profile Settings", href: "/dashboard/profile" },
       { id: "logout", label: "Logout", href: "/logout" },
     ],
   },
 ];
 
-const pathToItemId: Record<string, string> = {
-  "/": "create-story-board",
-  "/home": "home",
-  "/analytics": "analytics",
-  "/brands": "brands",
-  "/campaigns": "campaigns",
-  "/folders": "folders",
-  "/favorites": "favorites",
-  "/templates": "templates",
-  "/tools": "more-tools",
-  "/profile": "profile-settings",
-  "/logout": "logout",
-};
+const pathToItemId = Object.fromEntries(dashboardSections.flatMap((section) => section.items.map((item) => [item.href, item.id])));
 
 type DashboardShellProps = {
   children: ReactNode;
