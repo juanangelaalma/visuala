@@ -1,5 +1,7 @@
 "use client";
 
+import { Button } from "@visuala/ui";
+import Image from "next/image";
 import Link from "next/link";
 import { useActionState } from "react";
 import type { AuthActionState } from "../actions/auth-actions";
@@ -38,9 +40,10 @@ export function AuthForm({ mode, action, googleAction, initialError }: AuthFormP
           </div>
 
           <form action={googleAction}>
-            <button type="submit" className="flex h-12 w-full items-center justify-center rounded-full border border-white/10 bg-white text-sm font-semibold text-black transition hover:bg-primary">
+            <Button type="submit" variant="solid" className="h-12 w-full gap-3 border border-white/10 px-0 py-0 text-sm">
+              <Image src="/google-logo.png" alt="" width={20} height={20} aria-hidden />
               Continue with Google
-            </button>
+            </Button>
           </form>
 
           <div className="my-6 flex items-center gap-3 text-xs text-neutral-500">
@@ -69,9 +72,9 @@ export function AuthForm({ mode, action, googleAction, initialError }: AuthFormP
 
             {error ? <p className="rounded-2xl border border-danger/40 bg-danger/10 px-4 py-3 text-sm text-white">{error}</p> : null}
 
-            <button disabled={pending} className="h-12 w-full rounded-full bg-primary text-sm font-semibold text-black transition hover:bg-primary-dark disabled:cursor-not-allowed disabled:opacity-60">
+            <Button disabled={pending} className="h-12 w-full px-0 py-0 text-sm disabled:cursor-not-allowed disabled:opacity-60">
               {pending ? "Please wait..." : isLogin ? "Log in" : "Create account"}
-            </button>
+            </Button>
           </form>
 
           <p className="mt-6 text-center text-sm text-neutral-450">
