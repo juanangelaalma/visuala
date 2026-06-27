@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useActionState } from "react";
 import type { AuthActionState } from "../actions/auth-actions";
+import Hyperspeed, { hyperspeedPresetThree } from "./Hyperspeed";
 
 type AuthFormProps = {
   mode: "login" | "register";
@@ -19,15 +20,17 @@ export function AuthForm({ mode, action, googleAction, initialError }: AuthFormP
   const error = state.error ?? initialError;
 
   return (
-    <div className="min-h-screen bg-dark-bg px-6 py-8 text-white">
-      <main className="mx-auto flex min-h-[calc(100vh-4rem)] w-full max-w-6xl items-center justify-center lg:justify-between">
+    <div className="relative min-h-screen overflow-hidden bg-dark-bg px-6 py-8 text-white">
+      <Hyperspeed effectOptions={hyperspeedPresetThree} />
+      <div className="absolute inset-0 bg-black/60" />
+      <main className="relative z-10 mx-auto flex min-h-[calc(100vh-4rem)] w-full max-w-6xl items-center justify-center lg:justify-between">
         <section className="hidden max-w-xl lg:block">
-          <p className="mb-5 inline-flex rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm text-neutral-450">Visuala APP</p>
+          <p className="mb-5 inline-flex rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm text-neutral-450">Visuala AI</p>
           <h1 className="font-display text-6xl font-semibold leading-[0.95] tracking-[-0.04em]">Create product visuals, UGC videos, and fashion campaigns with AI.</h1>
           <p className="mt-6 max-w-md font-sans-secondary text-lg leading-8 text-neutral-450">Premium creative generation workspace for brands, creators, and affiliate teams.</p>
         </section>
 
-        <section className="w-full max-w-md rounded-3xl border border-white/10 bg-pricing-bg p-6 shadow-card-inner sm:p-8">
+        <section className="w-full max-w-md rounded-3xl border border-white/10 bg-pricing-bg/90 p-6 shadow-card-inner backdrop-blur sm:p-8">
           <div className="mb-8">
             <p className="text-sm font-semibold text-primary">{isLogin ? "Welcome back" : "Start creating"}</p>
             <h2 className="mt-2 text-3xl font-semibold tracking-[-0.03em]">{isLogin ? "Log in to Visuala" : "Create your account"}</h2>
