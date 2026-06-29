@@ -1,6 +1,8 @@
 export type AuthErrorCode =
   | "invalid_credentials"
   | "email_already_registered"
+  | "email_not_confirmed"
+  | "rate_limited"
   | "oauth_error"
   | "validation_error"
   | "session_expired"

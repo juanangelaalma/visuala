@@ -4,11 +4,13 @@ import type { AuthUser, UserProfile } from "@/domain/auth/types";
 import type { UserRepository } from "@/domain/auth/user-repository";
 import { loginWithEmail } from "./login-with-email";
 import { registerWithEmail } from "./register-with-email";
+import { resendConfirmationEmail } from "./resend-confirmation-email";
 
 function createAuthProvider(user: AuthUser | null = { id: "user-1", email: "user@example.com", fullName: "Jane Creator", avatarUrl: null }): AuthProvider {
   return {
     registerWithEmail: vi.fn().mockResolvedValue(undefined),
     loginWithEmail: vi.fn().mockResolvedValue(undefined),
+    resendConfirmationEmail: vi.fn().mockResolvedValue(undefined),
     loginWithOAuth: vi.fn().mockResolvedValue("http://localhost/auth/callback"),
     logout: vi.fn().mockResolvedValue(undefined),
     getCurrentUser: vi.fn().mockResolvedValue(user),
@@ -75,6 +77,14 @@ describe("email auth use cases", () => {
       fullName: "Jane Creator",
       avatarUrl: null,
     });
+  });
+
+  it("resends confirmation email", async () => {
+    const authProvider = createAuthProvider();
+
+    await resendConfirmationEmail(authProvider, { email: "user@example.com" });
+
+    expect(authProvider.resendConfirmationEmail).toHaveBeenCalledWith({ email: "user@example.com" });
   });
 
   it("skips profile when current user is missing", async () => {

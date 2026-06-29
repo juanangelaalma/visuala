@@ -1,5 +1,5 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
-import type { AuthProvider, LoginWithEmailInput, OAuthSignInInput, RegisterWithEmailInput } from "@/domain/auth/auth-provider";
+import type { AuthProvider, LoginWithEmailInput, OAuthSignInInput, RegisterWithEmailInput, ResendConfirmationEmailInput } from "@/domain/auth/auth-provider";
 import { AuthDomainError } from "@/domain/auth/errors";
 import type { AuthUser } from "@/domain/auth/types";
 import type { Database } from "@/infrastructure/supabase/database.types";
@@ -21,6 +21,15 @@ export class SupabaseAuthAdapter implements AuthProvider {
 
   async loginWithEmail(input: LoginWithEmailInput) {
     const { error } = await this.supabase.auth.signInWithPassword(input);
+
+    if (error) throw mapSupabaseAuthError(error.message);
+  }
+
+  async resendConfirmationEmail(input: ResendConfirmationEmailInput) {
+    const { error } = await this.supabase.auth.resend({
+      type: "signup",
+      email: input.email,
+    });
 
     if (error) throw mapSupabaseAuthError(error.message);
   }
@@ -59,6 +68,14 @@ export class SupabaseAuthAdapter implements AuthProvider {
 
 function mapSupabaseAuthError(message: string) {
   const normalizedMessage = message.toLowerCase();
+
+  if (normalizedMessage.includes("email not confirmed")) {
+    return new AuthDomainError("email_not_confirmed", "Please confirm your email before logging in.");
+  }
+
+  if (normalizedMessage.includes("rate limit") || normalizedMessage.includes("too many") || normalizedMessage.includes("for security purposes")) {
+    return new AuthDomainError("rate_limited", "Please wait a moment before requesting another confirmation email.");
+  }
 
   if (normalizedMessage.includes("invalid login") || normalizedMessage.includes("invalid credentials")) {
     return new AuthDomainError("invalid_credentials", "Invalid email or password.");

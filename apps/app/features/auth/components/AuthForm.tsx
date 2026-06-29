@@ -36,7 +36,7 @@ export function AuthForm({ mode, action, googleAction, initialError }: AuthFormP
           <div className="mb-8">
             <p className="text-sm font-semibold text-primary">{isLogin ? "Welcome back" : "Start creating"}</p>
             <h2 className="mt-2 text-3xl font-semibold tracking-[-0.03em]">{isLogin ? "Log in to Visuala" : "Create your account"}</h2>
-            <p className="mt-3 text-sm leading-6 text-neutral-450">{isLogin ? "Access your AI creative dashboard." : "Your account is active immediately after signup."}</p>
+            <p className="mt-3 text-sm leading-6 text-neutral-450">{isLogin ? "Access your AI creative dashboard." : "Create your account, then confirm your email to start using Visuala."}</p>
           </div>
 
           <form action={googleAction}>
@@ -72,7 +72,7 @@ export function AuthForm({ mode, action, googleAction, initialError }: AuthFormP
 
             {error ? <p className="rounded-2xl border border-danger/40 bg-danger/10 px-4 py-3 text-sm text-white">{error}</p> : null}
 
-            <Button disabled={pending} className="h-12 w-full px-0 py-0 text-sm disabled:cursor-not-allowed disabled:opacity-60">
+            <Button type="submit" disabled={pending} className="h-12 w-full px-0 py-0 text-sm disabled:cursor-not-allowed disabled:opacity-60">
               {pending ? "Please wait..." : isLogin ? "Log in" : "Create account"}
             </Button>
           </form>
