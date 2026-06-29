@@ -1,7 +1,11 @@
 import { describe, expect, it } from "vitest";
-import { loginSchema, registerSchema } from "./auth-schemas";
+import { emailSchema, loginSchema, registerSchema } from "./auth-schemas";
 
 describe("auth schemas", () => {
+  it("accepts valid email input", () => {
+    expect(emailSchema.safeParse({ email: "user@example.com" }).success).toBe(true);
+  });
+
   it("accepts valid login input", () => {
     expect(loginSchema.safeParse({ email: "user@example.com", password: "password123" }).success).toBe(true);
   });
