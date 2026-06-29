@@ -24,6 +24,7 @@ export async function registerAction(_: AuthActionState, formData: FormData): Pr
   try {
     const { authProvider, userRepository } = await createAuthServices();
     await registerWithEmail(authProvider, userRepository, parsed.data);
+    await resendConfirmationEmail(authProvider, { email: parsed.data.email }).catch(() => undefined);
   } catch (error) {
     return { error: toFriendlyAuthError(error) };
   }
