@@ -33,7 +33,7 @@ export default async function CheckEmailPage({ searchParams }: CheckEmailPagePro
           <p className="text-sm font-semibold text-primary">Check your inbox</p>
           <h2 className="mt-2 text-3xl font-semibold tracking-[-0.03em]">Confirm your email</h2>
           <p className="mt-3 text-sm leading-6 text-neutral-450">
-            We sent a confirmation link{email ? " to " : " to your email"}
+            If this email needs confirmation, we sent a link{email ? " to " : " to your email"}
             {email ? <span className="font-semibold text-white"> {email}</span> : null}. Click the link to activate your account before logging in.
           </p>
 
