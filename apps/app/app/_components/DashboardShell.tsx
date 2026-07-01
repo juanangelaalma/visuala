@@ -1,10 +1,11 @@
 "use client";
 
-import { DashboardFooter, DashboardNavbar, DashboardSidebar, type DashboardSidebarSection } from "@visuala/ui";
+import { DashboardFooter, DashboardNavbar, DashboardSidebar, type DashboardSidebarItem, type DashboardSidebarSection } from "@visuala/ui";
 import { usePathname } from "next/navigation";
-import type { ReactNode } from "react";
+import { useMemo, useRef, type ReactNode } from "react";
+import { logoutAction } from "@/features/auth/actions/auth-actions";
 
-const dashboardSections: DashboardSidebarSection[] = [
+const defaultDashboardSections: DashboardSidebarSection[] = [
   {
     title: "Main",
     items: [
@@ -28,18 +29,29 @@ const dashboardSections: DashboardSidebarSection[] = [
       { id: "templates", label: "Templates", href: "/dashboard/templates" },
       { id: "more-tools", label: "More Tools", href: "/dashboard/tools" },
       { id: "profile-settings", label: "Profile Settings", href: "/dashboard/profile" },
-      { id: "logout", label: "Logout", href: "/logout" },
+      { id: "logout", label: "Logout" },
     ],
   },
 ];
 
-const pathToItemId = Object.fromEntries(dashboardSections.flatMap((section) => section.items.map((item) => [item.href, item.id])));
+export const adminDashboardSections: DashboardSidebarSection[] = [
+  {
+    title: "Admin",
+    items: [
+      { id: "admin-dashboard", label: "Dashboard", href: "/admin/dashboard" },
+      { id: "admin-pricing", label: "Pricing", href: "/admin/pricing" },
+    ],
+  },
+];
 
 type DashboardShellProps = {
   children: ReactNode;
+  sections?: DashboardSidebarSection[];
+  showCreateButton?: boolean;
 };
 
-function getActiveItemId(pathname: string) {
+function getActiveItemId(pathname: string, sections: DashboardSidebarSection[]) {
+  const pathToItemId = Object.fromEntries(sections.flatMap((section) => section.items.flatMap((item) => (item.href ? [[item.href, item.id]] : []))));
   const exactMatch = pathToItemId[pathname];
   if (exactMatch) return exactMatch;
 
@@ -47,19 +59,26 @@ function getActiveItemId(pathname: string) {
     .filter((path) => path !== "/" && pathname.startsWith(path))
     .sort((a, b) => b.length - a.length)[0];
 
-  return matchedPath ? pathToItemId[matchedPath] : "create-story-board";
+  return matchedPath ? pathToItemId[matchedPath] : sections[0]?.items[0]?.id ?? "";
 }
 
-export default function DashboardShell({ children }: DashboardShellProps) {
+export default function DashboardShell({ children, sections = defaultDashboardSections, showCreateButton = true }: DashboardShellProps) {
   const pathname = usePathname();
+  const logoutFormRef = useRef<HTMLFormElement>(null);
+  const activeItemId = useMemo(() => getActiveItemId(pathname, sections), [pathname, sections]);
+
+  function handleItemSelect(item: DashboardSidebarItem) {
+    if (item.id === "logout") logoutFormRef.current?.requestSubmit();
+  }
 
   return (
     <div className="h-screen overflow-hidden bg-dark-bg p-4">
       <div className="flex h-full gap-8">
-        <DashboardSidebar items={dashboardSections} activeItemId={getActiveItemId(pathname)} className="h-full min-h-0 shrink-0" />
+        <DashboardSidebar items={sections} activeItemId={activeItemId} className="h-full min-h-0 shrink-0" onItemSelect={handleItemSelect} />
+        <form ref={logoutFormRef} action={logoutAction} className="hidden" />
 
         <div className="flex min-w-0 flex-1 flex-col gap-4 overflow-y-auto">
-          <DashboardNavbar />
+          <DashboardNavbar showCreateButton={showCreateButton} />
           <main className="min-w-0 flex-1">{children}</main>
           <DashboardFooter />
         </div>

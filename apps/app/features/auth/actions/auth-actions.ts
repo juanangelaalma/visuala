@@ -1,12 +1,13 @@
 "use server";
 
 import { redirect } from "next/navigation";
+import { getRoleRedirectPath } from "@/application/auth/get-role-redirect";
 import { loginWithEmail } from "@/application/auth/login-with-email";
 import { loginWithGoogle } from "@/application/auth/login-with-google";
 import { logout } from "@/application/auth/logout";
 import { registerWithEmail } from "@/application/auth/register-with-email";
 import { resendConfirmationEmail } from "@/application/auth/resend-confirmation-email";
-import { createAuthServices } from "@/application/auth/services";
+import { createWritableAuthServices } from "@/application/auth/services";
 import { AuthDomainError, toFriendlyAuthError } from "@/domain/auth/errors";
 import { getAppEnv } from "@/shared/config/env";
 import { emailSchema, loginSchema, registerSchema } from "../schemas/auth-schemas";
@@ -22,7 +23,7 @@ export async function registerAction(_: AuthActionState, formData: FormData): Pr
   if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Please check your details." };
 
   try {
-    const { authProvider, userRepository } = await createAuthServices();
+    const { authProvider, userRepository } = await createWritableAuthServices();
     await registerWithEmail(authProvider, userRepository, parsed.data);
     await resendConfirmationEmail(authProvider, { email: parsed.data.email }).catch(() => undefined);
   } catch (error) {
@@ -37,14 +38,17 @@ export async function loginAction(_: AuthActionState, formData: FormData): Promi
 
   if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Please check your details." };
 
+  let redirectPath = "/dashboard";
+
   try {
-    const { authProvider, userRepository } = await createAuthServices();
-    await loginWithEmail(authProvider, userRepository, parsed.data);
+    const { authProvider, userRepository } = await createWritableAuthServices();
+    const profile = await loginWithEmail(authProvider, userRepository, parsed.data);
+    redirectPath = getRoleRedirectPath(profile?.role);
   } catch (error) {
     return { error: toFriendlyAuthError(error) };
   }
 
-  redirect("/dashboard");
+  redirect(redirectPath);
 }
 
 export async function resendConfirmationAction(_: AuthActionState, formData: FormData): Promise<AuthActionState> {
@@ -53,7 +57,7 @@ export async function resendConfirmationAction(_: AuthActionState, formData: For
   if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Please enter a valid email address." };
 
   try {
-    const { authProvider } = await createAuthServices();
+    const { authProvider } = await createWritableAuthServices();
     await resendConfirmationEmail(authProvider, parsed.data);
   } catch (error) {
     if (error instanceof AuthDomainError && error.code === "rate_limited") return { error: error.message };
@@ -66,7 +70,7 @@ export async function googleLoginAction() {
   let url: string;
 
   try {
-    const { authProvider } = await createAuthServices();
+    const { authProvider } = await createWritableAuthServices();
     const env = getAppEnv();
     url = await loginWithGoogle(authProvider, `${env.NEXT_PUBLIC_APP_URL}/auth/callback`);
   } catch (error) {
@@ -78,7 +82,7 @@ export async function googleLoginAction() {
 }
 
 export async function logoutAction() {
-  const { authProvider } = await createAuthServices();
+  const { authProvider } = await createWritableAuthServices();
   await logout(authProvider);
   redirect("/login");
 }

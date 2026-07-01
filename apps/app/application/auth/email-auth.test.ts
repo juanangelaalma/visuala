@@ -29,7 +29,7 @@ function createUserRepository(): UserRepository {
   };
 
   return {
-    findById: vi.fn().mockResolvedValue(null),
+    findById: vi.fn().mockResolvedValue(profile),
     upsert: vi.fn().mockResolvedValue(profile),
   };
 }

@@ -3,7 +3,17 @@ import { cookies } from "next/headers";
 import { getAppEnv } from "@/shared/config/env";
 import type { Database } from "./database.types";
 
+type CookieWriteMode = "readonly" | "writable";
+
 export async function createSupabaseServerClient() {
+  return createSupabaseServerClientWithCookieMode("readonly");
+}
+
+export async function createSupabaseWritableServerClient() {
+  return createSupabaseServerClientWithCookieMode("writable");
+}
+
+async function createSupabaseServerClientWithCookieMode(mode: CookieWriteMode) {
   const env = getAppEnv();
   const cookieStore = await cookies();
 
@@ -13,6 +23,7 @@ export async function createSupabaseServerClient() {
         return cookieStore.getAll();
       },
       setAll(cookiesToSet) {
+        if (mode === "readonly") return;
         cookiesToSet.forEach(({ name, value, options }) => cookieStore.set(name, value, options));
       },
     },

@@ -49,7 +49,9 @@ type IconName =
     | "templates"
     | "tools"
     | "profile"
-    | "logout";
+    | "logout"
+    | "admin-dashboard"
+    | "pricing";
 
 type DefaultDashboardSidebarItem = DashboardSidebarItem & {
     iconName: IconName;
@@ -82,6 +84,12 @@ const defaultSections: Array<{ title: string; items: DefaultDashboardSidebarItem
             { id: "logout", label: "Logout", iconName: "logout" },
         ],
     },
+];
+
+const allDefaultItems: DefaultDashboardSidebarItem[] = [
+    ...defaultSections.flatMap((section) => section.items),
+    { id: "admin-dashboard", label: "Dashboard", iconName: "admin-dashboard" },
+    { id: "admin-pricing", label: "Pricing", iconName: "pricing" },
 ];
 
 const defaultProfile: DashboardSidebarProfile = {
@@ -227,6 +235,21 @@ function SidebarIcon({ name }: { name: IconName }) {
                     <rect x="13" y="13" width="7" height="7" rx="2" />
                 </svg>
             );
+        case "admin-dashboard":
+            return (
+                <svg viewBox="0 0 24 24" aria-hidden="true" className="h-6 w-6">
+                    <path d="M0 0h24v24H0z" fill="none" />
+                    <path fill="currentColor" d="M13 8V4q0-.425.288-.712T14 3h6q.425 0 .713.288T21 4v4q0 .425-.288.713T20 9h-6q-.425 0-.712-.288T13 8M3 12V4q0-.425.288-.712T4 3h6q.425 0 .713.288T11 4v8q0 .425-.288.713T10 13H4q-.425 0-.712-.288T3 12m10 8v-8q0-.425.288-.712T14 11h6q.425 0 .713.288T21 12v8q0 .425-.288.713T20 21h-6q-.425 0-.712-.288T13 20M3 20v-4q0-.425.288-.712T4 15h6q.425 0 .713.288T11 16v4q0 .425-.288.713T10 21H4q-.425 0-.712-.288T3 20m2-9h4V5H5zm10 8h4v-6h-4zm0-12h4V5h-4zM5 19h4v-2H5zm4-2" />
+                </svg>
+            );
+        case "pricing":
+            return (
+                <svg viewBox="0 0 24 24" aria-hidden="true" className="h-6 w-6">
+                    <path d="M0 0h24v24H0z" fill="none" />
+                    <path fill="currentColor" d="M13.71 3.29A1 1 0 0 0 13 3H4c-.55 0-1 .45-1 1v9c0 .27.11.52.29.71l8 8c.2.2.45.29.71.29s.51-.1.71-.29l9-9a.996.996 0 0 0 0-1.41zM12 19.58l-7-7V4.99h7.59l7 7z" />
+                    <path fill="currentColor" d="M9 7c-1.11 0-2 .9-2 2s.9 2 2 2s2-.9 2-2s-.9-2-2-2" />
+                </svg>
+            );
         case "profile":
             return (
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" className="h-6 w-6">
@@ -246,7 +269,7 @@ function SidebarIcon({ name }: { name: IconName }) {
 }
 
 function getDefaultIcon(item: DashboardSidebarItem) {
-    const match = defaultSections.flatMap((section) => section.items).find((defaultItem) => defaultItem.id === item.id);
+    const match = allDefaultItems.find((defaultItem) => defaultItem.id === item.id);
     return match ? <SidebarIcon name={match.iconName} /> : null;
 }
 

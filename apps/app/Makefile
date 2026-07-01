@@ -1,6 +1,15 @@
 dev:
 	pnpm dev
 
+refresh: refresh-cache
+
+refresh-cache:
+	rm -rf .next
+
+refresh-deps:
+	rm -rf node_modules .next ../../node_modules ../../packages/ui/node_modules
+	pnpm install --dir ../..
+
 build:
 	pnpm build
 
