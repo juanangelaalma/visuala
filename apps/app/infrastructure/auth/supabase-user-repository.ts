@@ -22,7 +22,7 @@ export class SupabaseUserRepository implements UserRepository {
           email: input.email,
           full_name: input.fullName ?? null,
           avatar_url: input.avatarUrl ?? null,
-          role: "user",
+          ...(input.role ? { role: input.role } : {}),
         },
         { onConflict: "id" },
       )

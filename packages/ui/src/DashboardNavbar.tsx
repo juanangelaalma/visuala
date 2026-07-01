@@ -10,6 +10,7 @@ export type DashboardNavbarProps = {
     createLabel?: string;
     createHref?: string;
     onCreateClick?: () => void;
+    showCreateButton?: boolean;
     className?: string;
 };
 
@@ -90,6 +91,7 @@ export default function DashboardNavbar({
     createLabel = "Create Scene ✨",
     createHref,
     onCreateClick,
+    showCreateButton = true,
     className = "",
 }: DashboardNavbarProps) {
     const handleSearchChange = (event: ChangeEvent<HTMLInputElement>) => {
@@ -123,15 +125,17 @@ export default function DashboardNavbar({
                 <NavbarIconAction label="Open notifications" onClick={onNotificationsClick}>
                     <NotificationIcon />
                 </NavbarIconAction>
-                {createHref ? (
-                    <Button href={createHref} variant="primary" tone="dark" className={navbarClassNames.createButton}>
-                        {createLabel}
-                    </Button>
-                ) : (
-                    <Button variant="primary" tone="dark" className={navbarClassNames.createButton} onClick={onCreateClick}>
-                        {createLabel}
-                    </Button>
-                )}
+                {showCreateButton ? (
+                    createHref ? (
+                        <Button href={createHref} variant="primary" tone="dark" className={navbarClassNames.createButton}>
+                            {createLabel}
+                        </Button>
+                    ) : (
+                        <Button variant="primary" tone="dark" className={navbarClassNames.createButton} onClick={onCreateClick}>
+                            {createLabel}
+                        </Button>
+                    )
+                ) : null}
             </div>
         </header>
     );

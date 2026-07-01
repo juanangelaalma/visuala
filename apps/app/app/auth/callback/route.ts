@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
 import { ensureUserProfile } from "@/application/auth/ensure-user-profile";
-import { SupabaseAuthAdapter } from "@/infrastructure/auth/supabase-auth-adapter";
-import { SupabaseUserRepository } from "@/infrastructure/auth/supabase-user-repository";
-import { createSupabaseServerClient } from "@/infrastructure/supabase/server-client";
+import { getRoleRedirectPath } from "@/application/auth/get-role-redirect";
+import { createAuthServicesFromSupabase } from "@/application/auth/services";
+import { createSupabaseWritableServerClient } from "@/infrastructure/supabase/server-client";
 import { getAppEnv } from "@/shared/config/env";
 
 export async function GET(request: Request) {
@@ -19,18 +19,17 @@ export async function GET(request: Request) {
     return NextResponse.redirect(`${env.NEXT_PUBLIC_APP_URL}/login?error=${encodeURIComponent("Invalid auth callback.")}`);
   }
 
-  const supabase = await createSupabaseServerClient();
+  const supabase = await createSupabaseWritableServerClient();
   const { error } = await supabase.auth.exchangeCodeForSession(code);
 
   if (error) {
     return NextResponse.redirect(`${env.NEXT_PUBLIC_APP_URL}/login?error=${encodeURIComponent("Could not complete Google sign in.")}`);
   }
 
-  const authProvider = new SupabaseAuthAdapter(supabase);
-  const userRepository = new SupabaseUserRepository(supabase);
+  const { authProvider, userRepository } = createAuthServicesFromSupabase(supabase);
   const user = await authProvider.getCurrentUser();
+  const profile = user ? await ensureUserProfile(userRepository, user) : null;
+  const redirectPath = getRoleRedirectPath(profile?.role);
 
-  if (user) await ensureUserProfile(userRepository, user);
-
-  return NextResponse.redirect(`${env.NEXT_PUBLIC_APP_URL}/dashboard`);
+  return NextResponse.redirect(`${env.NEXT_PUBLIC_APP_URL}${redirectPath}`);
 }
