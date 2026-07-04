@@ -19,7 +19,7 @@ const defaultLinks: DashboardFooterLink[] = [
 ];
 
 const dashboardFooterClassNames = {
-    root: "flex w-full flex-col gap-3 rounded-lg bg-pricing-bg px-4 py-3 font-sans-secondary text-xs font-medium leading-5 text-neutral-650 md:flex-row md:items-center md:justify-between",
+    root: "flex w-full flex-col gap-3 rounded-lg px-4 py-3 font-sans-secondary text-xs font-medium leading-5 text-neutral-650 md:flex-row md:items-center md:justify-between",
     linkGroup: "flex flex-wrap items-center gap-6",
     link: "transition-colors hover:text-white",
     brand: "font-semibold text-primary",

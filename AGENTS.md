@@ -4,6 +4,10 @@
 This version has breaking changes — APIs, conventions, and file structure may all differ from your training data. Read the relevant guide in `node_modules/next/dist/docs/` before writing any code. Heed deprecation notices.
 <!-- END:nextjs-agent-rules -->
 
+## Clarifications
+
+When asking the user for clarification or decisions, use the `question` tool with explicit options instead of asking free-form text only. Include a recommended option when appropriate, and allow a custom answer when useful.
+
 ## graphify
 
 This project has a knowledge graph at graphify-out/ with god nodes, community structure, and cross-file relationships.

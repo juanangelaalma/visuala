@@ -1,7 +1,7 @@
 import Link from "next/link";
 import type { AnchorHTMLAttributes, ButtonHTMLAttributes, ReactNode } from "react";
 
-type ButtonVariant = "primary" | "outline" | "solid";
+type ButtonVariant = "primary" | "outline" | "solid" | "danger";
 type ButtonTone = "light" | "dark";
 type ButtonSize = "sm" | "md" | "lg";
 
@@ -41,6 +41,10 @@ const variantClassNames: Record<ButtonVariant, Record<ButtonTone, string>> = {
     solid: {
         light: "bg-white text-black hover:bg-primary hover:text-black",
         dark: "bg-black text-white hover:bg-primary hover:text-black",
+    },
+    danger: {
+        light: "bg-danger text-white hover:bg-danger/80",
+        dark: "bg-danger text-white hover:bg-danger/80",
     },
 };
 
