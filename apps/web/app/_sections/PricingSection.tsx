@@ -1,142 +1,25 @@
 import { Badge } from "@visuala/ui";
-import PrimaryCtaButton from "../_components/PrimaryCtaButton";
 import { OutlineButton } from "../_components/OutlineButton";
+import PricingTabs from "./PricingTabs";
+import type { PricingPlan } from "./pricing-types";
 
-type PlanTheme = "dark" | "light";
-
-type Plan = {
-  id: string;
-  name: string;
-  price: string;
-  credits: string;
-  conversion: string;
-  bonus: string;
-  features: string[];
-  theme: PlanTheme;
-  mostPopular?: boolean;
+type PricingPlansResponse = {
+  plans: PricingPlan[];
 };
 
-const plans: Plan[] = [
-  {
-    id: "starter",
-    name: "Starter",
-    price: "Rp899k",
-    credits: "250 credits",
-    conversion: "100 images or 25 videos",
-    bonus: "First month: 500 credits",
-    features: [
-      "Commercial use for all generated assets",
-      "Live chat & email support",
-      "Access to all styles",
-    ],
-    theme: "dark",
-  },
-  {
-    id: "professional",
-    name: "Professional",
-    price: "Rp3,9jt",
-    credits: "1,000 credits",
-    conversion: "400 images or 100 videos",
-    bonus: "First month: 2,000 credits",
-    features: [
-      "Commercial use for all generated assets",
-      "Priority support",
-      "Custom styles to your brand (coming soon)",
-    ],
-    mostPopular: true,
-    theme: "light",
-  },
-  {
-    id: "business",
-    name: "Business",
-    price: "Rp6,9jt",
-    credits: "2,500 credits",
-    conversion: "1,000 images or 250 videos",
-    bonus: "First month: 5,000 credits",
-    features: [
-      "Commercial use for all generated assets",
-      "Dedicated support",
-      "Custom styles to your brand (coming soon)",
-      "API Access (coming soon)",
-    ],
-    theme: "dark",
-  },
-];
+const appApiUrl = process.env.NEXT_PUBLIC_APP_API_URL ?? "http://localhost:3000";
 
-const planThemeClassNames = {
-  light: {
-    card: "border-primary bg-gradient-to-br from-white to-neutral-150 shadow-pricing-featured",
-    title: "text-black",
-    muted: "text-black/60",
-    feature: "text-black/80",
-    bonus: "border-black/20 bg-black/10 text-black/70",
-    check: "black",
-    cta: "dark",
-  },
-  dark: {
-    card: "border-white/20 bg-gradient-to-br from-black/80 to-black backdrop-blur-sm",
-    title: "text-white",
-    muted: "text-white/60",
-    feature: "text-white/60",
-    bonus: "border-primary/30 bg-primary/20 text-primary",
-    check: "var(--color-primary)",
-    cta: "light",
-  },
-} as const;
+async function getPricingPlans(): Promise<PricingPlan[]> {
+  try {
+    const response = await fetch(`${appApiUrl}/api/pricing-plans`, { next: { revalidate: 300 } });
 
-function CheckIcon({ color }: { color: string }) {
-  return (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" className="mt-1 shrink-0">
-      <path d="M20 6L9 17L4 12" stroke={color} strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-  );
-}
+    if (!response.ok) return [];
 
-function PricingCard({ plan }: { plan: Plan }) {
-  const theme = planThemeClassNames[plan.theme];
-
-  return (
-    <article className={`relative flex h-full flex-col rounded-3xl border-2 p-card-pad transition-all duration-300 ${theme.card}`}>
-      {plan.mostPopular ? (
-        <Badge className="absolute -top-3 left-1/2 -translate-x-1/2 bg-primary px-3 py-badge-y text-xs font-medium whitespace-nowrap text-black">
-          Most Popular
-        </Badge>
-      ) : null}
-
-      <div className="mb-4">
-        <h3 className={`mb-4 text-2xl tracking-tight ${theme.title}`}>{plan.name}</h3>
-        <p className={`font-display mb-6 text-section-sm leading-none font-medium tracking-tight ${theme.title}`}>
-          {plan.price}
-        </p>
-        <div className="mb-6 space-y-2">
-          <p className={`text-body-lg font-medium tracking-tight ${theme.title}`}>{plan.credits}</p>
-          <p className={`text-sm tracking-tight ${theme.muted}`}>{plan.conversion}</p>
-        </div>
-        <Badge className={`gap-2 border px-3 py-2 text-sm font-medium ${theme.bonus}`}>
-          <span className="text-base">🎁</span>
-          <span className="tracking-tight">{plan.bonus}</span>
-        </Badge>
-      </div>
-
-      <div className="mt-8 grow">
-        <ul className="mb-10 space-y-3">
-          {plan.features.map((feature) => (
-            <li key={feature} className="flex items-start gap-2">
-              <CheckIcon color={theme.check} />
-              <span className={`text-sm leading-5 tracking-tight ${theme.feature}`}>{feature}</span>
-            </li>
-          ))}
-        </ul>
-      </div>
-
-      <PrimaryCtaButton
-        tone={theme.cta}
-        className={`w-full px-8 py-3.5 text-base font-semibold ${plan.theme === "light" ? "shadow-pricing-cta" : ""}`}
-      >
-        Start free trial
-      </PrimaryCtaButton>
-    </article>
-  );
+    const data = (await response.json()) as PricingPlansResponse;
+    return data.plans;
+  } catch {
+    return [];
+  }
 }
 
 function EnterpriseBanner() {
@@ -157,7 +40,9 @@ function EnterpriseBanner() {
   );
 }
 
-export default function PricingSection() {
+export default async function PricingSection() {
+  const plans = await getPricingPlans();
+
   return (
     <section className="w-full overflow-hidden bg-pricing-bg px-4 py-24">
       <div className="mx-auto max-w-page">
@@ -182,10 +67,7 @@ export default function PricingSection() {
           </div>
         </header>
 
-        <div className="mb-16 grid grid-cols-1 items-stretch gap-6 md:grid-cols-3">
-          {plans.map((plan) => <PricingCard key={plan.id} plan={plan} />)}
-        </div>
-
+        <PricingTabs plans={plans} />
         <EnterpriseBanner />
       </div>
     </section>

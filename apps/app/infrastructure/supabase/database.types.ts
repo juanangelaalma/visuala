@@ -40,6 +40,11 @@ export type Database = {
           bonus_credits: number;
           credit_expires_in_days: number;
           features: string[];
+          billing_period: "monthly" | "annually";
+          billing_label: string;
+          compare_at_amount: number | null;
+          badge_label: string | null;
+          cta_label: string;
           is_active: boolean;
           is_most_popular: boolean;
           sort_order: number;
@@ -52,6 +57,11 @@ export type Database = {
           name: string;
           price_amount: number;
           currency?: string;
+          billing_period?: "monthly" | "annually";
+          billing_label?: string;
+          compare_at_amount?: number | null;
+          badge_label?: string | null;
+          cta_label?: string;
           credits: number;
           bonus_credits?: number;
           credit_expires_in_days: number;
@@ -67,6 +77,11 @@ export type Database = {
           name?: string;
           price_amount?: number;
           currency?: string;
+          billing_period?: "monthly" | "annually";
+          billing_label?: string;
+          compare_at_amount?: number | null;
+          badge_label?: string | null;
+          cta_label?: string;
           credits?: number;
           bonus_credits?: number;
           credit_expires_in_days?: number;
