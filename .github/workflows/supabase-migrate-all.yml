@@ -1,4 +1,4 @@
-name: Supabase Migrations
+name: Supabase Migrations Manually
 
 on:
   workflow_dispatch:
