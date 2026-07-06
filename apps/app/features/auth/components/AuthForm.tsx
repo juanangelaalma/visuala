@@ -40,7 +40,7 @@ export function AuthForm({ mode, action, googleAction, initialError }: AuthFormP
           </div>
 
           <form action={googleAction}>
-            <Button type="submit" variant="solid" className="h-12 w-full gap-3 border border-white/10 px-0 py-0 text-sm">
+            <Button type="submit" variant="solid" className="h-12 w-full gap-3 border border-white/10 px-0 py-0 text-sm hover:bg-google-hover!">
               <Image src="/google-logo.png" alt="" width={20} height={20} aria-hidden />
               Continue with Google
             </Button>
