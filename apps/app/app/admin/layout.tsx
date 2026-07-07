@@ -7,10 +7,10 @@ type AdminLayoutProps = {
 };
 
 export default async function AdminLayout({ children }: AdminLayoutProps) {
-  await requireAdmin();
+  const currentUser = await requireAdmin();
 
   return (
-    <DashboardShell sections={adminDashboardSections} showCreateButton={false}>
+    <DashboardShell sections={adminDashboardSections} showCreateButton={false} currentUser={currentUser}>
       {children}
     </DashboardShell>
   );
