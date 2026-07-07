@@ -1,6 +1,5 @@
 "use client";
 
-import Image, { type StaticImageData } from "next/image";
 import Link from "next/link";
 import { useState, type ReactNode } from "react";
 import Brand from "./Brand";
@@ -20,7 +19,7 @@ export type DashboardSidebarSection = {
 export type DashboardSidebarProfile = {
     name: string;
     plan: string;
-    avatarSrc?: string | StaticImageData;
+    avatarUrl?: string;
     avatarAlt?: string;
 };
 
@@ -317,8 +316,8 @@ function SidebarItem({
 }
 
 function Avatar({ profile }: { profile: DashboardSidebarProfile }) {
-    if (profile.avatarSrc) {
-        return <Image src={profile.avatarSrc} alt={profile.avatarAlt ?? profile.name} width={40} height={40} className={sidebarClassNames.avatarImage} />;
+    if (profile.avatarUrl) {
+        return <img src={profile.avatarUrl} alt={profile.avatarAlt ?? profile.name} className={sidebarClassNames.avatarImage} />;
     }
 
     return <span className={sidebarClassNames.avatar}>{getInitials(profile.name)}</span>;

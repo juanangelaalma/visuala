@@ -4,6 +4,7 @@ import { DashboardFooter, DashboardNavbar, DashboardSidebar, type DashboardSideb
 import { usePathname } from "next/navigation";
 import { useMemo, useRef, type ReactNode } from "react";
 import { logoutAction } from "@/features/auth/actions/auth-actions";
+import type { AuthUser } from "@/domain/auth/types";
 
 const defaultDashboardSections: DashboardSidebarSection[] = [
   {
@@ -48,6 +49,7 @@ type DashboardShellProps = {
   children: ReactNode;
   sections?: DashboardSidebarSection[];
   showCreateButton?: boolean;
+  currentUser: AuthUser | null;
 };
 
 function getActiveItemId(pathname: string, sections: DashboardSidebarSection[]) {
@@ -62,7 +64,7 @@ function getActiveItemId(pathname: string, sections: DashboardSidebarSection[]) 
   return matchedPath ? pathToItemId[matchedPath] : sections[0]?.items[0]?.id ?? "";
 }
 
-export default function DashboardShell({ children, sections = defaultDashboardSections, showCreateButton = true }: DashboardShellProps) {
+export default function DashboardShell({ children, sections = defaultDashboardSections, showCreateButton = true, currentUser }: DashboardShellProps) {
   const pathname = usePathname();
   const logoutFormRef = useRef<HTMLFormElement>(null);
   const activeItemId = useMemo(() => getActiveItemId(pathname, sections), [pathname, sections]);
@@ -71,10 +73,17 @@ export default function DashboardShell({ children, sections = defaultDashboardSe
     if (item.id === "logout") logoutFormRef.current?.requestSubmit();
   }
 
+  const profile = {
+    name: currentUser?.fullName ?? "",
+    plan: "Free Account",
+    avatarUrl: currentUser?.avatarUrl ?? undefined,
+    avatarAlt: currentUser?.fullName ?? undefined,
+  };
+
   return (
     <div className="h-screen overflow-hidden bg-dark-bg p-4">
       <div className="flex h-full gap-8">
-        <DashboardSidebar items={sections} activeItemId={activeItemId} className="h-full min-h-0 shrink-0" onItemSelect={handleItemSelect} />
+        <DashboardSidebar profile={profile} items={sections} activeItemId={activeItemId} className="h-full min-h-0 shrink-0" onItemSelect={handleItemSelect} />
         <form ref={logoutFormRef} action={logoutAction} className="hidden" />
 
         <div className="flex min-w-0 flex-1 flex-col gap-4 overflow-y-auto">
