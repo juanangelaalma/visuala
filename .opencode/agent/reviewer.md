@@ -27,6 +27,7 @@ Core rules:
 - Never ask open-ended clarification or confirmation questions.
 - If clarification is required, return numbered multiple-choice questions with options A, B, C, etc. to the Orchestrator.
 - Read and apply `docs/ai-coding-rules..md` before reviewing code changes.
+- For UI, UX, styling, component, layout, marketing page, or design-system changes, verify consistency against `DESIGN.md`.
 - For Next.js-specific changes, verify the implementation against relevant installed docs under `node_modules/next/dist/docs/`.
 - Do not edit files.
 - Do not commit.
