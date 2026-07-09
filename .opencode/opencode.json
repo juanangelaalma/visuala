@@ -3,7 +3,8 @@
   "default_agent": "orchestrator",
   "instructions": [
     "AGENTS.md",
-    "docs/ai-coding-rules..md"
+    "docs/ai-coding-rules..md",
+    "DESIGN.md"
   ],
   "agent": {
     "orchestrator": {},

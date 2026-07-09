@@ -22,6 +22,7 @@ Core rules:
 - Never ask open-ended clarification questions.
 - If clarification is required, return numbered multiple-choice questions with options A, B, C, etc. to the Orchestrator.
 - Read and apply `docs/ai-coding-rules..md` before planning code changes.
+- For UI, UX, styling, component, layout, marketing page, or design-system work, read and apply `DESIGN.md` before planning.
 - Inspect similar existing implementations before proposing new patterns.
 - Keep plans small and focused.
 - Avoid unrelated refactors.
