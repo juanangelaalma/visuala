@@ -1,3 +1,4 @@
+import { getAppUrl } from "../app-url";
 import InfiniteMarquee from "../_components/InfiniteMarquee";
 import PrimaryCtaButton from "../_components/PrimaryCtaButton";
 import FeatureShowcaseVideoCard from "./FeatureShowcaseVideoCard";
@@ -116,7 +117,7 @@ export default function FeatureShowcaseSection() {
                 <ShowcaseCarousel />
 
                 <div className="mt-10 flex justify-center">
-                    <PrimaryCtaButton id="generate-ugc-video-btn" glow className="relative tracking-widest" trailingIcon={<ArrowIcon />}>
+                    <PrimaryCtaButton href={getAppUrl("/")} id="generate-ugc-video-btn" glow className="relative tracking-widest" trailingIcon={<ArrowIcon />}>
                         Generate UGC Video
                     </PrimaryCtaButton>
                 </div>

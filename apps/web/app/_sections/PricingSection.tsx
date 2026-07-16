@@ -1,4 +1,5 @@
 import { Badge, PricingPeriodTabs } from "@visuala/ui";
+import { getAppUrl } from "../app-url";
 import { OutlineButton } from "../_components/OutlineButton";
 import type { PricingPlan } from "./pricing-types";
 
@@ -6,16 +7,21 @@ type PricingPlansResponse = {
   plans: PricingPlan[];
 };
 
-const appApiUrl = process.env.NEXT_PUBLIC_APP_API_URL ?? "http://localhost:3000";
+function addCheckoutLinks(plans: PricingPlan[]): PricingPlan[] {
+  return plans.map((plan) => ({
+    ...plan,
+    ctaHref: getAppUrl(`/billing/plans/${encodeURIComponent(plan.id)}/checkout`),
+  }));
+}
 
 async function getPricingPlans(): Promise<PricingPlan[]> {
   try {
-    const response = await fetch(`${appApiUrl}/api/pricing-plans`, { next: { revalidate: 300 } });
+    const response = await fetch(getAppUrl("/api/pricing-plans"), { next: { revalidate: 300 } });
 
     if (!response.ok) return [];
 
     const data = (await response.json()) as PricingPlansResponse;
-    return data.plans;
+    return addCheckoutLinks(data.plans);
   } catch {
     return [];
   }

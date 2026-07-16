@@ -1,9 +1,13 @@
+import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 import { ensureUserProfile } from "@/application/auth/ensure-user-profile";
 import { getRoleRedirectPath } from "@/application/auth/get-role-redirect";
+import { getSafeAuthRedirect } from "@/application/auth/get-safe-auth-redirect";
 import { createAuthServicesFromSupabase } from "@/application/auth/services";
 import { createSupabaseWritableServerClient } from "@/infrastructure/supabase/server-client";
 import { getAppEnv } from "@/shared/config/env";
+
+const AUTH_REDIRECT_COOKIE = "visuala_auth_redirect";
 
 export async function GET(request: Request) {
   const requestUrl = new URL(request.url);
@@ -29,7 +33,10 @@ export async function GET(request: Request) {
   const { authProvider, userRepository } = createAuthServicesFromSupabase(supabase);
   const user = await authProvider.getCurrentUser();
   const profile = user ? await ensureUserProfile(userRepository, user) : null;
-  const redirectPath = getRoleRedirectPath(profile?.role);
+  const cookieStore = await cookies();
+  const redirectPath = getSafeAuthRedirect(cookieStore.get(AUTH_REDIRECT_COOKIE)?.value) ?? getRoleRedirectPath(profile?.role);
+  const response = NextResponse.redirect(`${env.NEXT_PUBLIC_APP_URL}${redirectPath}`);
+  response.cookies.delete(AUTH_REDIRECT_COOKIE);
 
-  return NextResponse.redirect(`${env.NEXT_PUBLIC_APP_URL}${redirectPath}`);
+  return response;
 }

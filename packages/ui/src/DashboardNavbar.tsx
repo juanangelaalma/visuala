@@ -7,6 +7,10 @@ export type DashboardNavbarProps = {
     onSearchChange?: (value: string) => void;
     onSettingsClick?: () => void;
     onNotificationsClick?: () => void;
+    pricingLabel?: string;
+    pricingHref?: string;
+    pricingIsActive?: boolean;
+    showPricingCta?: boolean;
     createLabel?: string;
     createHref?: string;
     onCreateClick?: () => void;
@@ -23,6 +27,8 @@ const navbarClassNames = {
     actions: "flex h-13 items-center gap-3",
     iconButton: "inline-flex h-13 w-13 items-center justify-center rounded-full bg-pricing-bg text-white transition-colors hover:bg-surface-3",
     iconDisplay: "inline-flex h-13 w-13 items-center justify-center rounded-full bg-pricing-bg text-white",
+    pricingButton: "h-13 gap-2 border border-primary/40 bg-primary/10 px-5 font-sans-secondary text-sm font-semibold text-white hover:border-primary hover:bg-primary/20",
+    pricingButtonActive: "border-primary bg-primary text-black hover:bg-primary-dark",
     createButton: "h-13 px-7 font-sans-secondary text-sm font-semibold",
 } as const;
 
@@ -58,6 +64,15 @@ function NotificationIcon() {
     );
 }
 
+function PricingIcon() {
+    return (
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" className="h-5 w-5">
+            <path d="M20 13 13 20a2 2 0 0 1-2.8 0L4 13.8V4h9.8l6.2 6.2a2 2 0 0 1 0 2.8Z" />
+            <circle cx="9" cy="9" r="1.5" />
+        </svg>
+    );
+}
+
 function NavbarIconAction({
     label,
     onClick,
@@ -88,6 +103,10 @@ export default function DashboardNavbar({
     onSearchChange,
     onSettingsClick,
     onNotificationsClick,
+    pricingLabel = "Explore plans",
+    pricingHref = "/billing/plans",
+    pricingIsActive = false,
+    showPricingCta = false,
     createLabel = "Create Scene ✨",
     createHref,
     onCreateClick,
@@ -119,6 +138,18 @@ export default function DashboardNavbar({
             </div>
 
             <div className={navbarClassNames.actions}>
+                {showPricingCta ? (
+                    <Button
+                        href={pricingHref}
+                        variant="primary"
+                        tone="dark"
+                        aria-current={pricingIsActive ? "page" : undefined}
+                        className={cx(navbarClassNames.pricingButton, pricingIsActive && navbarClassNames.pricingButtonActive)}
+                    >
+                        <PricingIcon />
+                        {pricingLabel}
+                    </Button>
+                ) : null}
                 <NavbarIconAction label="Open settings" onClick={onSettingsClick}>
                     <SettingsIcon />
                 </NavbarIconAction>
