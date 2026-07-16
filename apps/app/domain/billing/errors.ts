@@ -6,6 +6,8 @@ export class BillingPaymentOwnershipError extends BillingError {}
 export class ActiveProviderAttemptError extends BillingError {}
 export class UnknownProviderAttemptError extends BillingError {}
 export class WebhookDeduplicationConflictError extends BillingError {}
+export class UnsupportedBillingGatewayError extends BillingError {}
+export class InvalidBillingPersistenceError extends BillingError {}
 export class BillingIdempotencyConflictError extends BillingError {
   name = "BillingIdempotencyConflictError";
 }

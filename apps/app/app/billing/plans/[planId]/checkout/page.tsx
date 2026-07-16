@@ -2,10 +2,9 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { getCurrentUser } from "@/application/auth/get-current-user";
 import { createAuthServices } from "@/application/auth/services";
-import { listEnabledPaymentMethods } from "@/application/billing/list-enabled-payment-methods";
+import { prepareBillingCheckout } from "@/application/billing/prepare-billing-checkout";
 import { createBillingServices } from "@/application/billing/services";
 import { createPricingServices } from "@/application/pricing/services";
-import type { PaymentMethod } from "@/domain/billing/types";
 import type { PricingPlan } from "@/domain/pricing/types";
 import { BillingCheckoutForm } from "@/features/billing/components/BillingCheckoutForm";
 import type { BillingPaymentMethodOption } from "@/features/billing/components/types";
@@ -18,34 +17,6 @@ type CheckoutPageProps = {
 
 function formatPrice(amount: number, currency: string) {
   return new Intl.NumberFormat("id-ID", { style: "currency", currency, maximumFractionDigits: 0 }).format(amount);
-}
-
-function isPaymentMethodKindEnabled(method: PaymentMethod, qrisEnabled: boolean, virtualAccountEnabled: boolean) {
-  if (method.kind === "qris") return qrisEnabled;
-  if (method.kind === "virtual_account") return virtualAccountEnabled;
-  return false;
-}
-
-function isPaymentMethodEligible(method: PaymentMethod, plan: PricingPlan, qrisEnabled: boolean, virtualAccountEnabled: boolean) {
-  const meetsMinimum = method.minAmount === null || plan.priceAmount >= method.minAmount;
-  const meetsMaximum = method.maxAmount === null || plan.priceAmount <= method.maxAmount;
-
-  return method.enabled
-    && isPaymentMethodKindEnabled(method, qrisEnabled, virtualAccountEnabled)
-    && method.currency === plan.currency
-    && meetsMinimum
-    && meetsMaximum;
-}
-
-function toPaymentMethodOption(method: PaymentMethod, plan: PricingPlan, qrisEnabled: boolean, virtualAccountEnabled: boolean): BillingPaymentMethodOption {
-  return {
-    id: method.id,
-    kind: method.kind,
-    label: method.label,
-    description: method.description,
-    enabled: isPaymentMethodEligible(method, plan, qrisEnabled, virtualAccountEnabled),
-    launchPhase: method.launchPhase,
-  };
 }
 
 function Summary({ plan }: { plan: PricingPlan }) {
@@ -86,14 +57,12 @@ export default async function PlanCheckoutPage({ params }: CheckoutPageProps) {
 
   try {
     const services = await createBillingServices();
-    const { checkoutEnabled, qrisEnabled, virtualAccountEnabled } = services.config;
-    const catalog = await listEnabledPaymentMethods(services.checkout.paymentCatalog);
-
-
-    methods = catalog.map((method) => toPaymentMethodOption(method, plan, qrisEnabled, virtualAccountEnabled));
-    checkoutAvailable = checkoutEnabled && (qrisEnabled || virtualAccountEnabled);
-    if (!checkoutAvailable) unavailableMessage = "Checkout is temporarily unavailable. Your plan selection is still shown below.";
-  } catch {
+    const prepared = await prepareBillingCheckout(services.checkout, { plan, checkoutEnabled: services.config.checkoutEnabled });
+    methods = prepared.methods;
+    checkoutAvailable = prepared.checkoutAvailable;
+    unavailableMessage = prepared.unavailableMessage;
+  } catch (error) {
+    console.error("Failed to prepare billing checkout", error);
     unavailableMessage = "Payment methods are temporarily unavailable. Try again later.";
   }
 

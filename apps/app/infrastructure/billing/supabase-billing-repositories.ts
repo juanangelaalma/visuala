@@ -1,5 +1,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { z } from "zod";
 import type { BillingPaymentRepository, CreateBillingPaymentInput, PaymentCatalogRepository, ProviderAttemptRepository, TrustedProviderAllocation } from "@/domain/billing/contracts";
+import { InvalidBillingPersistenceError } from "@/domain/billing/errors";
 import type { BillingPayment, BillingPaymentProjection, CheckoutAction, PaymentMethod, ProviderAttempt } from "@/domain/billing/types";
 import type { Database } from "@/infrastructure/supabase/database.types";
 
@@ -8,12 +10,24 @@ type PaymentRow = Tables["billing_payments"]["Row"];
 type MethodRow = Tables["billing_payment_methods"]["Row"];
 type AttemptRow = Tables["billing_provider_attempts"]["Row"];
 
+const checkoutActionSchema = z.discriminatedUnion("type", [
+  z.object({ type: z.literal("qr_code"), value: z.string(), expiresAt: z.string().nullable() }),
+  z.object({ type: z.literal("redirect"), url: z.string(), expiresAt: z.string().nullable() }),
+  z.object({ type: z.literal("deep_link"), url: z.string(), expiresAt: z.string().nullable() }),
+  z.object({ type: z.literal("virtual_account"), accountNumber: z.string(), bankCode: z.string(), expiresAt: z.string().nullable() }),
+]);
+
+export function parseCheckoutActions(value: unknown): CheckoutAction[] {
+  const parsed = z.array(checkoutActionSchema).safeParse(value);
+  if (!parsed.success) throw new InvalidBillingPersistenceError("Invalid persisted checkout actions", { cause: parsed.error });
+  return parsed.data;
+}
+
 export class SupabasePaymentCatalogRepository implements PaymentCatalogRepository {
   constructor(private readonly supabase: SupabaseClient<Database>) {}
 
   async listEnabled(): Promise<PaymentMethod[]> {
     const { data, error } = await this.supabase.from("billing_payment_methods").select("*").eq("enabled", true).eq("launch_phase", 1).order("sort_order");
-    console.log(data)
     if (error) throw error;
     return data.map(mapPaymentMethod);
   }
@@ -75,4 +89,4 @@ export class SupabaseProviderAttemptRepository implements ProviderAttemptReposit
 
 export function mapPaymentMethod(row: MethodRow): PaymentMethod { return { id: row.id, slug: row.slug, kind: row.kind, label: row.label, description: row.description, logoUrl: row.logo_url, currency: row.currency, minAmount: row.min_amount, maxAmount: row.max_amount, enabled: row.enabled, launchPhase: row.launch_phase, sortOrder: row.sort_order }; }
 export function mapPayment(row: PaymentRow): BillingPayment { return { id: row.id, userId: row.user_id, pricingPlanId: row.pricing_plan_id, selectedPaymentMethodId: row.selected_payment_method_id, idempotencyKey: row.idempotency_key, status: row.status, priceAmount: row.price_amount, currency: row.currency, baseCredits: row.base_credits, bonusCredits: row.bonus_credits, creditExpiresInDays: row.credit_expires_in_days, expiresAt: row.expires_at, paidAt: row.paid_at, settlementAuditCode: row.settlement_audit_code, createdAt: row.created_at, updatedAt: row.updated_at }; }
-export function mapAttempt(row: AttemptRow): ProviderAttempt { return { id: row.id, billingPaymentId: row.billing_payment_id, paymentMethodId: row.payment_method_id, provider: row.provider, environment: row.environment, providerMethodType: row.provider_method_type, providerChannelCode: row.provider_channel_code, mappingConfig: row.mapping_config, providerReference: row.provider_reference, providerIdempotencyKey: row.provider_idempotency_key, providerPaymentId: row.provider_payment_id, status: row.status, actions: row.actions as CheckoutAction[], expiresAt: row.expires_at }; }
+export function mapAttempt(row: AttemptRow): ProviderAttempt { return { id: row.id, billingPaymentId: row.billing_payment_id, paymentMethodId: row.payment_method_id, provider: row.provider, environment: row.environment, providerMethodType: row.provider_method_type, providerChannelCode: row.provider_channel_code, mappingConfig: row.mapping_config, providerReference: row.provider_reference, providerIdempotencyKey: row.provider_idempotency_key, providerPaymentId: row.provider_payment_id, status: row.status, actions: parseCheckoutActions(row.actions), expiresAt: row.expires_at }; }
