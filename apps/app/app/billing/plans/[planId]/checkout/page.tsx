@@ -45,7 +45,10 @@ export default async function PlanCheckoutPage({ params }: CheckoutPageProps) {
 
   const { authProvider } = await createAuthServices();
   const user = await getCurrentUser(authProvider);
-  if (!user) redirect("/login");
+  if (!user) {
+    const checkoutPath = `/billing/plans/${planId}/checkout`;
+    redirect(`/login?next=${encodeURIComponent(checkoutPath)}`);
+  }
 
   const { pricingPlanRepository } = await createPricingServices();
   const plan = await pricingPlanRepository.findActiveById(planId);

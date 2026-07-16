@@ -10,13 +10,14 @@ import Hyperspeed, { hyperspeedPresetThree } from "./Hyperspeed";
 type AuthFormProps = {
   mode: "login" | "register";
   action: (state: AuthActionState, formData: FormData) => Promise<AuthActionState>;
-  googleAction: () => Promise<void>;
+  googleAction: (formData: FormData) => Promise<void>;
   initialError?: string;
+  redirectPath?: string;
 };
 
 const initialState: AuthActionState = {};
 
-export function AuthForm({ mode, action, googleAction, initialError }: AuthFormProps) {
+export function AuthForm({ mode, action, googleAction, initialError, redirectPath }: AuthFormProps) {
   const [state, formAction, pending] = useActionState(action, initialState);
   const isLogin = mode === "login";
   const error = state.error ?? initialError;
@@ -40,6 +41,7 @@ export function AuthForm({ mode, action, googleAction, initialError }: AuthFormP
           </div>
 
           <form action={googleAction}>
+            {redirectPath ? <input type="hidden" name="next" value={redirectPath} /> : null}
             <Button type="submit" variant="solid" className="h-12 w-full gap-3 border border-white/10 px-0 py-0 text-sm hover:bg-google-hover!">
               <Image src="/google-logo.png" alt="" width={20} height={20} aria-hidden />
               Continue with Google
@@ -53,6 +55,7 @@ export function AuthForm({ mode, action, googleAction, initialError }: AuthFormP
           </div>
 
           <form action={formAction} className="space-y-4">
+            {redirectPath ? <input type="hidden" name="next" value={redirectPath} /> : null}
             {!isLogin ? (
               <label className="block">
                 <span className="mb-2 block text-sm font-medium text-neutral-450">Full name</span>

@@ -30,7 +30,6 @@ const defaultDashboardSections: DashboardSidebarSection[] = [
       { id: "templates", label: "Templates", href: "/dashboard/templates" },
       { id: "more-tools", label: "More Tools", href: "/dashboard/tools" },
       { id: "profile-settings", label: "Profile Settings", href: "/dashboard/profile" },
-      { id: "pricing", label: "Billing Plans", href: "/billing/plans" },
       { id: "logout", label: "Logout" },
     ],
   },
@@ -54,12 +53,13 @@ type DashboardShellProps = {
 };
 
 function getActiveItemId(pathname: string, sections: DashboardSidebarSection[]) {
-  const pathToItemId = Object.fromEntries(sections.flatMap((section) => section.items.flatMap((item) => (item.href ? [[item.href, item.id]] : []))));
+  const items = sections.flatMap((section) => section.items);
+  const pathToItemId = Object.fromEntries(items.flatMap((item) => (item.href ? [[item.href, item.id]] : [])));
   const exactMatch = pathToItemId[pathname];
   if (exactMatch) return exactMatch;
 
   const matchedPath = Object.keys(pathToItemId)
-    .filter((path) => path !== "/" && pathname.startsWith(path))
+    .filter((path) => path !== "/" && pathname.startsWith(`${path}/`))
     .sort((a, b) => b.length - a.length)[0];
 
   return matchedPath ? pathToItemId[matchedPath] : sections[0]?.items[0]?.id ?? "";
@@ -68,6 +68,8 @@ function getActiveItemId(pathname: string, sections: DashboardSidebarSection[]) 
 export default function DashboardShell({ children, sections = defaultDashboardSections, showCreateButton = true, currentUser }: DashboardShellProps) {
   const pathname = usePathname();
   const logoutFormRef = useRef<HTMLFormElement>(null);
+  const showPricingCta = sections === defaultDashboardSections;
+  const pricingIsActive = pathname === "/billing/plans" || pathname.startsWith("/billing/plans/");
   const activeItemId = useMemo(() => getActiveItemId(pathname, sections), [pathname, sections]);
 
   function handleItemSelect(item: DashboardSidebarItem) {
@@ -88,7 +90,7 @@ export default function DashboardShell({ children, sections = defaultDashboardSe
         <form ref={logoutFormRef} action={logoutAction} className="hidden" />
 
         <div className="flex min-w-0 flex-1 flex-col gap-4 overflow-y-auto">
-          <DashboardNavbar showCreateButton={showCreateButton} />
+          <DashboardNavbar showCreateButton={showCreateButton} showPricingCta={showPricingCta} pricingIsActive={pricingIsActive} />
           <main className="min-w-0 flex-1">{children}</main>
           <DashboardFooter />
         </div>

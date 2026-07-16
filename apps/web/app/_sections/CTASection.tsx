@@ -1,4 +1,5 @@
 import Image from "next/image";
+import { getAppUrl } from "../app-url";
 import PrimaryCtaButton from "../_components/PrimaryCtaButton";
 import bgImage from "../__assets/image/background-cta.png";
 
@@ -42,7 +43,7 @@ export default function CTASection() {
         </div>
 
         <div className="pt-8">
-          <PrimaryCtaButton href="/signup">
+          <PrimaryCtaButton href={getAppUrl("/register")}>
             Join the Party
           </PrimaryCtaButton>
         </div>

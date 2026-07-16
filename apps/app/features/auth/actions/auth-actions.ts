@@ -1,7 +1,9 @@
 "use server";
 
+import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { getRoleRedirectPath } from "@/application/auth/get-role-redirect";
+import { getSafeAuthRedirect } from "@/application/auth/get-safe-auth-redirect";
 import { loginWithEmail } from "@/application/auth/login-with-email";
 import { loginWithGoogle } from "@/application/auth/login-with-google";
 import { logout } from "@/application/auth/logout";
@@ -16,6 +18,8 @@ export type AuthActionState = {
   error?: string;
   message?: string;
 };
+
+const AUTH_REDIRECT_COOKIE = "visuala_auth_redirect";
 
 export async function registerAction(_: AuthActionState, formData: FormData): Promise<AuthActionState> {
   const parsed = registerSchema.safeParse(Object.fromEntries(formData));
@@ -43,7 +47,7 @@ export async function loginAction(_: AuthActionState, formData: FormData): Promi
   try {
     const { authProvider, userRepository } = await createWritableAuthServices();
     const profile = await loginWithEmail(authProvider, userRepository, parsed.data);
-    redirectPath = getRoleRedirectPath(profile?.role);
+    redirectPath = getSafeAuthRedirect(formData.get("next")) ?? getRoleRedirectPath(profile?.role);
   } catch (error) {
     return { error: toFriendlyAuthError(error) };
   }
@@ -66,12 +70,19 @@ export async function resendConfirmationAction(_: AuthActionState, formData: For
   return { message: "If an account exists, we sent a confirmation email." };
 }
 
-export async function googleLoginAction() {
+export async function googleLoginAction(formData: FormData) {
   let url: string;
 
   try {
     const { authProvider } = await createWritableAuthServices();
     const env = getAppEnv();
+    const redirectPath = getSafeAuthRedirect(formData.get("next"));
+
+    if (redirectPath) {
+      const cookieStore = await cookies();
+      cookieStore.set(AUTH_REDIRECT_COOKIE, redirectPath, { httpOnly: true, maxAge: 600, path: "/", sameSite: "lax", secure: process.env.NODE_ENV === "production" });
+    }
+
     url = await loginWithGoogle(authProvider, `${env.NEXT_PUBLIC_APP_URL}/auth/callback`);
   } catch (error) {
     if (error instanceof AuthDomainError) redirect(`/login?error=${encodeURIComponent(error.message)}`);

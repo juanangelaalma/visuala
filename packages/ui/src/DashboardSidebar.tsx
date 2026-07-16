@@ -117,7 +117,7 @@ const sidebarClassNames = {
     itemInactive: "bg-pricing-bg text-white hover:bg-surface-3",
     itemIcon: "inline-flex h-6 w-6 shrink-0 items-center justify-center",
     divider: "h-px w-full bg-surface-3",
-    profile: "mt-auto flex h-10 w-full items-center mb-4",
+    profile: "mt-auto mb-4 flex h-10 w-full items-center",
     profileExpanded: "justify-between",
     profileCollapsed: "justify-center",
     profileMain: "flex min-w-0 items-center gap-3",
