@@ -13,6 +13,7 @@ export class SupabasePaymentCatalogRepository implements PaymentCatalogRepositor
 
   async listEnabled(): Promise<PaymentMethod[]> {
     const { data, error } = await this.supabase.from("billing_payment_methods").select("*").eq("enabled", true).eq("launch_phase", 1).order("sort_order");
+    console.log(data)
     if (error) throw error;
     return data.map(mapPaymentMethod);
   }
