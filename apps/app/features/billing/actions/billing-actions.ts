@@ -23,6 +23,7 @@ export async function createBillingCheckoutAction(_: BillingActionState, formDat
     if (!payment) return { error: "Could not create checkout." };
     paymentId = payment.id;
   } catch (error) {
+    console.error("Failed to create billing checkout", error);
     return { error: error instanceof BillingError ? "Could not create checkout." : "Checkout is unavailable." };
   }
   redirect(`/billing/checkout/${encodeURIComponent(paymentId)}`);
@@ -37,7 +38,8 @@ export async function refreshBillingPaymentAction(_: BillingActionState, formDat
     if (!user) return { error: "Sign in to continue." };
     const payment = await refreshOwnedBillingPayment({ payments: services.payments }, { paymentId: parsed.data.paymentId, userId: user.id });
     return { payment };
-  } catch {
+  } catch (error) {
+    console.error("Failed to refresh billing payment", error);
     return { error: "Could not refresh payment." };
   }
 }

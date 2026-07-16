@@ -22,6 +22,7 @@ export async function POST(request: Request) {
     return Response.json({ received: true, duplicate: result.duplicate, outcome: result.outcome });
   } catch (error) {
     if (error instanceof XenditWebhookVerificationError) return Response.json({ error: "Unauthorized." }, { status: 401 });
+    console.error("Failed to process Xendit billing webhook", error);
     return Response.json({ error: "Webhook unavailable." }, { status: 503 });
   }
 }

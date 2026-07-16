@@ -1,6 +1,8 @@
 import "server-only";
 
 import { createAuthServices } from "@/application/auth/services";
+import { createPaymentMethodFeaturePolicy } from "@/application/billing/payment-method-feature-policy";
+import { UnsupportedBillingGatewayError } from "@/domain/billing/errors";
 import { SupabaseBillingPaymentRepository, SupabasePaymentCatalogRepository, SupabaseProviderAttemptRepository } from "@/infrastructure/billing/supabase-billing-repositories";
 import { SupabaseBillingWebhookRepository } from "@/infrastructure/billing/supabase-billing-webhook-repositories";
 import { XenditCheckoutProvider } from "@/infrastructure/billing/xendit-checkout-provider";
@@ -15,6 +17,11 @@ export async function createBillingServices() {
   const serviceRoleSupabase = createSupabaseServiceRoleClient();
   const { authProvider } = await createAuthServices();
   const gateway = new XenditCheckoutProvider(config);
+  const payments = new SupabaseBillingPaymentRepository(serviceRoleSupabase);
+  const resolveGateway = (provider: string, environment: "test" | "production") => {
+    if (provider !== "xendit" || environment !== config.environment) throw new UnsupportedBillingGatewayError("Unsupported billing gateway");
+    return gateway;
+  };
 
   return {
     authProvider,
@@ -22,15 +29,15 @@ export async function createBillingServices() {
     checkout: {
       pricingPlans: new SupabasePricingPlanRepository(sessionSupabase),
       paymentCatalog: new SupabasePaymentCatalogRepository(sessionSupabase),
-      payments: new SupabaseBillingPaymentRepository(serviceRoleSupabase),
+      payments,
       providerAllocation: {
         allocate: async ({ billingPaymentId, paymentMethod, clientIdempotencyKey }: { billingPaymentId: string; paymentMethod: { id: string }; clientIdempotencyKey: string }) => ({ paymentMethodId: paymentMethod.id, provider: "xendit", environment: config.environment, providerReference: `visuala-${billingPaymentId}`, providerIdempotencyKey: clientIdempotencyKey }),
       },
       attempts: new SupabaseProviderAttemptRepository(serviceRoleSupabase),
-      gateways: { resolve: () => gateway },
-      isPaymentMethodEnabled: (method: { kind: string }) => method.kind === "qris" ? config.qrisEnabled : method.kind === "virtual_account" ? config.virtualAccountEnabled : false,
+      gateways: { resolve: resolveGateway },
+      isPaymentMethodEnabled: createPaymentMethodFeaturePolicy(config),
     },
-    payments: new SupabaseBillingPaymentRepository(serviceRoleSupabase),
+    payments,
     xendit: gateway,
   };
 }

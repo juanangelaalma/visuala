@@ -1,5 +1,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { z } from "zod";
 import type { BillingWebhookRepository, ManualBillingReconciliationRepository } from "@/domain/billing/contracts";
+import { InvalidBillingPersistenceError } from "@/domain/billing/errors";
 import type { NormalizedWebhook, WebhookCandidate, WebhookFulfillmentOutcome, WebhookReceipt } from "@/domain/billing/types";
 import type { Database } from "@/infrastructure/supabase/database.types";
 
@@ -23,7 +25,8 @@ export class SupabaseBillingWebhookRepository implements BillingWebhookRepositor
   async fulfill(eventId: string): Promise<WebhookFulfillmentOutcome> {
     const { data, error } = await this.supabase.rpc("fulfill_billing_webhook", { p_event_id: eventId, p_max_attempts: 8, p_verified_failed_settlement: false });
     if (error) throw error;
-    if ((data as string) !== "not_eligible") return data;
+    const persistedOutcome: unknown = data;
+    if (persistedOutcome !== "not_eligible") return parseWebhookFulfillmentOutcome(persistedOutcome);
     const event = await this.supabase.from("billing_webhook_events").select("status, outcome_code, dead_lettered_at").eq("id", eventId).single();
     if (event.error) throw event.error;
     return mapIneligibleWebhookEvent(event.data);
@@ -38,8 +41,16 @@ export class SupabaseBillingWebhookRepository implements BillingWebhookRepositor
 
 type IneligibleWebhookEvent = { status: string; outcome_code: string | null; dead_lettered_at: string | null };
 
+const webhookFulfillmentOutcomeSchema = z.enum(["retryable", "fulfilled", "duplicate_paid", "quarantined_requires_review", "quarantined_paid_after_failed", "quarantined_paid_after_cancelled", "already_paid", "stale_attempt_observation", "terminal_observation", "requires_action", "no_op"]);
+
+export function parseWebhookFulfillmentOutcome(value: unknown): WebhookFulfillmentOutcome {
+  const parsed = webhookFulfillmentOutcomeSchema.safeParse(value);
+  if (!parsed.success) throw new InvalidBillingPersistenceError("Invalid persisted webhook outcome", { cause: parsed.error });
+  return parsed.data;
+}
+
 export function mapIneligibleWebhookEvent(event: IneligibleWebhookEvent): WebhookFulfillmentOutcome {
-  if ((event.status === "processed" || event.dead_lettered_at !== null) && event.outcome_code && event.outcome_code !== "not_eligible") return event.outcome_code as WebhookFulfillmentOutcome;
+  if ((event.status === "processed" || event.dead_lettered_at !== null) && event.outcome_code && event.outcome_code !== "not_eligible") return parseWebhookFulfillmentOutcome(event.outcome_code);
   return "retryable";
 }
 
@@ -50,6 +61,6 @@ export class SupabaseManualBillingReconciliationRepository implements ManualBill
     if (!authorization.authorizedByUserId || !authorization.reason.trim()) throw new Error("manual_reconciliation_authorization_required");
     const { data, error } = await this.supabase.rpc("fulfill_billing_webhook", { p_event_id: eventId, p_max_attempts: 8, p_verified_failed_settlement: true });
     if (error) throw error;
-    return data;
+    return parseWebhookFulfillmentOutcome(data);
   }
 }
