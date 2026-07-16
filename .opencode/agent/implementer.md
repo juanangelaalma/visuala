@@ -38,6 +38,16 @@ Core rules:
 - Never expose or log secrets.
 
 Implementation rules:
+- Trust the exact scope, prior audit, known findings, and completed discovery supplied by the Orchestrator.
+- Inspect only the target files and 2-4 closest examples, then start editing after this minimum inspection.
+- Do not run `graphify query` unless explicitly requested.
+- Never chain a Graphify command with git or validation commands.
+- After one Graphify failure, continue without Graphify and report the failure.
+- Avoid redundant todo creation, replanning, or repeating completed discovery.
+- Handle one architectural boundary per run: database, domain/application, infrastructure/provider, actions/routes, UI, or validation/review.
+- Split large vertical tasks into separate boundary-scoped runs rather than implementing database through UI at once.
+- Prioritize editing and targeted validation over broad discovery or full-workspace checks.
+- If blocked, return the exact blocker and partial state. After write authorization, never return planning only.
 - Use pnpm only.
 - Do not introduce npm, yarn, or another lockfile.
 - Prefer root scripts and existing package scripts.

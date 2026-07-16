@@ -27,7 +27,7 @@ type ButtonAsLinkProps = ButtonBaseProps &
 type ButtonProps = ButtonAsButtonProps | ButtonAsLinkProps;
 
 const baseClassName =
-    "inline-flex cursor-pointer items-center justify-center rounded-full font-semibold transition-all duration-300";
+    "inline-flex cursor-pointer items-center justify-center rounded-full font-semibold transition-all duration-300 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary motion-reduce:transition-none disabled:cursor-not-allowed disabled:opacity-50";
 
 const variantClassNames: Record<ButtonVariant, Record<ButtonTone, string>> = {
     primary: {

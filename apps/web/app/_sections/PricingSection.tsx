@@ -1,6 +1,5 @@
-import { Badge } from "@visuala/ui";
+import { Badge, PricingPeriodTabs } from "@visuala/ui";
 import { OutlineButton } from "../_components/OutlineButton";
-import PricingTabs from "./PricingTabs";
 import type { PricingPlan } from "./pricing-types";
 
 type PricingPlansResponse = {
@@ -67,7 +66,7 @@ export default async function PricingSection() {
           </div>
         </header>
 
-        <PricingTabs plans={plans} />
+        <PricingPeriodTabs plans={plans} />
         <EnterpriseBanner />
       </div>
     </section>

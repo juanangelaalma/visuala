@@ -30,6 +30,7 @@ const defaultDashboardSections: DashboardSidebarSection[] = [
       { id: "templates", label: "Templates", href: "/dashboard/templates" },
       { id: "more-tools", label: "More Tools", href: "/dashboard/tools" },
       { id: "profile-settings", label: "Profile Settings", href: "/dashboard/profile" },
+      { id: "pricing", label: "Billing Plans", href: "/billing/plans" },
       { id: "logout", label: "Logout" },
     ],
   },

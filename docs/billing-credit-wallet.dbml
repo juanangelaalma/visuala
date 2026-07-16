@@ -1,0 +1,149 @@
+// Visuala Provider-Agnostic Billing and Credit Wallet
+// DBML format for https://dbdiagram.io/
+// Source plan: docs/provider-agnostic-billing-credit-wallet-plan.md
+
+Table auth_users as "auth.users" {
+  id uuid [pk]
+
+  Note: 'Supabase Auth users table. Defined by Supabase, shown here only for relationships.'
+}
+
+Table pricing_plans as "public.pricing_plans" {
+  id uuid [pk]
+  slug text [unique, not null]
+  name text [not null]
+  price_amount integer [not null]
+  currency text [not null]
+  billing_period text [not null]
+  billing_label text [not null]
+  credits integer [not null]
+  bonus_credits integer [not null, default: 0]
+  credit_expires_in_days integer [not null]
+  is_active boolean [not null, default: true]
+  created_at timestamptz [not null]
+  updated_at timestamptz [not null]
+
+  Note: 'Existing pricing table. Only relevant fields are shown for billing/credit relationships.'
+}
+
+Table billing_payment_intents as "public.billing_payment_intents" {
+  id uuid [pk, default: `gen_random_uuid()`]
+  user_id uuid [not null, ref: > auth_users.id]
+  pricing_plan_id uuid [not null, ref: > pricing_plans.id]
+
+  provider text [not null, note: 'Example: xendit. Kept generic for future providers.']
+  provider_payment_id text [note: 'Provider payment/session ID, e.g. Xendit payment_session_id.']
+  provider_reference text [note: 'Provider/internal reference, e.g. payment_intent_<id>.']
+  status text [not null, note: 'pending | paid | expired | failed | cancelled']
+
+  amount integer [not null, note: 'Snapshot amount at checkout creation. Check: amount >= 0.']
+  currency text [not null, note: 'Snapshot currency at checkout creation, e.g. IDR.']
+  checkout_mode text [not null, default: 'embedded', note: 'embedded | hosted. Embedded is primary for Visuala no-redirect checkout.']
+  provider_client_secret text [note: 'Generic client-side checkout key/secret. For Xendit Components this stores components_sdk_key.']
+  checkout_url text [note: 'Provider hosted checkout URL. Nullable; used only for hosted fallback.']
+
+  credits integer [not null, note: 'Snapshot plan credits at checkout creation. Check: credits >= 0.']
+  bonus_credits integer [not null, default: 0, note: 'Snapshot plan bonus credits. Check: bonus_credits >= 0.']
+  credit_expires_in_days integer [not null, note: 'Snapshot expiry policy. Check: credit_expires_in_days > 0.']
+
+  idempotency_key text [not null, unique]
+  metadata jsonb [not null, default: '{}']
+
+  paid_at timestamptz
+  expires_at timestamptz
+  created_at timestamptz [not null, default: `now()`]
+  updated_at timestamptz [not null, default: `now()`]
+
+  indexes {
+    (user_id, created_at) [name: 'billing_payment_intents_user_created_idx']
+    (provider, provider_payment_id) [name: 'billing_payment_intents_provider_payment_idx']
+    (status, created_at) [name: 'billing_payment_intents_status_created_idx']
+    (provider, provider_payment_id) [unique, name: 'billing_payment_intents_provider_payment_unique', note: 'Partial unique in SQL where provider_payment_id is not null.']
+  }
+
+  Note: 'Internal payment/order state. Stores pricing snapshot so future plan changes do not alter purchased credit terms.'
+}
+
+Table billing_webhook_events as "public.billing_webhook_events" {
+  id uuid [pk, default: `gen_random_uuid()`]
+
+  provider text [not null, note: 'Example: xendit.']
+  event_id text [not null, note: 'Provider event key. For Xendit Payment Session, derive from event + payment_session_id or delivery payload identity.']
+  event_type text [not null, note: 'Example: payment_session.completed, payment_session.expired.']
+  payment_intent_id uuid [ref: > billing_payment_intents.id, note: 'Nullable. Filled after webhook is matched to an internal payment intent.']
+  provider_payment_id text [note: 'Provider payment/session ID if available.']
+  provider_reference text [note: 'Reference used to find billing_payment_intents.']
+
+  payload jsonb [not null, note: 'Raw provider webhook payload for audit. Avoid exposing to users.']
+  signature_valid boolean [not null, default: false]
+  processed_at timestamptz
+  processing_error text
+  created_at timestamptz [not null, default: `now()`]
+
+  indexes {
+    (provider, event_id) [unique, name: 'billing_webhook_events_provider_event_unique']
+    (payment_intent_id) [name: 'billing_webhook_events_payment_intent_idx']
+    (provider, provider_payment_id) [name: 'billing_webhook_events_provider_payment_idx']
+    (processed_at) [name: 'billing_webhook_events_processed_at_idx']
+  }
+
+  Note: 'Idempotency and audit table for payment provider webhooks. No direct user access.'
+}
+
+Table credit_wallets as "public.credit_wallets" {
+  user_id uuid [pk, ref: > auth_users.id]
+
+  available_balance integer [not null, default: 0, note: 'Credits available for new usage. Check: available_balance >= 0.']
+  reserved_balance integer [not null, default: 0, note: 'Credits reserved for in-progress jobs. Check: reserved_balance >= 0.']
+
+  created_at timestamptz [not null, default: `now()`]
+  updated_at timestamptz [not null, default: `now()`]
+
+  Note: 'Cached/snapshot balance per user. Ledger and grants explain how this balance changed.'
+}
+
+Table credit_grants as "public.credit_grants" {
+  id uuid [pk, default: `gen_random_uuid()`]
+  user_id uuid [not null, ref: > auth_users.id]
+  payment_intent_id uuid [not null, unique, ref: > billing_payment_intents.id]
+
+  original_amount integer [not null, note: 'Total credits granted. Check: original_amount > 0.']
+  remaining_amount integer [not null, note: 'Remaining credits in this grant. Check: remaining_amount >= 0.']
+  expires_at timestamptz [not null]
+  created_at timestamptz [not null, default: `now()`]
+
+  indexes {
+    (user_id, expires_at) [name: 'credit_grants_user_expires_idx']
+    (user_id, remaining_amount) [name: 'credit_grants_user_remaining_idx']
+  }
+
+  Note: 'Per-purchase credit lots. Enables strict expiry and FIFO consumption by earliest expires_at.'
+}
+
+Table credit_ledger_entries as "public.credit_ledger_entries" {
+  id uuid [pk, default: `gen_random_uuid()`]
+  user_id uuid [not null, ref: > auth_users.id]
+
+  amount integer [not null, note: 'Positive for grants/releases, negative for debits/expirations/reversals. Check: amount <> 0.']
+  entry_type text [not null, note: 'purchase_grant | usage_debit | reservation | reservation_release | refund_reversal | manual_adjustment | expiration']
+  source_type text [not null, note: 'payment_intent | generation | admin_adjustment | grant | refund | etc.']
+  source_id text
+
+  payment_intent_id uuid [ref: > billing_payment_intents.id]
+  pricing_plan_id uuid [ref: > pricing_plans.id]
+
+  balance_after integer [not null, note: 'Wallet available balance after this entry. Check: balance_after >= 0.']
+  metadata jsonb [not null, default: '{}']
+  created_at timestamptz [not null, default: `now()`]
+
+  indexes {
+    (user_id, created_at) [name: 'credit_ledger_entries_user_created_idx']
+    (payment_intent_id) [name: 'credit_ledger_entries_payment_intent_idx']
+    (payment_intent_id, entry_type) [unique, name: 'credit_ledger_purchase_grant_once', note: 'Recommended partial unique in SQL where entry_type = purchase_grant.']
+  }
+
+  Note: 'Immutable audit trail for all credit balance changes. Corrections should be new reversing entries, not edits/deletes.'
+}
+
+// Relationships are declared inline on columns with [ref: > ...].
+// Avoid duplicate endpoint references in dbdiagram.io.
