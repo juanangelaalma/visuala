@@ -5,8 +5,8 @@ import { parseBillingConfig } from "./billing";
 const required = { XENDIT_ENVIRONMENT: "sandbox", XENDIT_API_KEY: "api-key", XENDIT_WEBHOOK_TOKEN: "webhook-token" };
 
 describe("billing config", () => {
-  it("defaults checkout and QRIS off and maps sandbox explicitly", () => {
-    expect(parseBillingConfig(required)).toMatchObject({ checkoutEnabled: false, qrisEnabled: false, environment: "test" });
+  it("defaults checkout and payment methods off and maps sandbox explicitly", () => {
+    expect(parseBillingConfig(required)).toMatchObject({ checkoutEnabled: false, qrisEnabled: false, virtualAccountEnabled: false, environment: "test" });
   });
 
   it("fails closed when required server secrets are absent", () => {
@@ -14,6 +14,6 @@ describe("billing config", () => {
   });
 
   it("accepts explicit enablement", () => {
-    expect(parseBillingConfig({ ...required, BILLING_CHECKOUT_ENABLED: "true", BILLING_QRIS_ENABLED: "true" })).toMatchObject({ checkoutEnabled: true, qrisEnabled: true });
+    expect(parseBillingConfig({ ...required, BILLING_CHECKOUT_ENABLED: "true", BILLING_QRIS_ENABLED: "true", BILLING_VIRTUAL_ACCOUNT_ENABLED: "true" })).toMatchObject({ checkoutEnabled: true, qrisEnabled: true, virtualAccountEnabled: true });
   });
 });

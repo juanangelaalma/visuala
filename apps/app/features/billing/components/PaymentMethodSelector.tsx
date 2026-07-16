@@ -9,7 +9,7 @@ type PaymentMethodSelectorProps = {
 };
 
 export function PaymentMethodSelector({ methods, name = "paymentMethodCatalogId", value, onChange, disabled = false }: PaymentMethodSelectorProps) {
-  const hasSelectableMethod = methods.some((method) => method.enabled && method.launchPhase === 1 && method.kind === "qris");
+  const hasSelectableMethod = methods.some((method) => method.enabled && method.launchPhase === 1 && (method.kind === "qris" || method.kind === "virtual_account"));
 
   return (
     <fieldset disabled={disabled} className="space-y-3">
@@ -18,7 +18,7 @@ export function PaymentMethodSelector({ methods, name = "paymentMethodCatalogId"
       {methods.length ? (
         <div className="grid gap-3">
           {methods.map((method) => {
-            const selectable = method.enabled && method.launchPhase === 1 && method.kind === "qris";
+            const selectable = method.enabled && method.launchPhase === 1 && (method.kind === "qris" || method.kind === "virtual_account");
             return (
               <label key={method.id} className={`flex min-h-16 items-center gap-3 rounded-2xl border px-4 py-3 transition motion-reduce:transition-none ${selectable ? "cursor-pointer border-white/10 bg-black has-checked:border-primary has-checked:bg-primary/10 has-focus-visible:ring-2 has-focus-visible:ring-primary has-focus-visible:ring-offset-2 has-focus-visible:ring-offset-black" : "cursor-not-allowed border-white/5 bg-black/50 opacity-60"}`}>
                 <input type="radio" name={selectable ? name : undefined} value={selectable ? method.id : undefined} checked={selectable && method.id === value} onChange={() => onChange(method.id)} required={selectable} disabled={!selectable} className="h-5 w-5 shrink-0 accent-primary" />

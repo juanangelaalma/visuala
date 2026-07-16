@@ -11,6 +11,7 @@ type CreateBillingCheckoutDependencies = {
   providerAllocation: ProviderAllocationService;
   attempts: ProviderAttemptRepository;
   gateways: BillingGatewayResolver;
+  isPaymentMethodEnabled: (method: PaymentMethod) => boolean;
 };
 
 type CreateBillingCheckoutInput = {
@@ -68,7 +69,7 @@ export async function createBillingCheckout(dependencies: CreateBillingCheckoutD
   if (!plan || plan.currency !== "IDR") throw new PricingPlanUnavailableError("Pricing plan unavailable");
 
   const method = await dependencies.paymentCatalog.findEnabledById(input.paymentMethodCatalogId, plan.priceAmount, "IDR");
-  if (!method) throw new PaymentMethodUnavailableError("Payment method unavailable");
+  if (!method || !dependencies.isPaymentMethodEnabled(method)) throw new PaymentMethodUnavailableError("Payment method unavailable");
 
   const snapshot = buildPaymentSnapshot(input, plan, method);
   const creation = await dependencies.payments.createIdempotently(snapshot);

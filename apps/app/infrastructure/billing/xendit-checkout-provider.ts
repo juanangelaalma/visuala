@@ -3,13 +3,24 @@ import "server-only";
 import { createHash, timingSafeEqual } from "node:crypto";
 import { z } from "zod";
 import type { BillingGateway } from "@/domain/billing/contracts";
-import type { BillingPayment, NormalizedWebhook, PaymentMethod, ProviderAttempt, ProviderAttemptStatus } from "@/domain/billing/types";
+import type { BillingPayment, CheckoutAction, NormalizedWebhook, PaymentMethod, ProviderAttempt, ProviderAttemptStatus } from "@/domain/billing/types";
 import type { BillingConfig } from "@/shared/config/billing";
 
 const API_URL = "https://api.xendit.co/v3/payment_requests";
 const API_VERSION = "2024-11-11";
 const MAX_ACTIONS = 8;
 const MAX_ACTION_VALUE_LENGTH = 4096;
+const VIRTUAL_ACCOUNT_CHANNELS = new Set([
+  "BCA_VIRTUAL_ACCOUNT",
+  "BNI_VIRTUAL_ACCOUNT",
+  "BRI_VIRTUAL_ACCOUNT",
+  "MANDIRI_VIRTUAL_ACCOUNT",
+  "PERMATA_VIRTUAL_ACCOUNT",
+]);
+
+const virtualAccountConfigSchema = z.object({
+  display_name: z.string().trim().min(1).max(100),
+});
 
 const actionSchema = z.object({
   type: z.string(),
@@ -22,6 +33,8 @@ const paymentSchema = z.object({
   reference_id: z.string().min(1),
   status: z.string().min(1),
   actions: z.array(actionSchema).max(MAX_ACTIONS).default([]),
+  channel_code: z.string().min(1).optional(),
+  channel_properties: z.object({ expires_at: z.string().datetime().optional() }).passthrough().optional(),
   created: z.string().datetime().optional(),
   updated: z.string().datetime().optional(),
 }).passthrough();
@@ -73,15 +86,16 @@ export class XenditCheckoutProvider implements BillingGateway {
   constructor(private readonly config: BillingConfig, private readonly fetchImplementation: Fetch = fetch) {}
 
   async createCheckout(attempt: ProviderAttempt, payment: BillingPayment, method: PaymentMethod) {
-    if (!this.config.checkoutEnabled || !this.config.qrisEnabled || method.kind !== "qris" || payment.currency !== "IDR" || attempt.environment !== this.config.environment) {
+    if (!isConfiguredMethod(this.config, attempt, payment, method)) {
       throw new XenditProviderError("configuration");
     }
+    const channelProperties = buildChannelProperties(attempt, method);
     // Xendit documents no idempotency header here; an ambiguous create remains unknown and requires manual review.
     const result = await this.request(API_URL, {
       method: "POST",
-      body: JSON.stringify({ reference_id: attempt.providerReference, type: "PAY", country: "ID", currency: "IDR", request_amount: payment.priceAmount, capture_method: "AUTOMATIC", channel_code: "QRIS", channel_properties: {} }),
+      body: JSON.stringify({ reference_id: attempt.providerReference, type: "PAY", country: "ID", currency: "IDR", request_amount: payment.priceAmount, capture_method: "AUTOMATIC", channel_code: attempt.providerChannelCode, channel_properties: channelProperties }),
     }, true);
-    return normalizePayment(result);
+    return normalizePayment(result, attempt.providerChannelCode, method.kind);
   }
 
   async retrievePayment(providerPaymentId: string) {
@@ -123,10 +137,35 @@ export class XenditCheckoutProvider implements BillingGateway {
   }
 }
 
-function normalizePayment(payload: unknown) {
+function normalizePayment(payload: unknown, expectedChannelCode?: string, methodKind?: PaymentMethod["kind"]) {
   const parsed = paymentSchema.safeParse(payload);
   if (!parsed.success) throw new XenditProviderError("invalid_response");
-  return { providerPaymentId: parsed.data.payment_request_id, status: normalizeAttemptStatus(parsed.data.status), actions: parsed.data.actions.filter((action) => action.type === "PRESENT_TO_CUSTOMER" && action.descriptor === "QR_STRING").map((action) => ({ type: "qr_code" as const, value: action.value, expiresAt: null })), expiresAt: null };
+  if (expectedChannelCode && parsed.data.channel_code && parsed.data.channel_code !== expectedChannelCode) throw new XenditProviderError("invalid_response");
+  const channelCode = expectedChannelCode ?? parsed.data.channel_code;
+  const expiresAt = parsed.data.channel_properties?.expires_at ?? null;
+  const actions = parsed.data.actions.flatMap<CheckoutAction>((action) => {
+    if (action.type !== "PRESENT_TO_CUSTOMER") return [];
+    if (action.descriptor === "QR_STRING" && (!methodKind || methodKind === "qris")) return [{ type: "qr_code" as const, value: action.value, expiresAt }];
+    if (action.descriptor === "VIRTUAL_ACCOUNT_NUMBER" && (!methodKind || methodKind === "virtual_account") && channelCode && VIRTUAL_ACCOUNT_CHANNELS.has(channelCode) && /^[0-9]{4,32}$/.test(action.value)) {
+      return [{ type: "virtual_account" as const, accountNumber: action.value, bankCode: channelCode.replace("_VIRTUAL_ACCOUNT", ""), expiresAt }];
+    }
+    return [];
+  });
+  return { providerPaymentId: parsed.data.payment_request_id, status: normalizeAttemptStatus(parsed.data.status), actions, expiresAt };
+}
+
+function isConfiguredMethod(config: BillingConfig, attempt: ProviderAttempt, payment: BillingPayment, method: PaymentMethod) {
+  if (!config.checkoutEnabled || payment.currency !== "IDR" || attempt.environment !== config.environment || attempt.paymentMethodId !== method.id) return false;
+  if (method.kind === "qris") return config.qrisEnabled && attempt.providerMethodType === "QR_CODE" && attempt.providerChannelCode === "QRIS";
+  if (method.kind === "virtual_account") return config.virtualAccountEnabled && attempt.providerMethodType === "VIRTUAL_ACCOUNT" && VIRTUAL_ACCOUNT_CHANNELS.has(attempt.providerChannelCode);
+  return false;
+}
+
+function buildChannelProperties(attempt: ProviderAttempt, method: PaymentMethod) {
+  if (method.kind === "qris") return {};
+  const parsed = virtualAccountConfigSchema.safeParse(attempt.mappingConfig);
+  if (!parsed.success) throw new XenditProviderError("configuration");
+  return parsed.data;
 }
 
 function normalizeWebhook(environment: BillingConfig["environment"], eventType: string, value: z.infer<typeof webhookPaymentSchema>, occurredAt: string): NormalizedWebhook {

@@ -3,9 +3,9 @@ vi.mock("server-only", () => ({}));
 import type { BillingConfig } from "@/shared/config/billing";
 import { XenditAmbiguousOutcomeError, XenditCheckoutProvider, XenditWebhookVerificationError } from "./xendit-checkout-provider";
 
-const config: BillingConfig = { checkoutEnabled: true, qrisEnabled: true, environment: "test", apiKey: "xnd_development_test", webhookToken: "callback-test", requestTimeoutMs: 1000 };
+const config: BillingConfig = { checkoutEnabled: true, qrisEnabled: true, virtualAccountEnabled: true, environment: "test", apiKey: "xnd_development_test", webhookToken: "callback-test", requestTimeoutMs: 1000 };
 const payment = { id: "payment", userId: "user", pricingPlanId: "plan", selectedPaymentMethodId: "method", idempotencyKey: "key", status: "pending" as const, priceAmount: 10000, currency: "IDR" as const, baseCredits: 10, bonusCredits: 0, creditExpiresInDays: 30, expiresAt: null, paidAt: null, settlementAuditCode: null, createdAt: "2026-01-01T00:00:00Z", updatedAt: "2026-01-01T00:00:00Z" };
-const attempt = { id: "attempt", billingPaymentId: "payment", paymentMethodId: "method", provider: "xendit", environment: "test" as const, providerReference: "visuala-reference", providerIdempotencyKey: "unused", providerPaymentId: null, status: "creating" as const, actions: [], expiresAt: null };
+const attempt = { id: "attempt", billingPaymentId: "payment", paymentMethodId: "method", provider: "xendit", environment: "test" as const, providerMethodType: "QR_CODE", providerChannelCode: "QRIS", mappingConfig: {}, providerReference: "visuala-reference", providerIdempotencyKey: "unused", providerPaymentId: null, status: "creating" as const, actions: [], expiresAt: null };
 const method = { id: "method", slug: "qris", kind: "qris" as const, label: "QRIS", description: null, logoUrl: null, currency: "IDR" as const, minAmount: null, maxAmount: null, enabled: true, launchPhase: 1, sortOrder: 1 };
 
 describe("XenditCheckoutProvider docs-derived fixtures (not sandbox-certified)", () => {
@@ -22,6 +22,25 @@ describe("XenditCheckoutProvider docs-derived fixtures (not sandbox-certified)",
     const fetcher = vi.fn().mockResolvedValue(new Response(JSON.stringify({ payment_request_id: "pr-1", reference_id: "visuala-reference", status: "PENDING", actions: [] }), { status: 200 }));
     await new XenditCheckoutProvider(config, fetcher).retrievePayment("pr-1");
     expect(fetcher).toHaveBeenCalledWith("https://api.xendit.co/v3/payment_requests/pr-1", expect.objectContaining({ method: "GET" }));
+  });
+
+  it("creates a configured virtual account and normalizes its payment instruction", async () => {
+    const virtualAccountAttempt = { ...attempt, providerMethodType: "VIRTUAL_ACCOUNT", providerChannelCode: "BRI_VIRTUAL_ACCOUNT", mappingConfig: { display_name: "Visuala" } };
+    const virtualAccountMethod = { ...method, slug: "bri-virtual-account", kind: "virtual_account" as const, label: "BRI Virtual Account" };
+    const fetcher = vi.fn().mockResolvedValue(new Response(JSON.stringify({ payment_request_id: "pr-va-1", reference_id: "visuala-reference", status: "REQUIRES_ACTION", channel_code: "BRI_VIRTUAL_ACCOUNT", channel_properties: { expires_at: "2026-01-02T00:00:00.000Z" }, actions: [{ type: "PRESENT_TO_CUSTOMER", descriptor: "VIRTUAL_ACCOUNT_NUMBER", value: "1328216932121" }] }), { status: 200 }));
+
+    const result = await new XenditCheckoutProvider(config, fetcher).createCheckout(virtualAccountAttempt, payment, virtualAccountMethod);
+
+    expect(result).toEqual({ providerPaymentId: "pr-va-1", status: "requires_action", actions: [{ type: "virtual_account", accountNumber: "1328216932121", bankCode: "BRI", expiresAt: "2026-01-02T00:00:00.000Z" }], expiresAt: "2026-01-02T00:00:00.000Z" });
+    expect(JSON.parse(fetcher.mock.calls[0][1].body)).toMatchObject({ type: "PAY", request_amount: 10000, channel_code: "BRI_VIRTUAL_ACCOUNT", channel_properties: { display_name: "Visuala" } });
+  });
+
+  it("fails closed for an unsupported or mismatched virtual account mapping", async () => {
+    const virtualAccountMethod = { ...method, slug: "unknown-va", kind: "virtual_account" as const };
+    const provider = new XenditCheckoutProvider(config, vi.fn());
+
+    await expect(provider.createCheckout({ ...attempt, providerMethodType: "VIRTUAL_ACCOUNT", providerChannelCode: "UNKNOWN_VIRTUAL_ACCOUNT", mappingConfig: { display_name: "Visuala" } }, payment, virtualAccountMethod)).rejects.toMatchObject({ category: "configuration" });
+    await expect(provider.createCheckout({ ...attempt, providerMethodType: "VIRTUAL_ACCOUNT", providerChannelCode: "BRI_VIRTUAL_ACCOUNT", mappingConfig: {} }, payment, virtualAccountMethod)).rejects.toMatchObject({ category: "configuration" });
   });
 
   it("keeps an ambiguous create unknown for manual review without retrying", async () => {

@@ -52,6 +52,9 @@ export type ProviderAttempt = {
   paymentMethodId: string;
   provider: BillingProvider;
   environment: BillingEnvironment;
+  providerMethodType: string;
+  providerChannelCode: string;
+  mappingConfig: unknown;
   providerReference: string;
   providerIdempotencyKey: string;
   providerPaymentId: string | null;
