@@ -40,6 +40,10 @@ supabase-down:
 supabase-reset:
 	pnpm dlx supabase db reset --workdir .
 
+seed:
+	@eval "$$(pnpm dlx supabase status -o env --override-name db.url=DATABASE_URL 2>/dev/null)"; \
+	psql "$$DATABASE_URL" -v ON_ERROR_STOP=1 -f supabase/seed.sql
+
 migration-new:
 	pnpm dlx supabase migration new $(name) --workdir .
 
