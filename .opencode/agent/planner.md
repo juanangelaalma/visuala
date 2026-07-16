@@ -37,6 +37,9 @@ Planning output:
 - Risks and human decisions needed
 
 Todo list style:
+- For large features, split stages by architectural boundary: database, domain/application, infrastructure/provider, actions/routes, UI, and validation/review.
+- State dependencies, review gates, and per-stage validation for each boundary.
+- Never assign a full database-to-UI vertical slice to one implementation run.
 - Use concise steps.
 - Include implementation, review, and validation.
 - Mark destructive, security-sensitive, or ambiguous steps as requiring user confirmation.

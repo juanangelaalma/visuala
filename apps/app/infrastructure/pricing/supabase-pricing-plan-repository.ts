@@ -9,6 +9,18 @@ type PricingPlanUpdate = Database["public"]["Tables"]["pricing_plans"]["Update"]
 export class SupabasePricingPlanRepository implements PricingPlanRepository {
   constructor(private readonly supabase: SupabaseClient<Database>) {}
 
+  async findActiveById(id: string): Promise<PricingPlan | null> {
+    const { data, error } = await this.supabase
+      .from("pricing_plans")
+      .select("*")
+      .eq("id", id)
+      .eq("is_active", true)
+      .maybeSingle();
+
+    if (error) throw error;
+    return data ? mapPricingPlan(data) : null;
+  }
+
   async listActive(): Promise<PricingPlan[]> {
     const { data, error } = await this.supabase
       .from("pricing_plans")

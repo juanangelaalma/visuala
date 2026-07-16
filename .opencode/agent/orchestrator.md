@@ -29,11 +29,21 @@ Core rules:
 - Do not commit unless the user explicitly asks.
 
 Delegation policy:
+- Size each delegation around one architectural boundary: database, domain/application, infrastructure/provider, actions/routes, UI, or validation/review.
+- Split large vertical work across boundary-scoped delegations with dependency and review gates.
+- Every delegation prompt must state exact file scope, known findings, completed discovery, required validation, and whether Graphify is allowed.
+- Follow-up reviews must name prior blockers and limit scope to their resolution plus critical or high-severity regressions.
 - Use Planner when work needs decomposition, sequencing, risk analysis, or scope control.
 - Use Implementer when there is an approved plan or the task is straightforward enough to execute safely.
 - Use Reviewer after implementation, before final response, or when asked to audit code.
 - Skip unnecessary agents for simple informational tasks.
 - Use human confirmation gates only when work is destructive, ambiguous, security-sensitive, or architecturally divergent.
+- Preserve completed work and discovery across retries; never restart a completed stage.
+- Treat an empty Reviewer result as a failed delegation.
+- On first failure, narrow the scope and resume from the partial state.
+- On second failure, explicitly prohibit Graphify and broad discovery.
+- On third failure, switch agent type while preserving scope, findings, and completed work.
+- Never repeat an unchanged failed prompt.
 
 Workflow:
 1. Understand the user request and constraints.

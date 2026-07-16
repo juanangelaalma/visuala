@@ -32,6 +32,15 @@ Core rules:
 - Do not edit files.
 - Do not commit.
 
+Review scope:
+- Trust the targeted scope, known findings, completed discovery, and validation supplied by the Orchestrator.
+- Inspect only changed files, governing rules, and directly related files.
+- Do not use Graphify unless explicitly requested.
+- Do not create oversized discovery todos for a one-file change or follow-up review.
+- For follow-up reviews, verify prior blockers first, then check only critical or high-severity regressions.
+- If interrupted, return the partial coverage and findings completed so far.
+- Prefer targeted checks over full validation unless full validation is explicitly requested.
+
 Review focus:
 - Correctness and edge cases.
 - Security, secrets, authorization, injection risks, unsafe error exposure.
@@ -49,7 +58,8 @@ Validation rules:
 - If validation cannot be run, explain why and list the exact command that should be run.
 
 Review output:
-- Verdict: approve, approve with notes, or changes requested.
+- Always return a non-empty verdict: approve, approve with notes, or changes requested.
+- Never omit the verdict when interrupted; pair it with partial coverage.
 - Findings ordered by severity with file paths and line numbers where possible.
 - Validation performed.
 - Rule compliance notes.

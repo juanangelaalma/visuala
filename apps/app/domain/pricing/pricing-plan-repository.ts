@@ -20,6 +20,7 @@ export type SavePricingPlanInput = {
 };
 
 export interface PricingPlanRepository {
+  findActiveById(id: string): Promise<PricingPlan | null>;
   listActive(): Promise<PricingPlan[]>;
   listAll(): Promise<PricingPlan[]>;
   create(input: SavePricingPlanInput): Promise<PricingPlan>;
