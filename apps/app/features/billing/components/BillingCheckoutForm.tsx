@@ -18,7 +18,7 @@ type BillingCheckoutFormProps = {
 const initialState: BillingActionState = {};
 
 export function BillingCheckoutForm({ pricingPlanId, idempotencyKey, methods, defaultPaymentMethodId, checkoutAvailable = true, unavailableMessage }: BillingCheckoutFormProps) {
-  const selectableMethods = methods.filter((method) => method.enabled && method.launchPhase === 1 && method.kind === "qris");
+  const selectableMethods = methods.filter((method) => method.enabled && method.launchPhase === 1 && (method.kind === "qris" || method.kind === "virtual_account"));
   const initialPaymentMethodId = selectableMethods.some((method) => method.id === defaultPaymentMethodId) ? defaultPaymentMethodId : selectableMethods[0]?.id;
   const [selectedPaymentMethodId, setSelectedPaymentMethodId] = useState(initialPaymentMethodId ?? "");
   const [state, formAction, pending] = useActionState(createBillingCheckoutAction, initialState);

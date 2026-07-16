@@ -28,6 +28,7 @@ export async function createBillingServices() {
       },
       attempts: new SupabaseProviderAttemptRepository(serviceRoleSupabase),
       gateways: { resolve: () => gateway },
+      isPaymentMethodEnabled: (method: { kind: string }) => method.kind === "qris" ? config.qrisEnabled : method.kind === "virtual_account" ? config.virtualAccountEnabled : false,
     },
     payments: new SupabaseBillingPaymentRepository(serviceRoleSupabase),
     xendit: gateway,

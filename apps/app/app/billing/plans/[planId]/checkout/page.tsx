@@ -58,14 +58,14 @@ export default async function PlanCheckoutPage({ params }: CheckoutPageProps) {
   try {
     const services = await createBillingServices();
     const catalog = await listEnabledPaymentMethods(services.checkout.paymentCatalog);
-    methods = catalog.map((method) => ({ id: method.id, kind: method.kind, label: method.label, description: method.description, enabled: method.enabled && method.currency === plan.currency && (method.minAmount === null || plan.priceAmount >= method.minAmount) && (method.maxAmount === null || plan.priceAmount <= method.maxAmount), launchPhase: method.launchPhase }));
-    checkoutAvailable = services.config.checkoutEnabled && services.config.qrisEnabled;
+    methods = catalog.map((method) => ({ id: method.id, kind: method.kind, label: method.label, description: method.description, enabled: method.enabled && (method.kind === "qris" ? services.config.qrisEnabled : method.kind === "virtual_account" ? services.config.virtualAccountEnabled : false) && method.currency === plan.currency && (method.minAmount === null || plan.priceAmount >= method.minAmount) && (method.maxAmount === null || plan.priceAmount <= method.maxAmount), launchPhase: method.launchPhase }));
+    checkoutAvailable = services.config.checkoutEnabled && (services.config.qrisEnabled || services.config.virtualAccountEnabled);
     if (!checkoutAvailable) unavailableMessage = "Checkout is temporarily unavailable. Your plan selection is still shown below.";
   } catch {
     unavailableMessage = "Payment methods are temporarily unavailable. Try again later.";
   }
 
-  const eligibleMethods = methods.filter((method) => method.enabled && method.kind === "qris" && method.launchPhase === 1);
+  const eligibleMethods = methods.filter((method) => method.enabled && (method.kind === "qris" || method.kind === "virtual_account") && method.launchPhase === 1);
   const defaultPaymentMethodId = eligibleMethods[0]?.id;
 
   return (

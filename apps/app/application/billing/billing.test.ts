@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 import type { BillingGateway, BillingPaymentRepository, BillingWebhookRepository, PaymentCatalogRepository, ProviderAttemptRepository } from "@/domain/billing/contracts";
-import { BillingIdempotencyConflictError } from "@/domain/billing/errors";
+import { BillingIdempotencyConflictError, PaymentMethodUnavailableError } from "@/domain/billing/errors";
 import type { BillingPayment, BillingPaymentProjection, PaymentMethod, ProviderAttempt } from "@/domain/billing/types";
 import type { PricingPlanRepository } from "@/domain/pricing/pricing-plan-repository";
 import { createBillingCheckout } from "./create-billing-checkout";
@@ -9,7 +9,7 @@ import { refreshOwnedBillingPayment, toBillingRefreshProjection } from "./refres
 
 const payment: BillingPayment = { id: "payment-1", userId: "user-1", pricingPlanId: "plan-1", selectedPaymentMethodId: "method-1", idempotencyKey: "key-1", status: "pending", priceAmount: 10000, currency: "IDR", baseCredits: 100, bonusCredits: 10, creditExpiresInDays: 30, expiresAt: null, paidAt: null, settlementAuditCode: null, createdAt: "now", updatedAt: "now" };
 const method: PaymentMethod = { id: "method-1", slug: "qris", kind: "qris", label: "QRIS", description: null, logoUrl: null, currency: "IDR", minAmount: null, maxAmount: null, enabled: true, launchPhase: 1, sortOrder: 1 };
-const attempt: ProviderAttempt = { id: "attempt-1", billingPaymentId: payment.id, paymentMethodId: method.id, provider: "provider", environment: "test", providerReference: "ref", providerIdempotencyKey: "provider-key", providerPaymentId: null, status: "creating", actions: [], expiresAt: null };
+const attempt: ProviderAttempt = { id: "attempt-1", billingPaymentId: payment.id, paymentMethodId: method.id, provider: "provider", environment: "test", providerMethodType: "QR_CODE", providerChannelCode: "QRIS", mappingConfig: {}, providerReference: "ref", providerIdempotencyKey: "provider-key", providerPaymentId: null, status: "creating", actions: [], expiresAt: null };
 const projection: BillingPaymentProjection = { ...payment, paymentMethod: method, latestAttempt: attempt };
 
 function dependencies(created = true) {
@@ -20,7 +20,8 @@ function dependencies(created = true) {
   const gateway = { createCheckout: vi.fn().mockResolvedValue({ providerPaymentId: "provider-payment", status: "pending", actions: [], expiresAt: null }) } as BillingGateway;
   const providerAllocation = { allocate: vi.fn().mockResolvedValue({ paymentMethodId: method.id, provider: "provider", environment: "test", providerReference: "ref", providerIdempotencyKey: "provider-key" }) };
   const gateways = { resolve: vi.fn().mockReturnValue(gateway) };
-  return { pricingPlans, paymentCatalog, payments, attempts, gateway, providerAllocation, gateways };
+  const isPaymentMethodEnabled = vi.fn().mockReturnValue(true);
+  return { pricingPlans, paymentCatalog, payments, attempts, gateway, providerAllocation, gateways, isPaymentMethodEnabled };
 }
 
 const checkoutInput = { userId: "user-1", pricingPlanId: "plan-1", paymentMethodCatalogId: "method-1", idempotencyKey: "key-1" };
@@ -31,6 +32,15 @@ describe("billing use cases", () => {
     await createBillingCheckout(deps, checkoutInput);
     expect(deps.payments.createIdempotently).toHaveBeenCalledWith(expect.objectContaining({ priceAmount: 10000, baseCredits: 100, bonusCredits: 10 }));
     expect(deps.gateway.createCheckout).toHaveBeenCalledOnce();
+  });
+
+  it("rejects a feature-flagged payment method before creating a payment", async () => {
+    const deps = dependencies();
+    deps.isPaymentMethodEnabled.mockReturnValue(false);
+
+    await expect(createBillingCheckout(deps, checkoutInput)).rejects.toBeInstanceOf(PaymentMethodUnavailableError);
+    expect(deps.payments.createIdempotently).not.toHaveBeenCalled();
+    expect(deps.attempts.allocate).not.toHaveBeenCalled();
   });
 
   it("returns an idempotent existing payment without another attempt", async () => {

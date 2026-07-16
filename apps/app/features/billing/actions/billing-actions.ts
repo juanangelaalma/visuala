@@ -16,7 +16,7 @@ export async function createBillingCheckoutAction(_: BillingActionState, formDat
   let paymentId: string;
   try {
     const services = await createBillingServices();
-    if (!services.config.checkoutEnabled || !services.config.qrisEnabled) return { error: "Checkout is unavailable." };
+    if (!services.config.checkoutEnabled || (!services.config.qrisEnabled && !services.config.virtualAccountEnabled)) return { error: "Checkout is unavailable." };
     const user = await services.authProvider.getCurrentUser();
     if (!user) return { error: "Sign in to continue." };
     const payment = await createBillingCheckout(services.checkout, { ...parsed.data, userId: user.id });
