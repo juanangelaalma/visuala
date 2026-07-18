@@ -1,6 +1,6 @@
 "use client";
 
-import { DashboardFooter, DashboardNavbar, DashboardSidebar, type DashboardSidebarItem, type DashboardSidebarSection } from "@visuala/ui";
+import { DashboardFooter, DashboardNavbar, DashboardSidebar, type DashboardSidebarSection } from "@visuala/ui";
 import { usePathname } from "next/navigation";
 import { useMemo, useRef, type ReactNode } from "react";
 import { logoutAction } from "@/features/auth/actions/auth-actions";
@@ -29,8 +29,6 @@ const defaultDashboardSections: DashboardSidebarSection[] = [
     items: [
       { id: "templates", label: "Templates", href: "/dashboard/templates" },
       { id: "more-tools", label: "More Tools", href: "/dashboard/tools" },
-      { id: "profile-settings", label: "Profile Settings", href: "/dashboard/profile" },
-      { id: "logout", label: "Logout" },
     ],
   },
 ];
@@ -72,8 +70,8 @@ export default function DashboardShell({ children, sections = defaultDashboardSe
   const pricingIsActive = pathname === "/billing/plans" || pathname.startsWith("/billing/plans/");
   const activeItemId = useMemo(() => getActiveItemId(pathname, sections), [pathname, sections]);
 
-  function handleItemSelect(item: DashboardSidebarItem) {
-    if (item.id === "logout") logoutFormRef.current?.requestSubmit();
+  function handleLogout() {
+    logoutFormRef.current?.requestSubmit();
   }
 
   const profile = {
@@ -86,7 +84,7 @@ export default function DashboardShell({ children, sections = defaultDashboardSe
   return (
     <div className="h-screen overflow-hidden bg-dark-bg p-4">
       <div className="flex h-full gap-8">
-        <DashboardSidebar profile={profile} items={sections} activeItemId={activeItemId} className="h-full min-h-0 shrink-0" onItemSelect={handleItemSelect} />
+        <DashboardSidebar profile={profile} items={sections} activeItemId={activeItemId} className="h-full min-h-0 shrink-0" onLogout={handleLogout} />
         <form ref={logoutFormRef} action={logoutAction} className="hidden" />
 
         <div className="flex min-w-0 flex-1 flex-col gap-4 overflow-y-auto">
