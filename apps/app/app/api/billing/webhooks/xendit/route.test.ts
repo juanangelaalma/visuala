@@ -64,22 +64,28 @@ describe("Xendit billing webhook route", () => {
     expect(verifyAndNormalizeWebhook).not.toHaveBeenCalled();
   });
 
-  it("returns safe 400, 401, and 503 responses without logging provider errors", async () => {
-    const consoleLog = vi.spyOn(console, "log").mockImplementation(() => undefined);
-    const invalid = await POST(new Request("http://localhost/api/billing/webhooks/xendit", { method: "POST", headers: { "x-callback-token": "token" }, body: "{" }));
-    expect(invalid.status).toBe(400);
-    await expect(invalid.json()).resolves.toEqual({ error: "Invalid request." });
+  it("returns safe 400, 401, and 503 responses and logs only unexpected errors", async () => {
+    const consoleError = vi.spyOn(console, "error").mockImplementation(() => undefined);
+    try {
+      const invalid = await POST(new Request("http://localhost/api/billing/webhooks/xendit", { method: "POST", headers: { "x-callback-token": "token" }, body: "{" }));
+      expect(invalid.status).toBe(400);
+      await expect(invalid.json()).resolves.toEqual({ error: "Invalid request." });
 
-    verifyAndNormalizeWebhook.mockImplementationOnce(() => { throw new XenditWebhookVerificationError(); });
-    const unauthorized = await POST(new Request("http://localhost/api/billing/webhooks/xendit", { method: "POST", headers: { "content-type": "application/json" }, body: "{}" }));
-    expect(unauthorized.status).toBe(401);
-    await expect(unauthorized.json()).resolves.toEqual({ error: "Unauthorized." });
+      verifyAndNormalizeWebhook.mockImplementationOnce(() => { throw new XenditWebhookVerificationError(); });
+      const unauthorized = await POST(new Request("http://localhost/api/billing/webhooks/xendit", { method: "POST", headers: { "content-type": "application/json" }, body: "{}" }));
+      expect(unauthorized.status).toBe(401);
+      await expect(unauthorized.json()).resolves.toEqual({ error: "Unauthorized." });
+      expect(consoleError).not.toHaveBeenCalled();
 
-    vi.mocked(receiveBillingWebhook).mockRejectedValueOnce(new Error("database detail"));
-    const unavailable = await POST(new Request("http://localhost/api/billing/webhooks/xendit", { method: "POST", headers: { "content-type": "application/json" }, body: "{}" }));
-    expect(unavailable.status).toBe(503);
-    await expect(unavailable.json()).resolves.toEqual({ error: "Webhook unavailable." });
-    expect(consoleLog).not.toHaveBeenCalled();
-    consoleLog.mockRestore();
+      const error = new Error("database detail");
+      vi.mocked(receiveBillingWebhook).mockRejectedValueOnce(error);
+      const unavailable = await POST(new Request("http://localhost/api/billing/webhooks/xendit", { method: "POST", headers: { "content-type": "application/json" }, body: "{}" }));
+      expect(unavailable.status).toBe(503);
+      await expect(unavailable.json()).resolves.toEqual({ error: "Webhook unavailable." });
+      expect(consoleError).toHaveBeenCalledOnce();
+      expect(consoleError).toHaveBeenCalledWith("Failed to process Xendit billing webhook", error);
+    } finally {
+      consoleError.mockRestore();
+    }
   });
 });
