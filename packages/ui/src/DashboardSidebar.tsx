@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useState, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import Brand from "./Brand";
 
 export type DashboardSidebarItem = {
@@ -34,7 +34,8 @@ export type DashboardSidebarProps = {
     onCollapsedChange?: (collapsed: boolean) => void;
     onItemSelect?: (item: DashboardSidebarItem) => void;
     onCollapse?: () => void;
-    onProfileClick?: () => void;
+    profileSettingsHref?: string;
+    onLogout?: () => void;
 };
 
 type IconName =
@@ -79,8 +80,6 @@ const defaultSections: Array<{ title: string; items: DefaultDashboardSidebarItem
         items: [
             { id: "templates", label: "Templates", iconName: "templates" },
             { id: "more-tools", label: "More Tools", iconName: "tools" },
-            { id: "profile-settings", label: "Profile Settings", iconName: "profile" },
-            { id: "logout", label: "Logout", iconName: "logout" },
         ],
     },
 ];
@@ -126,6 +125,10 @@ const sidebarClassNames = {
     profileText: "min-w-0 grid",
     profileName: "truncate font-sans text-sm font-semibold text-white",
     profilePlan: "truncate font-sans text-xs font-medium text-neutral-450",
+    accountMenu: "absolute bottom-full z-20 mb-3 rounded-2xl border border-white/10 bg-surface-2 p-2 shadow-lg",
+    accountMenuExpanded: "inset-x-0",
+    accountMenuCollapsed: "left-full ml-3 w-52",
+    accountMenuItem: "flex w-full items-center gap-3 rounded-xl px-3 py-2 font-sans text-sm font-medium transition-colors hover:bg-surface-3 focus-visible:outline-2 focus-visible:outline-primary",
 } as const;
 
 function cx(...classNames: Array<string | undefined | false>) {
@@ -334,10 +337,35 @@ export default function DashboardSidebar({
     onCollapsedChange,
     onItemSelect,
     onCollapse,
-    onProfileClick,
+    profileSettingsHref = "/dashboard/profile",
+    onLogout,
 }: DashboardSidebarProps) {
     const [internalCollapsed, setInternalCollapsed] = useState(defaultCollapsed);
+    const [isAccountMenuOpen, setIsAccountMenuOpen] = useState(false);
+    const accountMenuRef = useRef<HTMLDivElement>(null);
+    const accountMenuTriggerRef = useRef<HTMLButtonElement>(null);
     const isCollapsed = collapsed ?? internalCollapsed;
+
+    useEffect(() => {
+        if (!isAccountMenuOpen) return;
+
+        function handleKeyDown(event: KeyboardEvent) {
+            if (event.key !== "Escape") return;
+            setIsAccountMenuOpen(false);
+            accountMenuTriggerRef.current?.focus();
+        }
+
+        function handlePointerDown(event: PointerEvent) {
+            if (!accountMenuRef.current?.contains(event.target as Node)) setIsAccountMenuOpen(false);
+        }
+
+        document.addEventListener("keydown", handleKeyDown);
+        document.addEventListener("pointerdown", handlePointerDown);
+        return () => {
+            document.removeEventListener("keydown", handleKeyDown);
+            document.removeEventListener("pointerdown", handlePointerDown);
+        };
+    }, [isAccountMenuOpen]);
 
     function handleCollapse() {
         const nextCollapsed = !isCollapsed;
@@ -362,7 +390,7 @@ export default function DashboardSidebar({
                 )}
             </span>
             {isCollapsed ? null : (
-                <span className={sidebarClassNames.iconButton}>
+                <span className={cx(sidebarClassNames.iconButton, "transition-transform", isAccountMenuOpen && "rotate-180")}>
                     <ChevronDownIcon />
                 </span>
             )}
@@ -398,13 +426,39 @@ export default function DashboardSidebar({
                 ))}
             </nav>
 
-            {onProfileClick ? (
-                <button type="button" className={cx(sidebarClassNames.profile, isCollapsed ? sidebarClassNames.profileCollapsed : sidebarClassNames.profileExpanded, "cursor-pointer text-left")} onClick={onProfileClick}>
+            <div ref={accountMenuRef} className="relative mt-auto mb-4">
+                {isAccountMenuOpen ? (
+                    <div data-testid="account-actions" className={cx(sidebarClassNames.accountMenu, isCollapsed ? sidebarClassNames.accountMenuCollapsed : sidebarClassNames.accountMenuExpanded)}>
+                        <Link href={profileSettingsHref} className={cx(sidebarClassNames.accountMenuItem, "text-white")} onClick={() => setIsAccountMenuOpen(false)}>
+                            <SidebarIcon name="profile" />
+                            <span>Profile Settings</span>
+                        </Link>
+                        {onLogout ? (
+                            <button
+                                type="button"
+                                className={cx(sidebarClassNames.accountMenuItem, "cursor-pointer text-tertiary")}
+                                onClick={() => {
+                                    setIsAccountMenuOpen(false);
+                                    onLogout();
+                                }}
+                            >
+                                <SidebarIcon name="logout" />
+                                <span>Logout</span>
+                            </button>
+                        ) : null}
+                    </div>
+                ) : null}
+                <button
+                    ref={accountMenuTriggerRef}
+                    type="button"
+                    aria-label="Open account menu"
+                    aria-expanded={isAccountMenuOpen}
+                    className={cx(sidebarClassNames.profile, isCollapsed ? sidebarClassNames.profileCollapsed : sidebarClassNames.profileExpanded, "mb-0 cursor-pointer text-left")}
+                    onClick={() => setIsAccountMenuOpen((isOpen) => !isOpen)}
+                >
                     {profileContent}
                 </button>
-            ) : (
-                <div className={cx(sidebarClassNames.profile, isCollapsed ? sidebarClassNames.profileCollapsed : sidebarClassNames.profileExpanded)}>{profileContent}</div>
-            )}
+            </div>
         </aside>
     );
 }
