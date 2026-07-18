@@ -14,6 +14,12 @@ test.describe("dashboard account menu", () => {
     await page.waitForURL(/\/dashboard/);
   });
 
+  test("shows credit balance above profile", async ({ page }) => {
+    const creditBalance = page.getByRole("link", { name: /Credit balance .+ credits/i });
+
+    await expect(creditBalance).toHaveAttribute("href", "/billing/plans");
+  });
+
   test("opens from profile and exposes account actions", async ({ page }) => {
     const trigger = page.getByRole("button", { name: /account menu/i });
 

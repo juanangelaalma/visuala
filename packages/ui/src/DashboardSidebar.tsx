@@ -34,6 +34,7 @@ export type DashboardSidebarProps = {
     onCollapsedChange?: (collapsed: boolean) => void;
     onItemSelect?: (item: DashboardSidebarItem) => void;
     onCollapse?: () => void;
+    creditBalance?: number;
     profileSettingsHref?: string;
     onLogout?: () => void;
 };
@@ -113,10 +114,14 @@ const sidebarClassNames = {
     itemExpanded: "gap-4 px-4",
     itemCollapsed: "justify-center px-0",
     itemActive: "bg-primary text-pricing-bg",
-    itemInactive: "bg-pricing-bg text-white hover:bg-surface-3",
+    itemInactive: "bg-pricing-bg text-white hover:bg-dark-bg",
     itemIcon: "inline-flex h-6 w-6 shrink-0 items-center justify-center",
     divider: "h-px w-full bg-surface-3",
-    profile: "mt-auto mb-4 flex h-10 w-full items-center",
+    credit: "mb-4 flex py-4 min-h-13 w-full items-center font-sans transition-colors rounded-2xl focus-visible:outline-2 focus-visible:outline-primary",
+    creditExpanded: "gap-3 px-3 py-2",
+    creditCollapsed: "flex-col justify-center gap-0.5 px-1 py-2",
+    creditIcon: "inline-flex h-6 w-6 shrink-0 items-center justify-center text-primary",
+    profile: "flex h-10 w-full items-center",
     profileExpanded: "justify-between",
     profileCollapsed: "justify-center",
     profileMain: "flex min-w-0 items-center gap-3",
@@ -125,9 +130,7 @@ const sidebarClassNames = {
     profileText: "min-w-0 grid",
     profileName: "truncate font-sans text-sm font-semibold text-white",
     profilePlan: "truncate font-sans text-xs font-medium text-neutral-450",
-    accountMenu: "absolute bottom-full z-20 mb-3 rounded-2xl border border-white/10 bg-surface-2 p-2 shadow-lg",
-    accountMenuExpanded: "inset-x-0",
-    accountMenuCollapsed: "left-full ml-3 w-52",
+    accountMenu: "absolute bottom-0 left-full z-20 ml-3 w-52 rounded-2xl border border-white/10 bg-dark-bg p-2 shadow-lg",
     accountMenuItem: "flex w-full items-center gap-3 rounded-xl px-3 py-2 font-sans text-sm font-medium transition-colors hover:bg-surface-3 focus-visible:outline-2 focus-visible:outline-primary",
 } as const;
 
@@ -150,6 +153,16 @@ function CollapseIcon({ isCollapsed }: { isCollapsed: boolean }) {
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" className="h-6 w-6">
             <circle cx="12" cy="12" r="9" />
             <path d={isCollapsed ? "m11 8 4 4-4 4" : "m13 8-4 4 4 4"} />
+        </svg>
+    );
+}
+
+function CreditIcon() {
+    return (
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" className="h-6 w-6">
+            <circle cx="12" cy="12" r="9" />
+            <path d="M15 9.5c-.6-.7-1.6-1-3-1-1.7 0-3 .8-3 2s1.3 2 3 2 3 .8 3 2-1.3 2-3 2c-1.4 0-2.4-.3-3-1" />
+            <path d="M12 6.5v2M12 16.5v2" />
         </svg>
     );
 }
@@ -337,6 +350,7 @@ export default function DashboardSidebar({
     onCollapsedChange,
     onItemSelect,
     onCollapse,
+    creditBalance,
     profileSettingsHref = "/dashboard/profile",
     onLogout,
 }: DashboardSidebarProps) {
@@ -345,6 +359,8 @@ export default function DashboardSidebar({
     const accountMenuRef = useRef<HTMLDivElement>(null);
     const accountMenuTriggerRef = useRef<HTMLButtonElement>(null);
     const isCollapsed = collapsed ?? internalCollapsed;
+    const fullCreditBalance = creditBalance?.toLocaleString("id-ID");
+    const compactCreditBalance = creditBalance === undefined ? undefined : new Intl.NumberFormat("id-ID", { notation: "compact" }).format(creditBalance);
 
     useEffect(() => {
         if (!isAccountMenuOpen) return;
@@ -427,8 +443,26 @@ export default function DashboardSidebar({
             </nav>
 
             <div ref={accountMenuRef} className="relative mt-auto mb-4">
+                {creditBalance === undefined ? null : (
+                    <Link
+                        href="/billing/plans"
+                        aria-label={`Credit balance ${fullCreditBalance} credits`}
+                        className={cx(sidebarClassNames.credit, isCollapsed ? sidebarClassNames.creditCollapsed : sidebarClassNames.creditExpanded)}
+                    >
+                        <span className={sidebarClassNames.creditIcon}><CreditIcon /></span>
+                        {isCollapsed ? (
+                            <span className="text-xs font-semibold text-white">{compactCreditBalance}</span>
+                        ) : (
+                            <span className="min-w-0">
+                                <span className="block text-xs font-medium text-neutral-450">Credit balance</span>
+                                <span className="block truncate text-sm font-semibold text-white">{fullCreditBalance} credits</span>
+                            </span>
+                        )}
+                    </Link>
+                )}
+
                 {isAccountMenuOpen ? (
-                    <div data-testid="account-actions" className={cx(sidebarClassNames.accountMenu, isCollapsed ? sidebarClassNames.accountMenuCollapsed : sidebarClassNames.accountMenuExpanded)}>
+                    <div data-testid="account-actions" className={sidebarClassNames.accountMenu}>
                         <Link href={profileSettingsHref} className={cx(sidebarClassNames.accountMenuItem, "text-white")} onClick={() => setIsAccountMenuOpen(false)}>
                             <SidebarIcon name="profile" />
                             <span>Profile Settings</span>

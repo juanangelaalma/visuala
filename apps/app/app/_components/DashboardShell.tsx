@@ -48,6 +48,7 @@ type DashboardShellProps = {
   sections?: DashboardSidebarSection[];
   showCreateButton?: boolean;
   currentUser: AuthUser | null;
+  creditBalance?: number;
 };
 
 function getActiveItemId(pathname: string, sections: DashboardSidebarSection[]) {
@@ -63,7 +64,7 @@ function getActiveItemId(pathname: string, sections: DashboardSidebarSection[]) 
   return matchedPath ? pathToItemId[matchedPath] : sections[0]?.items[0]?.id ?? "";
 }
 
-export default function DashboardShell({ children, sections = defaultDashboardSections, showCreateButton = true, currentUser }: DashboardShellProps) {
+export default function DashboardShell({ children, sections = defaultDashboardSections, showCreateButton = true, currentUser, creditBalance }: DashboardShellProps) {
   const pathname = usePathname();
   const logoutFormRef = useRef<HTMLFormElement>(null);
   const showPricingCta = sections === defaultDashboardSections;
@@ -84,7 +85,7 @@ export default function DashboardShell({ children, sections = defaultDashboardSe
   return (
     <div className="h-screen overflow-hidden bg-dark-bg p-4">
       <div className="flex h-full gap-8">
-        <DashboardSidebar profile={profile} items={sections} activeItemId={activeItemId} className="h-full min-h-0 shrink-0" onLogout={handleLogout} />
+        <DashboardSidebar profile={profile} items={sections} activeItemId={activeItemId} creditBalance={creditBalance} className="h-full min-h-0 shrink-0" onLogout={handleLogout} />
         <form ref={logoutFormRef} action={logoutAction} className="hidden" />
 
         <div className="flex min-w-0 flex-1 flex-col gap-4 overflow-y-auto">
