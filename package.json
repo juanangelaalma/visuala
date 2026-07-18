@@ -12,7 +12,8 @@
     "web:lint": "turbo lint --filter=web",
     "app:dev": "turbo dev --filter=app",
     "app:build": "turbo build --filter=app",
-    "app:lint": "turbo lint --filter=app"
+    "app:lint": "turbo lint --filter=app",
+    "app:test:coverage": "turbo test:coverage --filter=app"
   },
   "devDependencies": {
     "turbo": "^2.5.8"

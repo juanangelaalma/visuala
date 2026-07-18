@@ -22,6 +22,12 @@ test:
 test-unit:
 	pnpm test:unit
 
+test-file:
+	pnpm test -- $(ARGS)
+
+coverage:
+	pnpm test:coverage
+
 test-e2e:
 	pnpm exec playwright test $(ARGS)
 
