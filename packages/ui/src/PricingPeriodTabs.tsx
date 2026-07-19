@@ -19,13 +19,19 @@ const defaultPeriods: { value: BillingPeriod; label: string }[] = [
 export default function PricingPeriodTabs({ plans, variant = "marketing", periods = defaultPeriods, emptyMessage = "Pricing plans are coming soon." }: PricingPeriodTabsProps) {
     const [activePeriod, setActivePeriod] = useState<BillingPeriod>(periods[0]?.value ?? "monthly");
     const visiblePlans = useMemo(() => plans.filter((plan) => !plan.billingPeriod || plan.billingPeriod === activePeriod), [activePeriod, plans]);
+    const activePeriodIndex = periods.findIndex((period) => period.value === activePeriod);
     const isCheckout = variant === "checkout";
 
     return (
         <>
             {periods.length > 1 ? (
                 <div className="mb-10 flex justify-center">
-                    <div role="tablist" aria-label="Billing period" className={`inline-flex rounded-full p-1 ${isCheckout ? "border border-white/10 bg-surface" : "border border-white/10 bg-black/40"}`}>
+                    <div role="tablist" aria-label="Billing period" className={`relative inline-grid rounded-full p-1 ${isCheckout ? "border border-white/10 bg-surface" : "border border-white/10 bg-black/40"}`} style={{ gridTemplateColumns: `repeat(${periods.length}, minmax(0, 1fr))` }}>
+                        <span
+                            aria-hidden="true"
+                            className={`pointer-events-none absolute top-1 bottom-1 left-1 rounded-full bg-primary transition-transform duration-300 ease-out motion-reduce:transition-none ${isCheckout ? "shadow-sm" : ""}`}
+                            style={{ width: `calc((100% - 0.5rem) / ${periods.length})`, transform: `translateX(${activePeriodIndex * 100}%)` }}
+                        />
                         {periods.map((tab) => (
                             <button
                                 key={tab.value}
@@ -36,11 +42,9 @@ export default function PricingPeriodTabs({ plans, variant = "marketing", period
                                 aria-controls={`pricing-panel-${tab.value}`}
                                 tabIndex={activePeriod === tab.value ? 0 : -1}
                                 onClick={() => setActivePeriod(tab.value)}
-                                className={`rounded-full px-6 py-3 text-sm font-semibold transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary motion-reduce:transition-none ${
+                                className={`relative z-10 rounded-full px-6 py-3 text-sm font-semibold transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary motion-reduce:transition-none ${
                                     activePeriod === tab.value
-                                        ? isCheckout
-                                            ? "bg-primary text-black shadow-sm"
-                                            : "bg-primary text-black"
+                                        ? "text-black"
                                         : isCheckout
                                           ? "text-neutral-400 hover:text-white"
                                           : "text-neutral-450 hover:text-white"
