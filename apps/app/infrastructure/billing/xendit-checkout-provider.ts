@@ -2,7 +2,8 @@ import "server-only";
 
 import { createHash, timingSafeEqual } from "node:crypto";
 import { z } from "zod";
-import type { BillingGateway } from "@/domain/billing/contracts";
+import type { BillingGateway, SimulateBillingPaymentInput } from "@/domain/billing/contracts";
+import { BillingPaymentSimulationRejectedError, BillingPaymentSimulationUnavailableError, BillingPaymentSimulationUnknownError } from "@/domain/billing/errors";
 import type { BillingPayment, CheckoutAction, NormalizedWebhook, PaymentMethod, ProviderAttempt, ProviderAttemptStatus } from "@/domain/billing/types";
 import type { BillingConfig } from "@/shared/config/billing";
 
@@ -96,6 +97,17 @@ export class XenditCheckoutProvider implements BillingGateway {
       body: JSON.stringify({ reference_id: attempt.providerReference, type: "PAY", country: "ID", currency: "IDR", request_amount: payment.priceAmount, capture_method: "AUTOMATIC", channel_code: attempt.providerChannelCode, channel_properties: channelProperties }),
     }, true);
     return normalizePayment(result, attempt.providerChannelCode, method.kind);
+  }
+
+  async simulatePayment(input: SimulateBillingPaymentInput): Promise<void> {
+    if (this.config.environment !== "test" || !input.providerPaymentId || !Number.isFinite(input.amount) || input.amount <= 0) throw new BillingPaymentSimulationUnavailableError();
+    try {
+      const response = await this.fetchImplementation(`${API_URL}/${encodeURIComponent(input.providerPaymentId)}/simulate`, { method: "POST", headers: { Authorization: `Basic ${Buffer.from(`${this.config.apiKey}:`).toString("base64")}`, "api-version": API_VERSION, "content-type": "application/json" }, body: JSON.stringify({ amount: input.amount }), signal: AbortSignal.timeout(this.config.requestTimeoutMs) });
+      if (!response.ok) throw new BillingPaymentSimulationRejectedError();
+    } catch (error) {
+      if (error instanceof BillingPaymentSimulationRejectedError) throw error;
+      throw new BillingPaymentSimulationUnknownError();
+    }
   }
 
   async retrievePayment(providerPaymentId: string) {

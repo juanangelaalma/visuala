@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 vi.mock("server-only", () => ({}));
+import { BillingPaymentSimulationRejectedError, BillingPaymentSimulationUnavailableError, BillingPaymentSimulationUnknownError } from "@/domain/billing/errors";
 import type { BillingConfig } from "@/shared/config/billing";
 import { XenditAmbiguousOutcomeError, XenditCheckoutProvider, XenditWebhookVerificationError } from "./xendit-checkout-provider";
 
@@ -16,6 +17,41 @@ describe("XenditCheckoutProvider docs-derived fixtures (not sandbox-certified)",
     const [, init] = fetcher.mock.calls[0];
     expect(init.headers).not.toHaveProperty("Idempotency-Key");
     expect(JSON.parse(init.body)).toMatchObject({ type: "PAY", country: "ID", currency: "IDR", capture_method: "AUTOMATIC", channel_code: "QRIS", channel_properties: {} });
+  });
+
+  it("sends the exact sandbox simulation request", async () => {
+    const fetcher = vi.fn().mockResolvedValue(new Response(null, { status: 202 }));
+
+    await new XenditCheckoutProvider(config, fetcher).simulatePayment({ providerPaymentId: "pr/1", amount: 10000 });
+
+    expect(fetcher).toHaveBeenCalledWith("https://api.xendit.co/v3/payment_requests/pr%2F1/simulate", expect.objectContaining({ method: "POST", body: '{"amount":10000}', headers: { Authorization: `Basic ${Buffer.from("xnd_development_test:").toString("base64")}`, "api-version": "2024-11-11", "content-type": "application/json" } }));
+  });
+
+  it.each([
+    ["production", { ...config, environment: "production" as const }, { providerPaymentId: "pr-1", amount: 10000 }],
+    ["invalid amount", config, { providerPaymentId: "pr-1", amount: 0 }],
+    ["non-finite amount", config, { providerPaymentId: "pr-1", amount: Number.NaN }],
+    ["empty provider ID", config, { providerPaymentId: "", amount: 10000 }],
+  ])("rejects %s simulation without fetching", async (_name, providerConfig, input) => {
+    const fetcher = vi.fn();
+
+    await expect(new XenditCheckoutProvider(providerConfig, fetcher).simulatePayment(input)).rejects.toBeInstanceOf(BillingPaymentSimulationUnavailableError);
+
+    expect(fetcher).not.toHaveBeenCalled();
+  });
+
+  it("maps a rejected simulation without parsing its body", async () => {
+    const fetcher = vi.fn().mockResolvedValue(new Response("provider detail", { status: 400 }));
+
+    await expect(new XenditCheckoutProvider(config, fetcher).simulatePayment({ providerPaymentId: "pr-1", amount: 10000 })).rejects.toBeInstanceOf(BillingPaymentSimulationRejectedError);
+  });
+
+  it("maps an ambiguous simulation failure without retrying", async () => {
+    const fetcher = vi.fn().mockRejectedValue(new Error("socket"));
+
+    await expect(new XenditCheckoutProvider(config, fetcher).simulatePayment({ providerPaymentId: "pr-1", amount: 10000 })).rejects.toBeInstanceOf(BillingPaymentSimulationUnknownError);
+
+    expect(fetcher).toHaveBeenCalledOnce();
   });
 
   it("retrieves only by the known provider ID", async () => {

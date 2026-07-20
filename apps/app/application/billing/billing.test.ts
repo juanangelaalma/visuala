@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 import type { BillingGateway, BillingPaymentRepository, BillingWebhookRepository, PaymentCatalogRepository, ProviderAttemptRepository } from "@/domain/billing/contracts";
-import { BillingIdempotencyConflictError, PaymentMethodUnavailableError } from "@/domain/billing/errors";
+import { BillingIdempotencyConflictError, BillingPaymentSimulationNotReadyError, BillingPaymentSimulationUnavailableError, PaymentMethodUnavailableError } from "@/domain/billing/errors";
 import type { BillingPayment, BillingPaymentProjection, PaymentMethod, ProviderAttempt } from "@/domain/billing/types";
 import type { PricingPlanRepository } from "@/domain/pricing/pricing-plan-repository";
 import type { PricingPlan } from "@/domain/pricing/types";
@@ -8,6 +8,8 @@ import { createBillingCheckout } from "./create-billing-checkout";
 import { prepareBillingCheckout } from "./prepare-billing-checkout";
 import { receiveBillingWebhook } from "./receive-billing-webhook";
 import { refreshOwnedBillingPayment, toBillingRefreshProjection } from "./refresh-owned-billing-payment";
+import { canSimulateBillingPayment } from "./payment-simulation-eligibility";
+import { simulateOwnedBillingPayment } from "./simulate-owned-billing-payment";
 
 const payment: BillingPayment = { id: "payment-1", userId: "user-1", pricingPlanId: "plan-1", selectedPaymentMethodId: "method-1", idempotencyKey: "key-1", status: "pending", priceAmount: 10000, currency: "IDR", baseCredits: 100, bonusCredits: 10, creditExpiresInDays: 30, expiresAt: null, paidAt: null, settlementAuditCode: null, createdAt: "now", updatedAt: "now" };
 const method: PaymentMethod = { id: "method-1", slug: "qris", kind: "qris", label: "QRIS", description: null, logoUrl: null, currency: "IDR", minAmount: null, maxAmount: null, enabled: true, launchPhase: 1, sortOrder: 1 };
@@ -20,7 +22,7 @@ function dependencies(created = true) {
   const paymentCatalog = { listEnabled: vi.fn(), findEnabledById: vi.fn().mockResolvedValue(method) } as PaymentCatalogRepository;
   const payments = { createIdempotently: vi.fn().mockResolvedValue({ payment, created }), findOwnedProjection: vi.fn().mockResolvedValue(projection) } as BillingPaymentRepository;
   const attempts = { allocate: vi.fn().mockResolvedValue(attempt), markUnknown: vi.fn(), saveProviderResult: vi.fn().mockResolvedValue(attempt) } as ProviderAttemptRepository;
-  const gateway = { createCheckout: vi.fn().mockResolvedValue({ providerPaymentId: "provider-payment", status: "pending", actions: [], expiresAt: null }) } as BillingGateway;
+  const gateway = { createCheckout: vi.fn().mockResolvedValue({ providerPaymentId: "provider-payment", status: "pending", actions: [], expiresAt: null }), simulatePayment: vi.fn() } as BillingGateway;
   const providerAllocation = { allocate: vi.fn().mockResolvedValue({ paymentMethodId: method.id, provider: "provider", environment: "test", providerReference: "ref", providerIdempotencyKey: "provider-key" }) };
   const gateways = { resolve: vi.fn().mockReturnValue(gateway) };
   const isPaymentMethodEnabled = vi.fn().mockReturnValue(true);
@@ -30,6 +32,11 @@ function dependencies(created = true) {
 const checkoutInput = { userId: "user-1", pricingPlanId: "plan-1", paymentMethodCatalogId: "method-1", idempotencyKey: "key-1" };
 
 describe("billing use cases", () => {
+  it("exports simulation input", () => {
+    const input: import("@/domain/billing/contracts").SimulateBillingPaymentInput = { providerPaymentId: "pr-1", amount: 10000 };
+    expect(input.amount).toBe(10000);
+  });
+
   it("snapshots pricing and creates checkout", async () => {
     const deps = dependencies();
     await createBillingCheckout(deps, checkoutInput);
@@ -110,6 +117,51 @@ describe("billing use cases", () => {
     vi.mocked(deps.attempts.markUnknown).mockRejectedValue(new Error("mark unknown failed"));
 
     await expect(createBillingCheckout(deps, checkoutInput)).rejects.toMatchObject({ attemptId: "attempt-1", cause: providerError });
+  });
+
+  it.each(["qris", "virtual_account"] as const)("simulates an owned sandbox %s payment", async (kind) => {
+    const deps = dependencies();
+    vi.mocked(deps.payments.findOwnedProjection).mockResolvedValue({ ...projection, paymentMethod: { ...method, kind }, latestAttempt: { ...attempt, provider: "xendit", providerPaymentId: "pr-1", status: "pending" } });
+
+    await simulateOwnedBillingPayment({ payments: deps.payments, gateways: deps.gateways, configuredEnvironment: "test" }, { paymentId: payment.id, userId: payment.userId });
+
+    expect(deps.gateway.simulatePayment).toHaveBeenCalledWith({ providerPaymentId: "pr-1", amount: 10000 });
+  });
+
+  it.each([
+    ["production attempt", { latestAttempt: { ...attempt, provider: "xendit", environment: "production", providerPaymentId: "pr-1", status: "pending" } }, "test", BillingPaymentSimulationUnavailableError],
+    ["production config", { latestAttempt: { ...attempt, provider: "xendit", providerPaymentId: "pr-1", status: "pending" } }, "production", BillingPaymentSimulationUnavailableError],
+    ["paid payment", { status: "paid", latestAttempt: { ...attempt, provider: "xendit", providerPaymentId: "pr-1", status: "pending" } }, "test", BillingPaymentSimulationUnavailableError],
+    ["missing provider ID", { latestAttempt: { ...attempt, provider: "xendit", providerPaymentId: null, status: "pending" } }, "test", BillingPaymentSimulationNotReadyError],
+    ["non-Xendit provider", { latestAttempt: { ...attempt, provider: "provider", providerPaymentId: "pr-1", status: "pending" } }, "test", BillingPaymentSimulationUnavailableError],
+    ["zero amount", { priceAmount: 0, latestAttempt: { ...attempt, provider: "xendit", providerPaymentId: "pr-1", status: "pending" } }, "test", BillingPaymentSimulationUnavailableError],
+    ["NaN amount", { priceAmount: Number.NaN, latestAttempt: { ...attempt, provider: "xendit", providerPaymentId: "pr-1", status: "pending" } }, "test", BillingPaymentSimulationUnavailableError],
+    ["expired payment", { expiresAt: "2000-01-01T00:00:00.000Z", latestAttempt: { ...attempt, provider: "xendit", providerPaymentId: "pr-1", status: "pending" } }, "test", BillingPaymentSimulationUnavailableError],
+    ["expired latest attempt", { latestAttempt: { ...attempt, provider: "xendit", providerPaymentId: "pr-1", status: "pending", expiresAt: "2000-01-01T00:00:00.000Z" } }, "test", BillingPaymentSimulationUnavailableError],
+  ] as const)("rejects %s without provider work", async (_name, overrides, configuredEnvironment, ErrorType) => {
+    const deps = dependencies();
+    const candidate = { ...projection, ...overrides } as BillingPaymentProjection;
+    vi.mocked(deps.payments.findOwnedProjection).mockResolvedValue(candidate);
+
+    await expect(simulateOwnedBillingPayment({ payments: deps.payments, gateways: deps.gateways, configuredEnvironment }, { paymentId: payment.id, userId: payment.userId })).rejects.toBeInstanceOf(ErrorType);
+
+    expect(canSimulateBillingPayment(candidate, configuredEnvironment)).toBe(false);
+    expect(deps.gateways.resolve).not.toHaveBeenCalled();
+    expect(deps.gateway.simulatePayment).not.toHaveBeenCalled();
+  });
+
+  it("rejects a missing or other-owner payment before provider work", async () => {
+    const deps = dependencies();
+    vi.mocked(deps.payments.findOwnedProjection).mockResolvedValue(null);
+
+    await expect(simulateOwnedBillingPayment({ payments: deps.payments, gateways: deps.gateways, configuredEnvironment: "test" }, { paymentId: payment.id, userId: "other-user" })).rejects.toBeInstanceOf(BillingPaymentSimulationUnavailableError);
+
+    expect(deps.gateways.resolve).not.toHaveBeenCalled();
+    expect(deps.gateway.simulatePayment).not.toHaveBeenCalled();
+  });
+
+  it("exposes the same sandbox eligibility policy to server rendering", () => {
+    expect(canSimulateBillingPayment({ ...projection, latestAttempt: { ...attempt, provider: "xendit", providerPaymentId: "pr-1", status: "pending" } }, "test")).toBe(true);
   });
 
   it("reloads owned payment state without provider side effects", async () => {
