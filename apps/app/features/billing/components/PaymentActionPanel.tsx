@@ -3,16 +3,18 @@
 import { Button } from "@visuala/ui";
 import { useActionState, useEffect, useMemo, useState } from "react";
 import type { BillingPaymentStatus, CheckoutAction } from "@/domain/billing/types";
-import { refreshBillingPaymentAction, type BillingActionState } from "../actions/billing-actions";
+import { refreshBillingPaymentAction, simulateBillingPaymentAction, type BillingActionState } from "../actions/billing-actions";
 import { PaymentExpiry } from "./PaymentExpiry";
 import { PaymentStatusBanner } from "./PaymentStatusBanner";
 import { QrisPaymentAction } from "./QrisPaymentAction";
+import { SandboxSimulationControls } from "./SandboxSimulationControls";
 
 type PaymentActionPanelProps = {
   paymentId: string;
   status: BillingPaymentStatus;
   actions: CheckoutAction[];
   expiresAt: string | null;
+  canSimulate: boolean;
 };
 
 const initialState: BillingActionState = {};
@@ -32,8 +34,9 @@ function isActive(expiresAt: string | null) {
   return !expiresAt || Date.parse(expiresAt) > Date.now();
 }
 
-export function PaymentActionPanel({ paymentId, status, actions, expiresAt }: PaymentActionPanelProps) {
+export function PaymentActionPanel({ paymentId, status, actions, expiresAt, canSimulate }: PaymentActionPanelProps) {
   const [state, formAction, pending] = useActionState(refreshBillingPaymentAction, initialState);
+  const [simulationState, simulationFormAction, simulationPending] = useActionState(simulateBillingPaymentAction, initialState);
   const [clock, setClock] = useState(0);
   const refreshedPayment = state.payment?.id === paymentId ? state.payment : null;
   const effectiveStatus = refreshedPayment?.status ?? status;
@@ -60,6 +63,7 @@ export function PaymentActionPanel({ paymentId, status, actions, expiresAt }: Pa
       }) : null}
       {!terminal && !activeActions.length ? <p className="rounded-2xl border border-white/10 bg-black px-4 py-4 text-sm text-neutral-450">{hasExpiredActions ? "Payment instructions expired. Refresh the status before continuing." : "Payment instructions are not available yet. Refresh the status shortly."}</p> : null}
       {!terminal && effectiveExpiresAt ? <PaymentExpiry key={`${effectiveExpiresAt}-${clock > 0}`} expiresAt={effectiveExpiresAt} /> : null}
+      <SandboxSimulationControls paymentId={paymentId} canSimulate={canSimulate} pending={simulationPending} state={simulationState} action={simulationFormAction} />
       {state.error ? <p role="alert" className="text-sm text-danger">{state.error}</p> : null}
       <form action={formAction}>
         <input type="hidden" name="paymentId" value={paymentId} />
