@@ -9,3 +9,7 @@ export const createBillingCheckoutSchema = z.object({
 export const refreshBillingPaymentSchema = z.object({
   paymentId: z.string().uuid("Invalid payment."),
 }).strict();
+
+export const simulateBillingPaymentSchema = z.object({
+  paymentId: z.string({ error: "Invalid payment." }).uuid("Invalid payment."),
+}).strict();

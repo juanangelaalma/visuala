@@ -3,6 +3,10 @@ export class PricingPlanUnavailableError extends BillingError {}
 export class PaymentMethodUnavailableError extends BillingError {}
 export class BillingPaymentNotFoundError extends BillingError {}
 export class BillingPaymentOwnershipError extends BillingError {}
+export class BillingPaymentSimulationUnavailableError extends BillingError {}
+export class BillingPaymentSimulationNotReadyError extends BillingError {}
+export class BillingPaymentSimulationRejectedError extends BillingError {}
+export class BillingPaymentSimulationUnknownError extends BillingError {}
 export class ActiveProviderAttemptError extends BillingError {}
 export class UnknownProviderAttemptError extends BillingError {}
 export class WebhookDeduplicationConflictError extends BillingError {}

@@ -1,5 +1,10 @@
 import type { BillingEnvironment, BillingPayment, BillingPaymentProjection, BillingProvider, PaymentMethod, ProviderAttempt, WebhookCandidate, WebhookFulfillmentOutcome, WebhookReceipt, NormalizedWebhook } from "./types";
 
+export type SimulateBillingPaymentInput = {
+  providerPaymentId: string;
+  amount: number;
+};
+
 export type CreateBillingPaymentInput = {
   userId: string;
   pricingPlanId: string;
@@ -42,6 +47,7 @@ export interface ProviderAttemptRepository {
 
 export interface BillingGateway {
   createCheckout(attempt: ProviderAttempt, payment: BillingPayment, method: PaymentMethod): Promise<{ providerPaymentId: string; status: ProviderAttempt["status"]; actions: ProviderAttempt["actions"]; expiresAt: string | null }>;
+  simulatePayment(input: SimulateBillingPaymentInput): Promise<void>;
 }
 
 export interface BillingGatewayResolver {

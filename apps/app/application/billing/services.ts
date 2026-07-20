@@ -22,6 +22,7 @@ export async function createBillingServices() {
     if (provider !== "xendit" || environment !== config.environment) throw new UnsupportedBillingGatewayError("Unsupported billing gateway");
     return gateway;
   };
+  const gateways = { resolve: resolveGateway };
 
   return {
     authProvider,
@@ -34,9 +35,10 @@ export async function createBillingServices() {
         allocate: async ({ billingPaymentId, paymentMethod, clientIdempotencyKey }: { billingPaymentId: string; paymentMethod: { id: string }; clientIdempotencyKey: string }) => ({ paymentMethodId: paymentMethod.id, provider: "xendit", environment: config.environment, providerReference: `visuala-${billingPaymentId}`, providerIdempotencyKey: clientIdempotencyKey }),
       },
       attempts: new SupabaseProviderAttemptRepository(serviceRoleSupabase),
-      gateways: { resolve: resolveGateway },
+      gateways,
       isPaymentMethodEnabled: createPaymentMethodFeaturePolicy(config),
     },
+    simulation: { payments, gateways, configuredEnvironment: config.environment },
     payments,
     xendit: gateway,
   };
