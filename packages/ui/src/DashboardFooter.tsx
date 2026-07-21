@@ -55,7 +55,7 @@ export default function DashboardFooter({
             <p>
                 {copyright ?? (
                     <>
-                        © 2026, made by <span className={dashboardFooterClassNames.brand}>VISUALA AI</span> Empowering sharing.
+                        © 2026, made by <span className={dashboardFooterClassNames.brand}>VISUALA AI</span> Empowering Advertising & Marketing
                     </>
                 )}
             </p>
