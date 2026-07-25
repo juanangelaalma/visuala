@@ -1,9 +1,10 @@
 import { redirect } from "next/navigation";
+import { getCurrentUser } from "./get-current-user";
 import { createAuthServices } from "./services";
 
 export async function requireAdmin() {
   const { authProvider, userRepository } = await createAuthServices();
-  const user = await authProvider.getCurrentUser();
+  const user = await getCurrentUser(authProvider);
 
   if (!user) redirect("/login");
 

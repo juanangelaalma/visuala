@@ -1,6 +1,7 @@
 "use server";
 
 import { redirect } from "next/navigation";
+import { getCurrentUser } from "@/application/auth/get-current-user";
 import { createBillingCheckout } from "@/application/billing/create-billing-checkout";
 import { refreshOwnedBillingPayment } from "@/application/billing/refresh-owned-billing-payment";
 import { createBillingServices } from "@/application/billing/services";
@@ -18,7 +19,7 @@ export async function createBillingCheckoutAction(_: BillingActionState, formDat
   try {
     const services = await createBillingServices();
     if (!services.config.checkoutEnabled || (!services.config.qrisEnabled && !services.config.virtualAccountEnabled)) return { error: "Checkout is unavailable." };
-    const user = await services.authProvider.getCurrentUser();
+    const user = await getCurrentUser(services.authProvider);
     if (!user) return { error: "Sign in to continue." };
     const payment = await createBillingCheckout(services.checkout, { ...parsed.data, userId: user.id });
     if (!payment) return { error: "Could not create checkout." };
@@ -35,7 +36,7 @@ export async function simulateBillingPaymentAction(_: BillingActionState, formDa
   if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Invalid payment." };
   try {
     const services = await createBillingServices();
-    const user = await services.authProvider.getCurrentUser();
+    const user = await getCurrentUser(services.authProvider);
     if (!user) return { error: "Sign in to continue." };
     await simulateOwnedBillingPayment(services.simulation, { paymentId: parsed.data.paymentId, userId: user.id });
     return { message: "Simulation sent. Wait for the webhook, then refresh payment status." };
@@ -53,7 +54,7 @@ export async function refreshBillingPaymentAction(_: BillingActionState, formDat
   if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Invalid payment." };
   try {
     const services = await createBillingServices();
-    const user = await services.authProvider.getCurrentUser();
+    const user = await getCurrentUser(services.authProvider);
     if (!user) return { error: "Sign in to continue." };
     const payment = await refreshOwnedBillingPayment({ payments: services.payments }, { paymentId: parsed.data.paymentId, userId: user.id });
     return { payment };
