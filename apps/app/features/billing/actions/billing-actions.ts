@@ -2,12 +2,14 @@
 
 import { redirect } from "next/navigation";
 import { createBillingCheckout } from "@/application/billing/create-billing-checkout";
+import { listOwnedBillingPayments } from "@/application/billing/list-owned-billing-payments";
 import { refreshOwnedBillingPayment } from "@/application/billing/refresh-owned-billing-payment";
 import { createBillingServices } from "@/application/billing/services";
 import { simulateOwnedBillingPayment } from "@/application/billing/simulate-owned-billing-payment";
 import { BillingError, BillingPaymentSimulationNotReadyError, BillingPaymentSimulationRejectedError, BillingPaymentSimulationUnknownError } from "@/domain/billing/errors";
+import type { BillingPaymentProjection } from "@/domain/billing/types";
 import type { BillingRefreshProjection } from "@/application/billing/refresh-owned-billing-payment";
-import { createBillingCheckoutSchema, refreshBillingPaymentSchema, simulateBillingPaymentSchema } from "../schemas/billing-schema";
+import { createBillingCheckoutSchema, listBillingPaymentsSchema, refreshBillingPaymentSchema, simulateBillingPaymentSchema } from "../schemas/billing-schema";
 
 export type BillingActionState = { error?: string; message?: string; payment?: BillingRefreshProjection };
 
@@ -60,5 +62,22 @@ export async function refreshBillingPaymentAction(_: BillingActionState, formDat
   } catch (error) {
     console.error("Failed to refresh billing payment", error);
     return { error: "Could not refresh payment." };
+  }
+}
+
+export type BillingHistoryActionState = { error?: string; payments?: BillingPaymentProjection[]; total?: number; page?: number; pageSize?: number };
+
+export async function listBillingPaymentsAction(_: BillingHistoryActionState, formData: FormData): Promise<BillingHistoryActionState> {
+  const parsed = listBillingPaymentsSchema.safeParse(Object.fromEntries(formData));
+  if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Invalid request." };
+  try {
+    const services = await createBillingServices();
+    const user = await services.authProvider.getCurrentUser();
+    if (!user) return { error: "Sign in to continue." };
+    const result = await listOwnedBillingPayments(services.payments, { userId: user.id, page: parsed.data.page, pageSize: parsed.data.pageSize });
+    return { payments: result.payments, total: result.total, page: parsed.data.page, pageSize: parsed.data.pageSize };
+  } catch (error) {
+    console.error("Failed to list billing payments", error);
+    return { error: "Could not load payment history." };
   }
 }

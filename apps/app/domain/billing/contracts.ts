@@ -22,9 +22,21 @@ export interface PaymentCatalogRepository {
   findEnabledById(id: string, amount: number, currency: "IDR"): Promise<PaymentMethod | null>;
 }
 
+export type ListOwnedBillingPaymentsInput = {
+  userId: string;
+  offset: number;
+  limit: number;
+};
+
+export type ListOwnedBillingPaymentsResult = {
+  payments: BillingPaymentProjection[];
+  total: number;
+};
+
 export interface BillingPaymentRepository {
   createIdempotently(input: CreateBillingPaymentInput): Promise<{ payment: BillingPayment; created: boolean }>;
   findOwnedProjection(id: string, userId: string): Promise<BillingPaymentProjection | null>;
+  listOwnedProjections(input: ListOwnedBillingPaymentsInput): Promise<ListOwnedBillingPaymentsResult>;
 }
 
 export type TrustedProviderAllocation = {

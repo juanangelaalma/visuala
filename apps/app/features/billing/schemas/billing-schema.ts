@@ -13,3 +13,8 @@ export const refreshBillingPaymentSchema = z.object({
 export const simulateBillingPaymentSchema = z.object({
   paymentId: z.string({ error: "Invalid payment." }).uuid("Invalid payment."),
 }).strict();
+
+export const listBillingPaymentsSchema = z.object({
+  page: z.coerce.number().int().min(1).default(1),
+  pageSize: z.coerce.number().int().min(1).max(50).default(10),
+}).strict();

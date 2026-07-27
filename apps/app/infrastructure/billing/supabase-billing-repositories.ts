@@ -1,6 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { z } from "zod";
-import type { BillingPaymentRepository, CreateBillingPaymentInput, PaymentCatalogRepository, ProviderAttemptRepository, TrustedProviderAllocation } from "@/domain/billing/contracts";
+import type { BillingPaymentRepository, CreateBillingPaymentInput, ListOwnedBillingPaymentsInput, ListOwnedBillingPaymentsResult, PaymentCatalogRepository, ProviderAttemptRepository, TrustedProviderAllocation } from "@/domain/billing/contracts";
 import { InvalidBillingPersistenceError } from "@/domain/billing/errors";
 import type { BillingPayment, BillingPaymentProjection, CheckoutAction, PaymentMethod, ProviderAttempt } from "@/domain/billing/types";
 import type { Database } from "@/infrastructure/supabase/database.types";
@@ -63,6 +63,36 @@ export class SupabaseBillingPaymentRepository implements BillingPaymentRepositor
     if (methodResult.error) throw methodResult.error;
     if (attemptResult.error) throw attemptResult.error;
     return { ...mapPayment(paymentResult.data), paymentMethod: mapPaymentMethod(methodResult.data), latestAttempt: attemptResult.data ? mapAttempt(attemptResult.data as AttemptRow) : null };
+  }
+
+  async listOwnedProjections(input: ListOwnedBillingPaymentsInput): Promise<ListOwnedBillingPaymentsResult> {
+    const [countResult, paymentsResult] = await Promise.all([
+      this.supabase.from("billing_payments").select("id", { count: "exact", head: true }).eq("user_id", input.userId),
+      this.supabase.from("billing_payments").select("*").eq("user_id", input.userId).order("created_at", { ascending: false }).range(input.offset, input.offset + input.limit - 1),
+    ]);
+    if (countResult.error) throw countResult.error;
+    if (paymentsResult.error) throw paymentsResult.error;
+    const total = countResult.count ?? 0;
+    if (paymentsResult.data.length === 0) return { payments: [], total };
+    const paymentIds = paymentsResult.data.map((p) => p.id);
+    const [methodsResult, attemptsResult] = await Promise.all([
+      this.supabase.from("billing_payment_methods").select("*").in("id", [...new Set(paymentsResult.data.map((p) => p.selected_payment_method_id))]),
+      this.supabase.from("billing_provider_attempts").select("*, billing_payments!inner(user_id)").in("billing_payment_id", paymentIds).eq("billing_payments.user_id", input.userId).order("attempt_number", { ascending: false }),
+    ]);
+    if (methodsResult.error) throw methodsResult.error;
+    if (attemptsResult.error) throw attemptsResult.error;
+    const methodsById = new Map(methodsResult.data.map((m) => [m.id, mapPaymentMethod(m)]));
+    const latestAttemptByPaymentId = new Map<string, ProviderAttempt>();
+    for (const row of attemptsResult.data) {
+      const attempt = mapAttempt(row as AttemptRow);
+      if (!latestAttemptByPaymentId.has(attempt.billingPaymentId)) latestAttemptByPaymentId.set(attempt.billingPaymentId, attempt);
+    }
+    const payments: BillingPaymentProjection[] = paymentsResult.data.map((row) => ({
+      ...mapPayment(row),
+      paymentMethod: methodsById.get(row.selected_payment_method_id)!,
+      latestAttempt: latestAttemptByPaymentId.get(row.id) ?? null,
+    }));
+    return { payments, total };
   }
 }
 
