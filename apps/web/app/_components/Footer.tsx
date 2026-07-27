@@ -77,7 +77,7 @@ export default function Footer() {
         <div className="w-full border-t border-black/10 mt-8 pt-8 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6">
           {/* Copyright */}
           <p className="text-black font-normal text-caption tracking-tight">
-            © 2026, made by <span className="font-semibold">VISUALA AI</span> Empowering Advertising & Marketing
+            © Visuala AI Inc. All rights reserved.
           </p>
 
           {/* Legal Links */}
