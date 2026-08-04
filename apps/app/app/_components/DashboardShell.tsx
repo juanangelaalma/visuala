@@ -10,7 +10,7 @@ const defaultDashboardSections: DashboardSidebarSection[] = [
   {
     title: "Main",
     items: [
-      { id: "create-story-board", label: "Create Story Board", href: "/dashboard" },
+      { id: "create-story-board", label: "Create Video", href: "/dashboard/create-video" },
       { id: "home", label: "Home", href: "/dashboard/home" },
       { id: "analytics", label: "Analytics", href: "/dashboard/analytics" },
     ],
@@ -89,7 +89,13 @@ export default function DashboardShell({ children, sections = defaultDashboardSe
         <form ref={logoutFormRef} action={logoutAction} className="hidden" />
 
         <div className="flex min-w-0 flex-1 flex-col gap-4 overflow-y-auto">
-          <DashboardNavbar showCreateButton={showCreateButton} showPricingCta={showPricingCta} pricingIsActive={pricingIsActive} />
+          <DashboardNavbar
+            showCreateButton={showCreateButton}
+            showPricingCta={showPricingCta}
+            pricingIsActive={pricingIsActive}
+            createLabel="Create Video ✨"
+            createHref="/dashboard/create-video"
+          />
           <main className="min-w-0 flex-1">{children}</main>
           <DashboardFooter />
         </div>
