@@ -1,0 +1,1090 @@
+
+<!doctype html>
+<html lang="en">
+<head><script>(function(){
+  function makeStore(){
+    var data = {};
+    var api = {
+      getItem: function(k){ return Object.prototype.hasOwnProperty.call(data, k) ? data[k] : null; },
+      setItem: function(k, v){ data[k] = String(v); },
+      removeItem: function(k){ delete data[k]; },
+      clear: function(){ data = {}; },
+      key: function(i){ return Object.keys(data)[i] || null; }
+    };
+    Object.defineProperty(api, 'length', { get: function(){ return Object.keys(data).length; } });
+    return api;
+  }
+  function tryShim(name){
+    var works = false;
+    try { works = !!window[name] && typeof window[name].getItem === 'function'; void window[name].length; }
+    catch (_) { works = false; }
+    if (works) return;
+    try { Object.defineProperty(window, name, { configurable: true, value: makeStore() }); }
+    catch (_) { try { window[name] = makeStore(); } catch (__) {} }
+  }
+  tryShim('localStorage');
+  tryShim('sessionStorage');
+})();</script>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Visuala AI — Wireframe</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#f5f5f5;--surface:#fff;--fg:#1a1a1a;--muted:#888;--border:#ddd;
+  --accent:#555;--radius:6px;--sidebar-w:220px;
+  --font:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif;
+  --mono:ui-monospace,'SF Mono',Menlo,monospace;
+}
+html{font-size:14px}
+body{font-family:var(--font);color:var(--fg);background:var(--bg);line-height:1.5;min-height:100vh;display:flex}
+button{font-family:inherit;cursor:pointer;border:none;background:none;font-size:inherit}
+input,textarea,select{font-family:inherit;font-size:inherit;border:1px solid var(--border);border-radius:var(--radius);padding:8px 12px;background:var(--surface);color:var(--fg);width:100%}
+textarea{resize:vertical;min-height:80px}
+input:focus,textarea:focus{outline:2px solid var(--accent);outline-offset:-1px;border-color:var(--accent)}
+a{color:var(--fg);text-decoration:none}
+
+.sidebar{width:var(--sidebar-w);background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;position:fixed;top:0;left:0;bottom:0;z-index:100}
+.sidebar-logo{padding:20px 16px;font-weight:700;font-size:15px;letter-spacing:-0.02em;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px}
+.sidebar-logo .logo-mark{width:28px;height:28px;background:var(--fg);border-radius:6px;display:flex;align-items:center;justify-content:center;color:var(--surface);font-size:12px;font-weight:800}
+.sidebar-nav{flex:1;padding:12px 8px}
+.sidebar-item{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:var(--radius);color:var(--muted);font-size:13px;font-weight:500;transition:background .15s}
+.sidebar-item:hover{background:var(--bg);color:var(--fg)}
+.sidebar-item.active{background:var(--fg);color:var(--surface)}
+.sidebar-item svg{width:18px;height:18px;flex-shrink:0}
+.sidebar-footer{padding:12px 16px;border-top:1px solid var(--border);font-size:12px;color:var(--muted)}
+
+.main{margin-left:var(--sidebar-w);flex:1;display:flex;flex-direction:column;min-height:100vh}
+.topbar{padding:16px 32px;background:var(--surface);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:50}
+.stepper{display:flex;gap:4px;align-items:center}
+.step{display:flex;align-items:center;gap:6px;padding:6px 14px;border-radius:20px;font-size:12px;font-weight:600;color:var(--muted);background:transparent;transition:all .15s}
+.step .step-num{width:22px;height:22px;border-radius:50%;border:1.5px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0}
+.step.active{color:var(--fg);background:var(--bg)}
+.step.active .step-num{background:var(--fg);color:var(--surface);border-color:var(--fg)}
+.step.done{color:var(--accent)}
+.step.done .step-num{background:var(--accent);color:var(--surface);border-color:var(--accent)}
+.step-connector{width:20px;height:1px;background:var(--border)}
+
+.content{flex:1;padding:32px;overflow-y:auto}
+.page-header{margin-bottom:28px}
+.page-header h1{font-size:22px;font-weight:700;letter-spacing:-0.02em;margin-bottom:4px}
+.page-header p{color:var(--muted);font-size:13px}
+
+.sticky-footer{padding:16px 32px;background:var(--surface);border-top:1px solid var(--border);display:flex;align-items:center;justify-content:flex-end;gap:12px;position:sticky;bottom:0;z-index:50}
+.btn{padding:8px 20px;border-radius:var(--radius);font-size:13px;font-weight:600;display:inline-flex;align-items:center;gap:6px;transition:all .15s}
+.btn-primary{background:var(--fg);color:var(--surface)}
+.btn-primary:hover{opacity:.85}
+.btn-secondary{border:1px solid var(--border);color:var(--fg);background:var(--surface)}
+.btn-secondary:hover{background:var(--bg)}
+.btn-ghost{color:var(--muted)}
+.btn-ghost:hover{color:var(--fg)}
+.btn-danger{color:#c00;border:1px solid #c0000030}
+.btn-danger:hover{background:#c0000008}
+.btn-sm{padding:5px 12px;font-size:12px}
+
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:20px}
+.card-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+
+.form-group{margin-bottom:20px}
+.form-label{display:block;font-size:12px;font-weight:600;margin-bottom:6px;color:var(--fg)}
+.form-help{font-size:11px;color:var(--muted);margin-top:4px}
+.form-optional{color:var(--muted);font-weight:400}
+
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:28px}
+
+.upload-zone{border:2px dashed var(--border);border-radius:var(--radius);padding:48px 24px;text-align:center;color:var(--muted);cursor:pointer;transition:border-color .15s}
+.upload-zone:hover{border-color:var(--accent)}
+.upload-zone .upload-icon{font-size:32px;margin-bottom:8px;opacity:.4}
+.upload-zone p{font-size:13px}
+.upload-zone .upload-btn{display:inline-block;margin-top:12px;padding:6px 16px;border:1px solid var(--border);border-radius:var(--radius);font-size:12px;font-weight:600;color:var(--fg)}
+
+.img-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:16px}
+.img-thumb{aspect-ratio:1;background:var(--bg);border:1px solid var(--border);border-radius:var(--radius);display:flex;align-items:center;justify-content:center;position:relative;font-size:11px;color:var(--muted)}
+.img-thumb.main-img{border-color:var(--fg);border-width:2px}
+.img-thumb .badge{position:absolute;top:4px;left:4px;font-size:9px;background:var(--fg);color:var(--surface);padding:2px 6px;border-radius:3px;font-weight:700}
+.img-thumb .img-actions{position:absolute;bottom:4px;right:4px;display:flex;gap:2px}
+.img-thumb .img-action{width:20px;height:20px;border-radius:3px;background:var(--surface);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:9px;cursor:pointer}
+.upload-count{font-size:12px;color:var(--muted);margin-top:10px}
+
+.checkbox-row{display:flex;align-items:center;gap:8px;font-size:13px}
+.checkbox-row input[type=checkbox]{width:16px;height:16px;flex-shrink:0}
+
+.summary-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:24px}
+.summary-row{display:flex;justify-content:space-between;align-items:center;padding:12px 0;border-bottom:1px solid var(--border)}
+.summary-row:last-child{border-bottom:none}
+.summary-row .label{font-size:12px;color:var(--muted);font-weight:500}
+.summary-row .value{font-size:13px;font-weight:600}
+.summary-row .edit-link{font-size:11px;color:var(--accent);cursor:pointer;text-decoration:underline}
+
+.char-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:32px}
+.char-card{background:var(--surface);border:2px solid var(--border);border-radius:var(--radius);padding:20px;text-align:center;cursor:pointer;transition:all .15s}
+.char-card:hover{border-color:var(--accent)}
+.char-card.selected{border-color:var(--fg);background:var(--bg)}
+.char-avatar{width:64px;height:64px;border-radius:50%;background:var(--bg);border:1px solid var(--border);margin:0 auto 12px;display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:700;color:var(--muted)}
+.char-card h3{font-size:14px;font-weight:700;margin-bottom:2px}
+.char-card .char-persona{font-size:11px;color:var(--accent);font-weight:600;margin-bottom:6px}
+.char-card .char-style{font-size:12px;color:var(--muted);margin-bottom:12px}
+.voice-preview{display:flex;align-items:center;gap:6px;padding:6px 10px;border:1px solid var(--border);border-radius:var(--radius);font-size:11px;font-weight:600;margin:0 auto;width:fit-content;color:var(--fg)}
+.voice-preview .play-icon{width:16px;height:16px;border-radius:50%;background:var(--fg);display:flex;align-items:center;justify-content:center}
+.voice-preview .play-icon::after{content:'';border-left:5px solid var(--surface);border-top:3px solid transparent;border-bottom:3px solid transparent;margin-left:1px}
+.audio-player{margin-top:8px;padding:8px;background:var(--bg);border-radius:var(--radius);display:flex;align-items:center;gap:6px;font-size:10px;color:var(--muted)}
+.audio-bar{flex:1;height:3px;background:var(--border);border-radius:2px;position:relative}
+.audio-bar .progress{position:absolute;left:0;top:0;height:100%;width:40%;background:var(--fg);border-radius:2px}
+
+.dur-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}
+.dur-card{background:var(--surface);border:2px solid var(--border);border-radius:var(--radius);padding:20px;cursor:pointer;transition:all .15s;position:relative}
+.dur-card:hover{border-color:var(--accent)}
+.dur-card.selected{border-color:var(--fg);background:var(--bg)}
+.dur-card h3{font-size:14px;font-weight:700;margin-bottom:2px}
+.dur-card .dur-time{font-size:22px;font-weight:800;letter-spacing:-0.03em;margin-bottom:6px}
+.dur-card p{font-size:12px;color:var(--muted);margin-bottom:8px}
+.dur-card .dur-scenes{font-size:11px;font-weight:600;color:var(--accent)}
+.dur-badge{position:absolute;top:-10px;right:12px;background:var(--fg);color:var(--surface);font-size:10px;font-weight:700;padding:3px 10px;border-radius:10px}
+
+.loading-container{text-align:center;padding:60px 20px}
+.loading-container h1{margin-bottom:8px}
+.loading-steps{max-width:400px;margin:32px auto;text-align:left}
+.loading-step{display:flex;align-items:center;gap:10px;padding:10px 0;font-size:13px;color:var(--muted)}
+.loading-step.done{color:var(--fg)}
+.loading-step.active{color:var(--fg);font-weight:600}
+.loading-step .step-icon{width:20px;height:20px;border-radius:50%;border:1.5px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:10px;flex-shrink:0}
+.loading-step.done .step-icon{background:var(--fg);border-color:var(--fg);color:var(--surface)}
+.loading-step.active .step-icon{border-color:var(--fg);animation:pulse 1.5s ease infinite}
+.skeleton{height:100px;background:linear-gradient(90deg,var(--bg) 25%,#eaeaea 50%,var(--bg) 75%);background-size:200% 100%;border-radius:var(--radius);animation:shimmer 1.5s infinite}
+.skeleton-grid{display:grid;gap:16px;max-width:600px;margin:32px auto}
+@keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+
+.summary-bar{display:flex;align-items:center;gap:16px;padding:12px 20px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);margin-bottom:24px;flex-wrap:wrap}
+.summary-bar .thumb{width:36px;height:36px;background:var(--bg);border:1px solid var(--border);border-radius:4px;flex-shrink:0}
+.summary-bar .info{font-size:13px;font-weight:600;flex:1}
+.summary-bar .meta{font-size:11px;color:var(--muted)}
+
+.scene-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);margin-bottom:12px;overflow:hidden}
+.scene-header{display:flex;align-items:center;gap:12px;padding:14px 20px;cursor:pointer;transition:background .1s}
+.scene-header:hover{background:var(--bg)}
+.scene-handle{width:14px;display:flex;flex-direction:column;gap:2px;cursor:grab;opacity:.3}
+.scene-handle span{display:block;width:14px;height:2px;background:var(--fg);border-radius:1px}
+.scene-num{font-size:11px;font-weight:700;color:var(--muted);min-width:18px}
+.scene-title{flex:1;font-size:14px;font-weight:600}
+.scene-dur{font-size:11px;color:var(--muted);font-weight:500}
+.scene-chevron{font-size:16px;color:var(--muted);transition:transform .2s}
+.scene-card.expanded .scene-chevron{transform:rotate(180deg)}
+.scene-body{padding:0 20px 20px;display:none}
+.scene-card.expanded .scene-body{display:block}
+.scene-field{margin-bottom:16px}
+.scene-field label{display:block;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);margin-bottom:6px}
+.scene-actions{display:flex;gap:8px;padding-top:12px;border-top:1px solid var(--border)}
+.speech-est{font-size:11px;color:var(--muted);margin-top:4px}
+.speech-warn{font-size:11px;color:#b45309;margin-top:4px;display:flex;align-items:center;gap:4px}
+.speech-warn::before{content:'!';width:14px;height:14px;border-radius:50%;background:#b4530920;color:#b45309;display:inline-flex;align-items:center;justify-content:center;font-size:9px;font-weight:800;flex-shrink:0}
+
+.add-scene-btn{width:100%;padding:14px;border:2px dashed var(--border);border-radius:var(--radius);text-align:center;font-size:13px;font-weight:600;color:var(--muted);cursor:pointer;transition:all .15s;background:none}
+.add-scene-btn:hover{border-color:var(--accent);color:var(--fg)}
+
+.modal-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:200;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .2s}
+.modal-backdrop.open{opacity:1;pointer-events:auto}
+.modal{background:var(--surface);border-radius:8px;padding:28px;max-width:480px;width:90%;max-height:80vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.15)}
+.modal h2{font-size:17px;font-weight:700;margin-bottom:4px}
+.modal .modal-desc{font-size:13px;color:var(--muted);margin-bottom:20px}
+.modal-actions{display:flex;justify-content:flex-end;gap:10px;margin-top:24px}
+
+.radio-group{display:flex;flex-direction:column;gap:8px}
+.radio-option{display:flex;align-items:center;gap:10px;padding:10px 14px;border:1px solid var(--border);border-radius:var(--radius);cursor:pointer;font-size:13px;transition:all .15s}
+.radio-option:hover{background:var(--bg)}
+.radio-option.selected{border-color:var(--fg);background:var(--bg)}
+.radio-dot{width:16px;height:16px;border-radius:50%;border:2px solid var(--border);flex-shrink:0;position:relative}
+.radio-option.selected .radio-dot{border-color:var(--fg)}
+.radio-option.selected .radio-dot::after{content:'';position:absolute;inset:3px;background:var(--fg);border-radius:50%}
+
+.progress-bar-wrap{max-width:500px;margin:24px auto}
+.progress-bar{height:8px;background:var(--bg);border-radius:4px;overflow:hidden}
+.progress-fill{height:100%;background:var(--fg);border-radius:4px;transition:width .3s}
+.progress-pct{text-align:center;font-size:22px;font-weight:800;margin-bottom:8px;letter-spacing:-0.02em}
+
+.gen-scene-list{max-width:500px;margin:24px auto;text-align:left}
+.gen-scene-row{display:flex;align-items:center;gap:10px;padding:8px 0;font-size:13px;border-bottom:1px solid var(--border)}
+.gen-scene-row:last-child{border-bottom:none}
+.gen-scene-row .status-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+.status-done{background:var(--fg)}
+.status-active{background:var(--fg);animation:pulse 1.2s ease infinite}
+.status-waiting{background:var(--border)}
+.status-error{background:#c00}
+
+.result-layout{display:grid;grid-template-columns:340px 1fr;gap:32px;align-items:start}
+.video-player{background:#1a1a1a;border-radius:var(--radius);aspect-ratio:9/16;max-height:520px;display:flex;flex-direction:column;align-items:center;justify-content:center;color:#666;position:relative;overflow:hidden}
+.video-player .play-btn-lg{width:56px;height:56px;border-radius:50%;background:rgba(255,255,255,.15);display:flex;align-items:center;justify-content:center;cursor:pointer}
+.video-player .play-btn-lg::after{content:'';border-left:18px solid #fff;border-top:11px solid transparent;border-bottom:11px solid transparent;margin-left:4px}
+.video-controls{position:absolute;bottom:0;left:0;right:0;padding:12px;background:linear-gradient(transparent,rgba(0,0,0,.6));display:flex;align-items:center;gap:8px}
+.video-controls .vc-bar{flex:1;height:3px;background:rgba(255,255,255,.2);border-radius:2px}
+.video-controls .vc-fill{height:100%;width:0;background:#fff;border-radius:2px}
+.video-controls .vc-time{font-size:10px;color:rgba(255,255,255,.6);font-variant-numeric:tabular-nums}
+.video-controls button{color:rgba(255,255,255,.7);font-size:14px;background:none;border:none;cursor:pointer;padding:2px}
+
+.result-details h1{font-size:20px;font-weight:700;margin-bottom:16px}
+.detail-row{display:flex;gap:8px;padding:8px 0;border-bottom:1px solid var(--border);font-size:13px}
+.detail-row .dl{color:var(--muted);min-width:100px}
+.detail-row .dv{font-weight:600}
+
+.accordion-trigger{display:flex;align-items:center;justify-content:space-between;padding:12px 0;cursor:pointer;font-size:13px;font-weight:600;border-top:1px solid var(--border);margin-top:16px}
+.accordion-body{font-size:12px;color:var(--muted);padding-bottom:12px;display:none}
+.accordion-trigger.open+.accordion-body{display:block}
+
+.alert{padding:12px 16px;border-radius:var(--radius);font-size:13px;display:flex;align-items:center;gap:8px;margin-bottom:16px}
+.alert-info{background:#f0f4ff;color:#3b5998;border:1px solid #d0d8ee}
+.alert-error{background:#fef2f2;color:#991b1b;border:1px solid #fecaca}
+.alert-success{background:#f0fdf4;color:#166534;border:1px solid #bbf7d0}
+.alert-warn{background:#fffbeb;color:#92400e;border:1px solid #fde68a}
+
+.error-banner{padding:14px 20px;background:#fef2f2;border:1px solid #fecaca;border-radius:var(--radius);margin-bottom:16px;display:flex;align-items:center;gap:10px}
+.error-banner .error-icon{width:20px;height:20px;border-radius:50%;background:#dc2626;color:#fff;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;flex-shrink:0}
+.error-banner .error-text{flex:1;font-size:13px;color:#991b1b}
+.error-banner .btn{flex-shrink:0}
+
+.credit-badge{display:inline-flex;align-items:center;gap:4px;padding:4px 10px;background:var(--bg);border:1px solid var(--border);border-radius:var(--radius);font-size:11px;font-weight:600;color:var(--muted)}
+
+.regen-compare{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:16px}
+.regen-version{padding:16px;border:1px solid var(--border);border-radius:var(--radius)}
+.regen-version h4{font-size:12px;font-weight:700;margin-bottom:8px;text-transform:uppercase;letter-spacing:.04em;color:var(--muted)}
+.regen-version.new-ver{border-color:var(--fg)}
+
+.screen{display:none}
+.screen.active{display:flex;flex-direction:column;flex:1}
+
+.empty-state{text-align:center;padding:60px 20px;color:var(--muted)}
+.empty-state .empty-icon{font-size:40px;opacity:.3;margin-bottom:12px}
+.empty-state p{font-size:14px;margin-bottom:16px}
+
+.info-note{font-size:12px;color:var(--muted);padding:12px 16px;background:var(--bg);border-radius:var(--radius);margin-top:12px;line-height:1.6}
+
+.footer-info{font-size:12px;color:var(--muted);display:flex;align-items:center;gap:4px}
+
+.tag{display:inline-block;padding:2px 8px;background:var(--bg);border:1px solid var(--border);border-radius:3px;font-size:11px;font-weight:600}
+</style>
+</head>
+<body>
+
+<aside class="sidebar">
+  <div class="sidebar-logo">
+    <div class="logo-mark">V</div>
+    Visuala AI
+  </div>
+  <nav class="sidebar-nav">
+    <a class="sidebar-item" href="#" data-nav="dashboard">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+      Dashboard
+    </a>
+    <a class="sidebar-item active" href="#" data-nav="create">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+      Create Video
+    </a>
+    <a class="sidebar-item" href="#" data-nav="videos">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="2" y="4" width="20" height="16" rx="2"/><polygon points="10,8 16,12 10,16"/></svg>
+      My Videos
+    </a>
+    <a class="sidebar-item" href="#" data-nav="characters">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 4-7 8-7s8 3 8 7"/></svg>
+      Characters
+    </a>
+    <a class="sidebar-item" href="#" data-nav="settings">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.32 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+      Settings
+    </a>
+  </nav>
+  <div class="sidebar-footer">Visuala AI v0.1 Beta</div>
+</aside>
+
+<div class="main">
+
+  <!-- ============ SCREEN 1: PRODUCT SETUP ============ -->
+  <div class="screen active" id="screen-product">
+    <div class="topbar">
+      <div class="stepper">
+        <div class="step active"><span class="step-num">1</span> Product</div>
+        <div class="step-connector"></div>
+        <div class="step"><span class="step-num">2</span> Character & Duration</div>
+        <div class="step-connector"></div>
+        <div class="step"><span class="step-num">3</span> Scenes</div>
+        <div class="step-connector"></div>
+        <div class="step"><span class="step-num">4</span> Generate</div>
+      </div>
+    </div>
+    <div class="content">
+      <div class="page-header">
+        <h1>Create Affiliate Video</h1>
+        <p>Add your product information and let AI prepare your video concept.</p>
+      </div>
+      <div class="two-col">
+        <div>
+          <div class="form-group">
+            <label class="form-label">Product Name</label>
+            <input type="text" value="Oatmilk Gentle Facial Wash">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Product Description</label>
+            <textarea rows="4">A gentle daily facial cleanser containing oat milk extract. Suitable for dry and sensitive skin. It cleanses the skin without making it feel tight or dry.</textarea>
+            <div class="form-help">Describe the product, its benefits, ingredients, and unique selling points.</div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Target Audience</label>
+            <input type="text" value="Women aged 18–30 with dry or sensitive skin">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Main Selling Point</label>
+            <input type="text" value="Gentle cleansing without drying the skin">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Offer or Promotion <span class="form-optional">(optional)</span></label>
+            <input type="text" value="20% discount this week">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Call to Action</label>
+            <input type="text" value="Click the yellow basket and try it now.">
+            <div style="margin-top:8px">
+              <label class="checkbox-row"><input type="checkbox"> Let AI generate the call to action</label>
+            </div>
+          </div>
+        </div>
+        <div>
+          <div class="form-group">
+            <label class="form-label">Upload Product Images</label>
+            <div class="upload-zone" id="uploadZone">
+              <div class="upload-icon">&#x1F4F7;</div>
+              <p>Drag and drop images here</p>
+              <p style="font-size:11px;margin-top:4px">or</p>
+              <span class="upload-btn">Browse Files</span>
+            </div>
+            <div class="form-help">Upload clear images that show the product packaging, label, and important details.</div>
+          </div>
+          <div class="img-grid" id="imgGrid">
+            <div class="img-thumb main-img">
+              <span class="badge">Main</span>
+              IMG 1
+              <div class="img-actions">
+                <span class="img-action" title="Preview">&#x1F50D;</span>
+                <span class="img-action" title="Delete">&#x2715;</span>
+              </div>
+            </div>
+            <div class="img-thumb">
+              IMG 2
+              <div class="img-actions">
+                <span class="img-action" title="Set as main">&#x2605;</span>
+                <span class="img-action" title="Preview">&#x1F50D;</span>
+                <span class="img-action" title="Delete">&#x2715;</span>
+              </div>
+            </div>
+            <div class="img-thumb">
+              IMG 3
+              <div class="img-actions">
+                <span class="img-action" title="Set as main">&#x2605;</span>
+                <span class="img-action" title="Preview">&#x1F50D;</span>
+                <span class="img-action" title="Delete">&#x2715;</span>
+              </div>
+            </div>
+          </div>
+          <div class="upload-count">3 images uploaded</div>
+
+          <div class="error-banner" style="margin-top:16px" id="uploadError">
+            <div class="error-icon">!</div>
+            <div class="error-text">Failed to upload "photo_4.jpg". The file may be too large or in an unsupported format.</div>
+            <button class="btn btn-sm btn-secondary">Retry</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="sticky-footer">
+      <button class="btn btn-secondary">Save Draft</button>
+      <button class="btn btn-primary" onclick="goTo('screen-understanding')">Continue</button>
+    </div>
+  </div>
+
+  <!-- ============ SCREEN 2: PRODUCT UNDERSTANDING ============ -->
+  <div class="screen" id="screen-understanding">
+    <div class="topbar">
+      <div class="stepper">
+        <div class="step done"><span class="step-num">&#x2713;</span> Product</div>
+        <div class="step-connector"></div>
+        <div class="step active"><span class="step-num">2</span> Character & Duration</div>
+        <div class="step-connector"></div>
+        <div class="step"><span class="step-num">3</span> Scenes</div>
+        <div class="step-connector"></div>
+        <div class="step"><span class="step-num">4</span> Generate</div>
+      </div>
+    </div>
+    <div class="content">
+      <div class="page-header">
+        <h1>Review Product Understanding</h1>
+        <p>Make sure Visuala understands your product correctly before generating the video.</p>
+      </div>
+
+      <div id="analysisError" class="error-banner" style="display:none">
+        <div class="error-icon">!</div>
+        <div class="error-text">AI product analysis failed. This may be due to insufficient product information or a temporary service issue.</div>
+        <button class="btn btn-sm btn-secondary" onclick="document.getElementById('analysisError').style.display='none'">Retry Analysis</button>
+      </div>
+
+      <div class="summary-card" style="max-width:640px">
+        <div class="summary-row">
+          <span class="label">Product</span>
+          <span class="value">Oatmilk Gentle Facial Wash</span>
+          <span class="edit-link">Edit</span>
+        </div>
+        <div class="summary-row">
+          <span class="label">Category</span>
+          <span class="value">Facial Cleanser</span>
+          <span class="edit-link">Edit</span>
+        </div>
+        <div class="summary-row">
+          <span class="label">Main Benefit</span>
+          <span class="value">Gentle daily cleansing</span>
+          <span class="edit-link">Edit</span>
+        </div>
+        <div class="summary-row">
+          <span class="label">Target Audience</span>
+          <span class="value">People with dry or sensitive skin</span>
+          <span class="edit-link">Edit</span>
+        </div>
+        <div class="summary-row">
+          <span class="label">Key Message</span>
+          <span class="value">Cleanses without making the skin feel tight</span>
+          <span class="edit-link">Edit</span>
+        </div>
+        <div class="summary-row">
+          <span class="label">Suggested Video Concept</span>
+          <span class="value">Problem–Solution Product Review</span>
+          <span class="edit-link">Edit</span>
+        </div>
+      </div>
+      <div class="info-note" style="max-width:640px">
+        These details will be used to generate your video script and visual directions.
+      </div>
+
+      <div style="margin-top:24px">
+        <button class="btn btn-sm btn-ghost" onclick="document.getElementById('analysisError').style.display='flex'">Show Analysis Error State</button>
+      </div>
+    </div>
+    <div class="sticky-footer">
+      <button class="btn btn-secondary" onclick="goTo('screen-product')">Back</button>
+      <button class="btn btn-primary" onclick="goTo('screen-character')">Confirm & Continue</button>
+    </div>
+  </div>
+
+  <!-- ============ SCREEN 3: CHARACTER & DURATION ============ -->
+  <div class="screen" id="screen-character">
+    <div class="topbar">
+      <div class="stepper">
+        <div class="step done"><span class="step-num">&#x2713;</span> Product</div>
+        <div class="step-connector"></div>
+        <div class="step active"><span class="step-num">2</span> Character & Duration</div>
+        <div class="step-connector"></div>
+        <div class="step"><span class="step-num">3</span> Scenes</div>
+        <div class="step-connector"></div>
+        <div class="step"><span class="step-num">4</span> Generate</div>
+      </div>
+    </div>
+    <div class="content">
+      <div class="page-header">
+        <h1>Choose Your Character</h1>
+        <p>Select the AI creator who will present your product.</p>
+      </div>
+
+      <div class="char-grid">
+        <div class="char-card selected" onclick="selectChar(this)">
+          <div class="char-avatar">N</div>
+          <h3>Nadia</h3>
+          <div class="char-persona">Friendly Beauty Creator</div>
+          <div class="char-style">Warm, casual, and natural speaking style.</div>
+          <div class="voice-preview"><span class="play-icon"></span> Play Voice Preview</div>
+          <div class="audio-player">
+            <span style="font-size:9px">&#9654;</span>
+            <div class="audio-bar"><div class="progress"></div></div>
+            <span>0:04</span>
+          </div>
+        </div>
+        <div class="char-card" onclick="selectChar(this)">
+          <div class="char-avatar">A</div>
+          <h3>Alya</h3>
+          <div class="char-persona">Energetic Lifestyle Creator</div>
+          <div class="char-style">Expressive, upbeat, and persuasive.</div>
+          <div class="voice-preview"><span class="play-icon"></span> Play Voice Preview</div>
+        </div>
+        <div class="char-card" onclick="selectChar(this)">
+          <div class="char-avatar">S</div>
+          <h3>Sarah</h3>
+          <div class="char-persona">Calm Product Reviewer</div>
+          <div class="char-style">Soft, trustworthy, and informative.</div>
+          <div class="voice-preview"><span class="play-icon"></span> Play Voice Preview</div>
+        </div>
+        <div class="char-card" onclick="selectChar(this)">
+          <div class="char-avatar">R</div>
+          <h3>Raka</h3>
+          <div class="char-persona">Casual Male Creator</div>
+          <div class="char-style">Relaxed, confident, and conversational.</div>
+          <div class="voice-preview"><span class="play-icon"></span> Play Voice Preview</div>
+        </div>
+      </div>
+
+      <div style="margin-bottom:12px">
+        <h2 style="font-size:16px;font-weight:700;margin-bottom:4px">Video Duration</h2>
+        <p style="font-size:12px;color:var(--muted)">The number of scenes will be determined automatically based on the selected duration.</p>
+      </div>
+      <div class="dur-grid">
+        <div class="dur-card" onclick="selectDur(this)">
+          <h3>Quick</h3>
+          <div class="dur-time">12s</div>
+          <p>Best for short hooks and simple product introductions.</p>
+          <div class="dur-scenes">Around 3 scenes</div>
+          <div class="credit-badge" style="margin-top:8px">1 credit</div>
+        </div>
+        <div class="dur-card selected" onclick="selectDur(this)">
+          <div class="dur-badge">Recommended</div>
+          <h3>Standard</h3>
+          <div class="dur-time">18s</div>
+          <p>Best for product benefits and problem–solution videos.</p>
+          <div class="dur-scenes">Around 4–5 scenes</div>
+          <div class="credit-badge" style="margin-top:8px">1 credit</div>
+        </div>
+        <div class="dur-card" onclick="selectDur(this)">
+          <h3>Extended</h3>
+          <div class="dur-time">25s</div>
+          <p>Best for detailed product demonstrations or reviews.</p>
+          <div class="dur-scenes">Around 5–7 scenes</div>
+          <div class="credit-badge" style="margin-top:8px">2 credits</div>
+        </div>
+        <div class="dur-card" onclick="selectDur(this)">
+          <h3>Custom</h3>
+          <div class="dur-time" style="font-size:16px;margin-top:8px">
+            <input type="number" min="8" max="30" placeholder="8–30" style="width:80px;text-align:center;font-size:16px;font-weight:800;padding:6px"> sec
+          </div>
+          <p>Enter a custom duration between 8 and 30 seconds.</p>
+          <div class="credit-badge" style="margin-top:8px">1–2 credits</div>
+        </div>
+      </div>
+    </div>
+    <div class="sticky-footer">
+      <button class="btn btn-secondary" onclick="goTo('screen-understanding')">Back</button>
+      <button class="btn btn-primary" onclick="goTo('screen-generating')">Generate Scenes</button>
+    </div>
+  </div>
+
+  <!-- ============ SCREEN 4: GENERATING SCENES ============ -->
+  <div class="screen" id="screen-generating">
+    <div class="topbar">
+      <div class="stepper">
+        <div class="step done"><span class="step-num">&#x2713;</span> Product</div>
+        <div class="step-connector"></div>
+        <div class="step done"><span class="step-num">&#x2713;</span> Character & Duration</div>
+        <div class="step-connector"></div>
+        <div class="step active"><span class="step-num">3</span> Scenes</div>
+        <div class="step-connector"></div>
+        <div class="step"><span class="step-num">4</span> Generate</div>
+      </div>
+    </div>
+    <div class="content" style="display:flex;align-items:center;justify-content:center;flex:1">
+      <div class="loading-container">
+        <h1 style="font-size:22px;font-weight:700">Creating Your Video Scenes</h1>
+        <p style="color:var(--muted);font-size:13px;margin-top:4px">Visuala is preparing a natural affiliate video based on your product, character, and selected duration.</p>
+
+        <div class="loading-steps">
+          <div class="loading-step done">
+            <div class="step-icon">&#x2713;</div>
+            Analyzing product
+          </div>
+          <div class="loading-step done">
+            <div class="step-icon">&#x2713;</div>
+            Preparing video concept
+          </div>
+          <div class="loading-step active">
+            <div class="step-icon"></div>
+            Writing dialogue
+          </div>
+          <div class="loading-step">
+            <div class="step-icon"></div>
+            Generating visual directions
+          </div>
+          <div class="loading-step">
+            <div class="step-icon"></div>
+            Finalizing scenes
+          </div>
+        </div>
+
+        <div class="skeleton-grid">
+          <div class="skeleton" style="height:72px"></div>
+          <div class="skeleton" style="height:72px"></div>
+          <div class="skeleton" style="height:72px"></div>
+          <div class="skeleton" style="height:72px"></div>
+          <div class="skeleton" style="height:72px"></div>
+        </div>
+
+        <button class="btn btn-sm btn-secondary" style="margin-top:16px" onclick="goTo('screen-scenes')">Skip to Scenes (demo)</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ SCREEN 5: SCENE EDITOR ============ -->
+  <div class="screen" id="screen-scenes">
+    <div class="topbar">
+      <div class="stepper">
+        <div class="step done"><span class="step-num">&#x2713;</span> Product</div>
+        <div class="step-connector"></div>
+        <div class="step done"><span class="step-num">&#x2713;</span> Character & Duration</div>
+        <div class="step-connector"></div>
+        <div class="step active"><span class="step-num">3</span> Scenes</div>
+        <div class="step-connector"></div>
+        <div class="step"><span class="step-num">4</span> Generate</div>
+      </div>
+    </div>
+    <div class="content">
+      <div class="page-header">
+        <h1>Review Your Scenes</h1>
+        <p>Edit the scene instructions and dialogue before generating your video.</p>
+      </div>
+
+      <div class="summary-bar">
+        <div class="thumb"></div>
+        <div class="info">Oatmilk Gentle Facial Wash &middot; Nadia &middot; 18 seconds &middot; 5 scenes &middot; 9:16</div>
+        <button class="btn btn-sm btn-secondary">Change Settings</button>
+      </div>
+
+      <!-- Scene 1 — expanded -->
+      <div class="scene-card expanded">
+        <div class="scene-header" onclick="toggleScene(this)">
+          <div class="scene-handle"><span></span><span></span><span></span></div>
+          <span class="scene-num">1</span>
+          <span class="scene-title">Product Introduction</span>
+          <span class="scene-dur">3 sec</span>
+          <span class="scene-chevron">&#x25BC;</span>
+        </div>
+        <div class="scene-body">
+          <div class="scene-field">
+            <label>Visual</label>
+            <textarea rows="2">The character holds the product close to the camera and smiles naturally.</textarea>
+          </div>
+          <div class="scene-field">
+            <label>Dialogue / Voice Over</label>
+            <textarea rows="2">"This is Oatmilk Gentle Facial Wash, my favorite cleanser for everyday use."</textarea>
+            <div class="speech-est">Estimated speech: 2.8 seconds</div>
+          </div>
+          <div class="scene-actions">
+            <button class="btn btn-sm btn-secondary" onclick="openModal('regenModal')">Regenerate Scene</button>
+            <button class="btn btn-sm btn-ghost">Move Up</button>
+            <button class="btn btn-sm btn-ghost">Move Down</button>
+            <button class="btn btn-sm btn-danger">Delete</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Scene 2 -->
+      <div class="scene-card expanded">
+        <div class="scene-header" onclick="toggleScene(this)">
+          <div class="scene-handle"><span></span><span></span><span></span></div>
+          <span class="scene-num">2</span>
+          <span class="scene-title">The Problem</span>
+          <span class="scene-dur">3 sec</span>
+          <span class="scene-chevron">&#x25BC;</span>
+        </div>
+        <div class="scene-body">
+          <div class="scene-field">
+            <label>Visual</label>
+            <textarea rows="2">The character touches her cheek and reacts to slightly dry skin.</textarea>
+          </div>
+          <div class="scene-field">
+            <label>Dialogue / Voice Over</label>
+            <textarea rows="2">"My skin often feels dry after washing my face."</textarea>
+            <div class="speech-est">Estimated speech: 2.4 seconds</div>
+          </div>
+          <div class="scene-actions">
+            <button class="btn btn-sm btn-secondary" onclick="openModal('regenModal')">Regenerate Scene</button>
+            <button class="btn btn-sm btn-ghost">Move Up</button>
+            <button class="btn btn-sm btn-ghost">Move Down</button>
+            <button class="btn btn-sm btn-danger">Delete</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Scene 3 -->
+      <div class="scene-card expanded">
+        <div class="scene-header" onclick="toggleScene(this)">
+          <div class="scene-handle"><span></span><span></span><span></span></div>
+          <span class="scene-num">3</span>
+          <span class="scene-title">Product Benefit</span>
+          <span class="scene-dur">4 sec</span>
+          <span class="scene-chevron">&#x25BC;</span>
+        </div>
+        <div class="scene-body">
+          <div class="scene-field">
+            <label>Visual</label>
+            <textarea rows="2">The character applies a small amount of facial wash onto her hand.</textarea>
+          </div>
+          <div class="scene-field">
+            <label>Dialogue / Voice Over</label>
+            <textarea rows="2">"The texture feels gentle and cleans my face without leaving it tight."</textarea>
+            <div class="speech-est">Estimated speech: 3.2 seconds</div>
+          </div>
+          <div class="scene-actions">
+            <button class="btn btn-sm btn-secondary" onclick="openModal('regenModal')">Regenerate Scene</button>
+            <button class="btn btn-sm btn-ghost">Move Up</button>
+            <button class="btn btn-sm btn-ghost">Move Down</button>
+            <button class="btn btn-sm btn-danger">Delete</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Scene 4 — with duration warning -->
+      <div class="scene-card">
+        <div class="scene-header" onclick="toggleScene(this)">
+          <div class="scene-handle"><span></span><span></span><span></span></div>
+          <span class="scene-num">4</span>
+          <span class="scene-title">Product Result</span>
+          <span class="scene-dur">4 sec</span>
+          <span class="scene-chevron">&#x25BC;</span>
+        </div>
+        <div class="scene-body">
+          <div class="scene-field">
+            <label>Visual</label>
+            <textarea rows="2">The character shows fresh-looking skin while holding the product beside her face.</textarea>
+          </div>
+          <div class="scene-field">
+            <label>Dialogue / Voice Over</label>
+            <textarea rows="2">"My skin feels clean, comfortable, and still moisturized after using it."</textarea>
+            <div class="speech-est">Estimated speech: 3.6 seconds</div>
+            <div class="speech-warn">This dialogue may not fit within the estimated scene duration. Shorten it or increase the duration.</div>
+          </div>
+          <div class="scene-actions">
+            <button class="btn btn-sm btn-secondary" onclick="openModal('regenModal')">Regenerate Scene</button>
+            <button class="btn btn-sm btn-ghost">Move Up</button>
+            <button class="btn btn-sm btn-ghost">Move Down</button>
+            <button class="btn btn-sm btn-danger">Delete</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Scene 5 -->
+      <div class="scene-card">
+        <div class="scene-header" onclick="toggleScene(this)">
+          <div class="scene-handle"><span></span><span></span><span></span></div>
+          <span class="scene-num">5</span>
+          <span class="scene-title">Call to Action</span>
+          <span class="scene-dur">4 sec</span>
+          <span class="scene-chevron">&#x25BC;</span>
+        </div>
+        <div class="scene-body">
+          <div class="scene-field">
+            <label>Visual</label>
+            <textarea rows="2">The character holds the product and points toward the shopping basket area.</textarea>
+          </div>
+          <div class="scene-field">
+            <label>Dialogue / Voice Over</label>
+            <textarea rows="2">"Click the yellow basket and try it before the promotion ends."</textarea>
+            <div class="speech-est">Estimated speech: 2.9 seconds</div>
+          </div>
+          <div class="scene-actions">
+            <button class="btn btn-sm btn-secondary" onclick="openModal('regenModal')">Regenerate Scene</button>
+            <button class="btn btn-sm btn-ghost">Move Up</button>
+            <button class="btn btn-sm btn-ghost">Move Down</button>
+            <button class="btn btn-sm btn-danger">Delete</button>
+          </div>
+        </div>
+      </div>
+
+      <button class="add-scene-btn">+ Add Scene</button>
+
+      <!-- Regeneration success state -->
+      <div style="margin-top:24px">
+        <div class="alert alert-success">Scene 2 has been regenerated successfully. You can compare the versions below.</div>
+        <div class="regen-compare">
+          <div class="regen-version">
+            <h4>Previous Version</h4>
+            <p style="font-size:12px;color:var(--muted);margin-bottom:6px"><strong>Visual:</strong> The character frowns at dry skin in a mirror.</p>
+            <p style="font-size:12px;color:var(--muted)"><strong>Dialogue:</strong> "Washing my face always makes it feel so dry."</p>
+            <button class="btn btn-sm btn-secondary" style="margin-top:10px">Restore Previous</button>
+          </div>
+          <div class="regen-version new-ver">
+            <h4>New Version (Current)</h4>
+            <p style="font-size:12px;margin-bottom:6px"><strong>Visual:</strong> The character touches her cheek and reacts to slightly dry skin.</p>
+            <p style="font-size:12px"><strong>Dialogue:</strong> "My skin often feels dry after washing my face."</p>
+            <button class="btn btn-sm btn-primary" style="margin-top:10px">Keep New Version</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Scene regeneration error state -->
+      <div class="error-banner" style="margin-top:16px">
+        <div class="error-icon">!</div>
+        <div class="error-text">Failed to regenerate Scene 4. Please try again.</div>
+        <button class="btn btn-sm btn-secondary">Retry</button>
+      </div>
+
+      <!-- Empty scene list state (hidden, toggle to show) -->
+      <div style="margin-top:24px;display:none" id="emptyScenes">
+        <div class="empty-state">
+          <div class="empty-icon">&#x1F3AC;</div>
+          <p>No scenes yet. Add your first scene to get started.</p>
+          <button class="btn btn-sm btn-primary">+ Add Scene</button>
+        </div>
+      </div>
+    </div>
+    <div class="sticky-footer">
+      <div class="footer-info">5 scenes &middot; 18 seconds &middot; Nadia voice</div>
+      <div style="flex:1"></div>
+      <button class="btn btn-secondary" onclick="goTo('screen-character')">Back</button>
+      <button class="btn btn-secondary">Save Draft</button>
+      <button class="btn btn-primary" onclick="openModal('confirmModal')">Generate Video</button>
+    </div>
+  </div>
+
+  <!-- ============ SCREEN 8: VIDEO GENERATION PROGRESS ============ -->
+  <div class="screen" id="screen-progress">
+    <div class="topbar">
+      <div class="stepper">
+        <div class="step done"><span class="step-num">&#x2713;</span> Product</div>
+        <div class="step-connector"></div>
+        <div class="step done"><span class="step-num">&#x2713;</span> Character & Duration</div>
+        <div class="step-connector"></div>
+        <div class="step done"><span class="step-num">&#x2713;</span> Scenes</div>
+        <div class="step-connector"></div>
+        <div class="step active"><span class="step-num">4</span> Generate</div>
+      </div>
+    </div>
+    <div class="content" style="display:flex;align-items:center;justify-content:center;flex:1">
+      <div class="loading-container">
+        <h1 style="font-size:22px;font-weight:700">Generating Your Video</h1>
+
+        <div class="progress-bar-wrap">
+          <div class="progress-pct">42%</div>
+          <div class="progress-bar"><div class="progress-fill" style="width:42%"></div></div>
+          <p style="font-size:12px;color:var(--muted);margin-top:6px">42% completed</p>
+        </div>
+
+        <div class="gen-scene-list">
+          <div class="gen-scene-row">
+            <div class="status-dot status-done"></div>
+            <span style="flex:1">Scene 1 — Product Introduction</span>
+            <span style="font-size:11px;color:var(--muted)">Completed</span>
+          </div>
+          <div class="gen-scene-row">
+            <div class="status-dot status-done"></div>
+            <span style="flex:1">Scene 2 — The Problem</span>
+            <span style="font-size:11px;color:var(--muted)">Completed</span>
+          </div>
+          <div class="gen-scene-row">
+            <div class="status-dot status-active"></div>
+            <span style="flex:1;font-weight:600">Scene 3 — Product Benefit</span>
+            <span style="font-size:11px;color:var(--fg);font-weight:600">Generating</span>
+          </div>
+          <div class="gen-scene-row">
+            <div class="status-dot status-waiting"></div>
+            <span style="flex:1">Scene 4 — Product Result</span>
+            <span style="font-size:11px;color:var(--muted)">Waiting</span>
+          </div>
+          <div class="gen-scene-row">
+            <div class="status-dot status-waiting"></div>
+            <span style="flex:1">Scene 5 — Call to Action</span>
+            <span style="font-size:11px;color:var(--muted)">Waiting</span>
+          </div>
+          <div class="gen-scene-row">
+            <div class="status-dot status-waiting"></div>
+            <span style="flex:1">Combining scenes</span>
+            <span style="font-size:11px;color:var(--muted)">Waiting</span>
+          </div>
+        </div>
+
+        <div style="display:flex;align-items:center;gap:12px;justify-content:center;margin-top:20px">
+          <div class="thumb" style="width:32px;height:32px;background:var(--bg);border:1px solid var(--border);border-radius:4px"></div>
+          <span style="font-size:12px;color:var(--muted)">Oatmilk Gentle Facial Wash &middot; Nadia</span>
+        </div>
+
+        <p class="info-note" style="max-width:440px;margin:20px auto 0;text-align:center">You can leave this page. Your video will remain available in My Videos when generation is complete.</p>
+
+        <!-- Error state for failed scene -->
+        <div class="error-banner" style="margin-top:20px;max-width:440px;margin-left:auto;margin-right:auto">
+          <div class="error-icon">!</div>
+          <div class="error-text">Scene 3 failed to generate.</div>
+          <button class="btn btn-sm btn-secondary">Retry Scene 3</button>
+        </div>
+
+        <button class="btn btn-sm btn-secondary" style="margin-top:16px" onclick="goTo('screen-result')">Skip to Result (demo)</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ SCREEN 9: VIDEO RESULT ============ -->
+  <div class="screen" id="screen-result">
+    <div class="topbar">
+      <div class="stepper">
+        <div class="step done"><span class="step-num">&#x2713;</span> Product</div>
+        <div class="step-connector"></div>
+        <div class="step done"><span class="step-num">&#x2713;</span> Character & Duration</div>
+        <div class="step-connector"></div>
+        <div class="step done"><span class="step-num">&#x2713;</span> Scenes</div>
+        <div class="step-connector"></div>
+        <div class="step done"><span class="step-num">&#x2713;</span> Generate</div>
+      </div>
+    </div>
+    <div class="content">
+      <div class="page-header">
+        <h1>Your Affiliate Video Is Ready</h1>
+      </div>
+
+      <div class="alert alert-success">Video generated successfully. Download or share your affiliate video.</div>
+
+      <div class="result-layout">
+        <div>
+          <div class="video-player">
+            <div class="play-btn-lg"></div>
+            <div class="video-controls">
+              <button>&#9654;</button>
+              <div class="vc-bar"><div class="vc-fill" style="width:0%"></div></div>
+              <span class="vc-time">0:00 / 0:18</span>
+              <button>&#x1F50A;</button>
+              <button>&#x26F6;</button>
+            </div>
+          </div>
+        </div>
+        <div class="result-details">
+          <h1 style="font-size:18px">Oatmilk Gentle Facial Wash — Affiliate Video</h1>
+
+          <div class="detail-row"><span class="dl">Product</span><span class="dv">Oatmilk Gentle Facial Wash</span></div>
+          <div class="detail-row"><span class="dl">Character</span><span class="dv">Nadia</span></div>
+          <div class="detail-row"><span class="dl">Duration</span><span class="dv">18 seconds</span></div>
+          <div class="detail-row"><span class="dl">Scenes</span><span class="dv">5</span></div>
+          <div class="detail-row"><span class="dl">Format</span><span class="dv">Vertical 9:16</span></div>
+          <div class="detail-row"><span class="dl">Generated</span><span class="dv">August 1, 2026</span></div>
+          <div class="detail-row"><span class="dl">Status</span><span class="dv"><span class="tag">Ready</span></span></div>
+
+          <div style="margin-top:24px;display:flex;flex-direction:column;gap:8px">
+            <button class="btn btn-primary" style="justify-content:center">Download Video</button>
+            <button class="btn btn-secondary" style="justify-content:center" onclick="goTo('screen-product')">Create Another Video</button>
+            <button class="btn btn-ghost" style="justify-content:center">Regenerate Video</button>
+            <button class="btn btn-ghost" style="justify-content:center">Back to My Videos</button>
+          </div>
+
+          <div class="accordion-trigger" onclick="this.classList.toggle('open')">
+            Scene Summary
+            <span>&#x25BC;</span>
+          </div>
+          <div class="accordion-body">
+            <p style="margin-bottom:6px"><strong>Scene 1:</strong> Product Introduction — Character holds product and introduces it. (3s)</p>
+            <p style="margin-bottom:6px"><strong>Scene 2:</strong> The Problem — Character reacts to dry skin. (3s)</p>
+            <p style="margin-bottom:6px"><strong>Scene 3:</strong> Product Benefit — Character applies facial wash. (4s)</p>
+            <p style="margin-bottom:6px"><strong>Scene 4:</strong> Product Result — Character shows fresh skin. (4s)</p>
+            <p><strong>Scene 5:</strong> Call to Action — Character points to basket. (4s)</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Video generation failure state -->
+      <div class="error-banner" style="margin-top:24px">
+        <div class="error-icon">!</div>
+        <div class="error-text">Video generation failed due to a processing error. Your scenes have been saved.</div>
+        <button class="btn btn-sm btn-secondary" onclick="goTo('screen-scenes')">Back to Scenes</button>
+        <button class="btn btn-sm btn-secondary">Retry Generation</button>
+      </div>
+
+      <!-- Insufficient credits state -->
+      <div class="alert alert-warn" style="margin-top:16px">
+        You have 0 video credits remaining. Purchase more credits in Settings to generate additional videos.
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ============ MODALS ============ -->
+
+<!-- Regenerate Scene Modal -->
+<div class="modal-backdrop" id="regenModal">
+  <div class="modal">
+    <h2>Regenerate Scene 3</h2>
+    <p class="modal-desc">AI will create a new version of this scene without changing the other scenes.</p>
+
+    <div class="radio-group">
+      <div class="radio-option selected" onclick="selectRadio(this)">
+        <span class="radio-dot"></span>
+        Regenerate the entire scene
+      </div>
+      <div class="radio-option" onclick="selectRadio(this)">
+        <span class="radio-dot"></span>
+        Regenerate visual instructions only
+      </div>
+      <div class="radio-option" onclick="selectRadio(this)">
+        <span class="radio-dot"></span>
+        Regenerate dialogue only
+      </div>
+    </div>
+
+    <div class="form-group" style="margin-top:16px">
+      <label class="form-label">Tell AI what you want to improve <span class="form-optional">(optional)</span></label>
+      <textarea rows="2" placeholder="For example: Make the dialogue more casual and less promotional."></textarea>
+    </div>
+
+    <div class="modal-actions">
+      <button class="btn btn-secondary" onclick="closeModal('regenModal')">Cancel</button>
+      <button class="btn btn-primary" onclick="closeModal('regenModal')">Regenerate Scene</button>
+    </div>
+  </div>
+</div>
+
+<!-- Generate Confirmation Modal -->
+<div class="modal-backdrop" id="confirmModal">
+  <div class="modal">
+    <h2>Generate Affiliate Video?</h2>
+    <p class="modal-desc">Visuala will generate each scene and combine them into one complete affiliate video.</p>
+
+    <div class="summary-card" style="padding:16px">
+      <div class="summary-row"><span class="label">Product</span><span class="value">Oatmilk Gentle Facial Wash</span></div>
+      <div class="summary-row"><span class="label">Character</span><span class="value">Nadia</span></div>
+      <div class="summary-row"><span class="label">Duration</span><span class="value">18 seconds</span></div>
+      <div class="summary-row"><span class="label">Scenes</span><span class="value">5</span></div>
+      <div class="summary-row"><span class="label">Format</span><span class="value">Vertical 9:16</span></div>
+    </div>
+
+    <div class="credit-badge" style="margin-top:16px">This generation will use 1 video credit.</div>
+
+    <div class="modal-actions">
+      <button class="btn btn-secondary" onclick="closeModal('confirmModal')">Cancel</button>
+      <button class="btn btn-primary" onclick="closeModal('confirmModal');goTo('screen-progress')">Generate Video</button>
+    </div>
+  </div>
+</div>
+
+<!-- Insufficient Credits Modal -->
+<div class="modal-backdrop" id="creditsModal">
+  <div class="modal">
+    <h2>Insufficient Credits</h2>
+    <p class="modal-desc">You need at least 1 video credit to generate a video. You currently have 0 credits.</p>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" onclick="closeModal('creditsModal')">Cancel</button>
+      <button class="btn btn-primary" onclick="closeModal('creditsModal')">Purchase Credits</button>
+    </div>
+  </div>
+</div>
+
+<script>
+function goTo(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  document.querySelector('.main').scrollTop=0;
+  window.scrollTo(0,0);
+}
+function openModal(id){document.getElementById(id).classList.add('open')}
+function closeModal(id){document.getElementById(id).classList.remove('open')}
+function toggleScene(el){el.closest('.scene-card').classList.toggle('expanded')}
+function selectChar(el){
+  el.closest('.char-grid').querySelectorAll('.char-card').forEach(c=>c.classList.remove('selected'));
+  el.classList.add('selected');
+}
+function selectDur(el){
+  el.closest('.dur-grid').querySelectorAll('.dur-card').forEach(c=>c.classList.remove('selected'));
+  el.classList.add('selected');
+}
+function selectRadio(el){
+  el.closest('.radio-group').querySelectorAll('.radio-option').forEach(r=>r.classList.remove('selected'));
+  el.classList.add('selected');
+}
+document.querySelectorAll('.modal-backdrop').forEach(m=>{
+  m.addEventListener('click',e=>{if(e.target===m)m.classList.remove('open')});
+});
+</script>
+</body>
+</html>
