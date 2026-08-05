@@ -1,3 +1,4 @@
+import { z } from "zod";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 vi.mock("server-only", () => ({}));
@@ -42,13 +43,60 @@ describe("Xendit billing webhook route", () => {
     await expect(response.json()).resolves.toEqual({ received: true, duplicate: true, outcome: "already_paid" });
   });
 
-  it("returns 503 for retryable unfulfilled events", async () => {
+  it("logs fulfillment context for retryable unfulfilled events", async () => {
+    const consoleError = vi.spyOn(console, "error").mockImplementation(() => undefined);
     vi.mocked(receiveBillingWebhook).mockResolvedValue({ eventId: "event-1", duplicate: true, outcome: "retryable", fulfilled: false });
 
-    const response = await POST(new Request("http://localhost/api/billing/webhooks/xendit", { method: "POST", headers: { "content-type": "application/json" }, body: "{}" }));
+    try {
+      const response = await POST(new Request("http://localhost/api/billing/webhooks/xendit", { method: "POST", headers: { "content-type": "application/json" }, body: "{}" }));
 
-    expect(response.status).toBe(503);
-    await expect(response.json()).resolves.toEqual({ error: "Webhook unavailable." });
+      expect(response.status).toBe(503);
+      expect(consoleError).toHaveBeenCalledWith("Xendit webhook processing failed", { stage: "fulfillment", outcome: "retryable" });
+    } finally {
+      consoleError.mockRestore();
+    }
+  });
+
+  it("logs checkout disabled context without secrets", async () => {
+    const consoleError = vi.spyOn(console, "error").mockImplementation(() => undefined);
+    vi.mocked(createBillingWorkerServices).mockReturnValueOnce({ ...services, config: { checkoutEnabled: false } } as never);
+
+    try {
+      const response = await POST(new Request("http://localhost/api/billing/webhooks/xendit", { method: "POST", headers: { "x-callback-token": "secret-token" }, body: "secret-payload" }));
+
+      expect(response.status).toBe(503);
+      expect(consoleError).toHaveBeenCalledWith("Xendit webhook processing failed", { stage: "checkout_disabled", checkoutEnabled: false });
+    } finally {
+      consoleError.mockRestore();
+    }
+  });
+
+  it("logs safe configuration diagnostics for Zod errors", async () => {
+    const consoleError = vi.spyOn(console, "error").mockImplementation(() => undefined);
+    const previousApiKey = process.env.XENDIT_API_KEY;
+    const previousWebhookToken = process.env.XENDIT_WEBHOOK_TOKEN;
+    process.env.XENDIT_API_KEY = "secret-api-key";
+    delete process.env.XENDIT_WEBHOOK_TOKEN;
+    vi.mocked(createBillingWorkerServices).mockImplementationOnce(() => {
+      throw new z.ZodError([]);
+    });
+
+    try {
+      const response = await POST(new Request("http://localhost/api/billing/webhooks/xendit", { method: "POST" }));
+
+      expect(response.status).toBe(503);
+      expect(consoleError).toHaveBeenCalledWith("Xendit webhook processing failed", {
+        stage: "configuration",
+        apiKeyPresent: true,
+        webhookTokenPresent: false,
+      });
+    } finally {
+      if (previousApiKey === undefined) delete process.env.XENDIT_API_KEY;
+      else process.env.XENDIT_API_KEY = previousApiKey;
+      if (previousWebhookToken === undefined) delete process.env.XENDIT_WEBHOOK_TOKEN;
+      else process.env.XENDIT_WEBHOOK_TOKEN = previousWebhookToken;
+      consoleError.mockRestore();
+    }
   });
 
   it.each([null, "wrong"])("returns 401 without parsing the body for token %s", async (token) => {
@@ -83,7 +131,7 @@ describe("Xendit billing webhook route", () => {
       expect(unavailable.status).toBe(503);
       await expect(unavailable.json()).resolves.toEqual({ error: "Webhook unavailable." });
       expect(consoleError).toHaveBeenCalledOnce();
-      expect(consoleError).toHaveBeenCalledWith("Failed to process Xendit billing webhook", error);
+      expect(consoleError).toHaveBeenCalledWith("Xendit webhook processing failed", { stage: "unexpected", errorName: "Error" });
     } finally {
       consoleError.mockRestore();
     }
