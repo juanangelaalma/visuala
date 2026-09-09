@@ -24,7 +24,7 @@ export type DashboardSidebarProfile = {
 };
 
 export type DashboardSidebarProps = {
-    items?: DashboardSidebarSection[];
+    items: DashboardSidebarSection[];
     activeItemId?: string;
     profile?: DashboardSidebarProfile;
     logo?: ReactNode;
@@ -54,42 +54,19 @@ type IconName =
     | "admin-dashboard"
     | "pricing";
 
-type DefaultDashboardSidebarItem = DashboardSidebarItem & {
-    iconName: IconName;
+const defaultIconByItemId: Record<string, IconName> = {
+    "create-story-board": "create",
+    home: "home",
+    analytics: "analytics",
+    brands: "brands",
+    campaigns: "campaigns",
+    folders: "folders",
+    favorites: "favorites",
+    templates: "templates",
+    "more-tools": "tools",
+    "admin-dashboard": "admin-dashboard",
+    "admin-pricing": "pricing",
 };
-
-const defaultSections: Array<{ title: string; items: DefaultDashboardSidebarItem[] }> = [
-    {
-        title: "Main",
-        items: [
-            { id: "create-story-board", label: "Create Story Board", iconName: "create" },
-            { id: "home", label: "Home", iconName: "home" },
-            { id: "analytics", label: "Analytics", iconName: "analytics" },
-        ],
-    },
-    {
-        title: "Organize",
-        items: [
-            { id: "brands", label: "Brands", iconName: "brands" },
-            { id: "campaigns", label: "Campaigns", iconName: "campaigns" },
-            { id: "folders", label: "Folders", iconName: "folders" },
-            { id: "favorites", label: "Favorites", iconName: "favorites" },
-        ],
-    },
-    {
-        title: "More",
-        items: [
-            { id: "templates", label: "Templates", iconName: "templates" },
-            { id: "more-tools", label: "More Tools", iconName: "tools" },
-        ],
-    },
-];
-
-const allDefaultItems: DefaultDashboardSidebarItem[] = [
-    ...defaultSections.flatMap((section) => section.items),
-    { id: "admin-dashboard", label: "Dashboard", iconName: "admin-dashboard" },
-    { id: "admin-pricing", label: "Pricing", iconName: "pricing" },
-];
 
 const defaultProfile: DashboardSidebarProfile = {
     name: "Achmad Q",
@@ -284,8 +261,8 @@ function SidebarIcon({ name }: { name: IconName }) {
 }
 
 function getDefaultIcon(item: DashboardSidebarItem) {
-    const match = allDefaultItems.find((defaultItem) => defaultItem.id === item.id);
-    return match ? <SidebarIcon name={match.iconName} /> : null;
+    const iconName = defaultIconByItemId[item.id];
+    return iconName ? <SidebarIcon name={iconName} /> : null;
 }
 
 function SidebarItem({
@@ -340,8 +317,8 @@ function Avatar({ profile }: { profile: DashboardSidebarProfile }) {
 }
 
 export default function DashboardSidebar({
-    items = defaultSections,
-    activeItemId = "create-story-board",
+    items,
+    activeItemId,
     profile = defaultProfile,
     logo,
     className = "",
