@@ -20,6 +20,13 @@ test.describe("dashboard account menu", () => {
     await expect(creditBalance).toHaveAttribute("href", "/billing/plans");
   });
 
+  test("links Create Story Board to the dashboard create-video page", async ({ page }) => {
+    await expect(page.getByRole("link", { name: "Create Story Board" })).toHaveAttribute(
+      "href",
+      "/dashboard/create-video",
+    );
+  });
+
   test("opens from profile and exposes account actions", async ({ page }) => {
     const trigger = page.getByRole("button", { name: /account menu/i });
 

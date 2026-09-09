@@ -1,15 +1,10 @@
 {
   "$schema": "https://opencode.ai/config.json",
-  "default_agent": "orchestrator",
   "instructions": [
     "AGENTS.md",
     "docs/ai-coding-rules..md",
     "DESIGN.md"
   ],
   "agent": {
-    "orchestrator": {},
-    "planner": {},
-    "implementer": {},
-    "reviewer": {}
   }
 }
