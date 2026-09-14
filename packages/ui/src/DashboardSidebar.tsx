@@ -62,7 +62,6 @@ const defaultSections: Array<{ title: string; items: DefaultDashboardSidebarItem
     {
         title: "Main",
         items: [
-            { id: "create-story-board", label: "Create Story Board", iconName: "create" },
             { id: "home", label: "Home", iconName: "home" },
             { id: "analytics", label: "Analytics", iconName: "analytics" },
         ],
@@ -341,7 +340,7 @@ function Avatar({ profile }: { profile: DashboardSidebarProfile }) {
 
 export default function DashboardSidebar({
     items = defaultSections,
-    activeItemId = "create-story-board",
+    activeItemId = "home",
     profile = defaultProfile,
     logo,
     className = "",

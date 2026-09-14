@@ -110,7 +110,7 @@ export default function DashboardNavbar({
     createLabel = "Create Scene ✨",
     createHref,
     onCreateClick,
-    showCreateButton = true,
+    showCreateButton = false,
     className = "",
 }: DashboardNavbarProps) {
     const handleSearchChange = (event: ChangeEvent<HTMLInputElement>) => {

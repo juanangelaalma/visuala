@@ -10,7 +10,6 @@ const defaultDashboardSections: DashboardSidebarSection[] = [
   {
     title: "Main",
     items: [
-      { id: "create-story-board", label: "Create Video", href: "/dashboard/create-video" },
       { id: "home", label: "Home", href: "/dashboard/home" },
       { id: "analytics", label: "Analytics", href: "/dashboard/analytics" },
     ],
@@ -64,7 +63,7 @@ function getActiveItemId(pathname: string, sections: DashboardSidebarSection[]) 
   return matchedPath ? pathToItemId[matchedPath] : sections[0]?.items[0]?.id ?? "";
 }
 
-export default function DashboardShell({ children, sections = defaultDashboardSections, showCreateButton = true, currentUser, creditBalance }: DashboardShellProps) {
+export default function DashboardShell({ children, sections = defaultDashboardSections, showCreateButton = false, currentUser, creditBalance }: DashboardShellProps) {
   const pathname = usePathname();
   const logoutFormRef = useRef<HTMLFormElement>(null);
   const showPricingCta = sections === defaultDashboardSections;
@@ -93,8 +92,6 @@ export default function DashboardShell({ children, sections = defaultDashboardSe
             showCreateButton={showCreateButton}
             showPricingCta={showPricingCta}
             pricingIsActive={pricingIsActive}
-            createLabel="Create Video ✨"
-            createHref="/dashboard/create-video"
           />
           <main className="min-w-0 flex-1">{children}</main>
           <DashboardFooter />
