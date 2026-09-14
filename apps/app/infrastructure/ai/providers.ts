@@ -1,23 +1,10 @@
 import "server-only";
 import { z } from "zod";
-import type { AtlasImageProvider, AtlasVideoProvider, AtlasVoiceProvider, GenerationStatusResult, GeminiTextProvider } from "@/domain/ai/providers";
+import type { AtlasImageProvider, AtlasVideoProvider, AtlasVoiceProvider, GenerationStatusResult } from "@/domain/ai/providers";
 import { atlasVideoRegistry, providerModelId } from "@/domain/ai/model-registry";
 import type { GenerationStatus, VisualaModelKey } from "@/domain/ai/types";
 
 function required(name: string) { const value = process.env[name]; if (!value) throw new Error(`AI configuration missing: ${name}`); return value; }
-export class GoogleGeminiTextProvider implements GeminiTextProvider {
-  async generateStructured<T>({ prompt, schema, images = [] }: { prompt: string; schema: z.ZodType<T>; images?: { mimeType: string; base64: string }[] }) {
-    const model = providerModelId("text_brain_default"); const key = required("GEMINI_API_KEY");
-    let repair = ""; let raw: unknown;
-    for (let attempt = 0; attempt < 2; attempt++) {
-      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent?key=${encodeURIComponent(key)}`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ contents: [{ parts: [{ text: prompt + repair }, ...images.map(i => ({ inlineData: { mimeType: i.mimeType, data: i.base64 } }))] }], generationConfig: { responseMimeType: "application/json", temperature: 0.25 } }), signal: AbortSignal.timeout(30_000) });
-      if (!response.ok) throw new Error(`Gemini request failed (${response.status})`); raw = await response.json();
-      const text = (raw as { candidates?: { content?: { parts?: { text?: string }[] } }[] }).candidates?.[0]?.content?.parts?.[0]?.text;
-      try { return { value: schema.parse(JSON.parse(text || "")), raw }; } catch { if (attempt) throw new Error("Gemini returned invalid structured output"); repair = "\nYour previous response was invalid. Return only JSON matching every requested field and type."; }
-    }
-    throw new Error("Gemini generation failed");
-  }
-}
 const outputSchema = z.union([z.string().url(),z.object({url:z.string().url()}),z.object({image:z.string().url()}),z.object({video:z.string().url()}),z.object({output:z.string().url()})]);
 const atlasStatus = z.object({ data: z.object({ status: z.string().min(1), output: outputSchema.optional(), outputs: z.array(outputSchema).optional(), billed_cost_usd: z.number().nonnegative().optional() }) });
 const outputUrl=(value:z.infer<typeof outputSchema>)=>typeof value==="string"?value:"url" in value?value.url:"image" in value?value.image:"video" in value?value.video:value.output;

@@ -13,7 +13,11 @@
     "test:unit:watch": "vitest",
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui",
-    "test:install": "playwright install"
+    "test:install": "playwright install",
+    "ai:check-config": "tsx --conditions=react-server scripts/ai-service.ts check-config",
+    "ai:smoke:text": "tsx --conditions=react-server scripts/ai-service.ts smoke:text",
+    "ai:smoke:structured": "tsx --conditions=react-server scripts/ai-service.ts smoke:structured",
+    "ai:smoke:vision": "tsx --conditions=react-server scripts/ai-service.ts smoke:vision"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1107.0",
@@ -43,6 +47,7 @@
     "eslint": "^9",
     "eslint-config-next": "16.2.9",
     "tailwindcss": "^4",
+    "tsx": "^4.23.13",
     "typescript": "^5",
     "vitest": "^3.2.4"
   }

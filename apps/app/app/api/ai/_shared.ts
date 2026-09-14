@@ -1,4 +1,5 @@
 import { createAuthServices } from "@/application/auth/services";
+import { AIError, type AIErrorCode } from "@/domain/ai-service/errors";
 import { timingSafeEqual } from "node:crypto";
 import { ZodError } from "zod";
 
@@ -22,11 +23,28 @@ export function failure(error: unknown) {
   if (error instanceof ZodError) {
     return Response.json({ error: { code: "INVALID_REQUEST", message: "Request validation failed" } }, { status: 400 });
   }
+  if (error instanceof AIError) {
+    const mapped = AI_ERROR_RESPONSES[error.code];
+    return Response.json({ error: { code: error.code, message: mapped.message } }, { status: mapped.status });
+  }
   if (error instanceof Error && error.message.includes("INSUFFICIENT_CREDITS")) {
     return Response.json({ error: { code: "INSUFFICIENT_CREDITS", message: "Insufficient credits" } }, { status: 402 });
   }
   return Response.json({ error: { code: "INTERNAL_ERROR", message: "The request could not be completed" } }, { status: 500 });
 }
+
+const AI_ERROR_RESPONSES: Record<AIErrorCode, { status: number; message: string }> = {
+  AI_CONFIG_ERROR: { status: 503, message: "The AI service is not configured." },
+  AI_CAPABILITY_UNSUPPORTED: { status: 422, message: "The requested AI operation is not supported." },
+  AI_AUTH_ERROR: { status: 503, message: "The AI service is unavailable." },
+  AI_RATE_LIMITED: { status: 429, message: "The AI service is busy. Try again later." },
+  AI_TIMEOUT: { status: 504, message: "The AI request timed out." },
+  AI_UNAVAILABLE: { status: 503, message: "The AI service is unavailable." },
+  AI_INPUT_INVALID: { status: 400, message: "The AI input is invalid." },
+  AI_INVALID_OUTPUT: { status: 502, message: "The AI service returned an invalid response." },
+  AI_REFUSED: { status: 422, message: "The AI service could not complete this request." },
+  AI_CANCELLED: { status: 499, message: "The AI request was cancelled." },
+};
 
 export function workerAuthorized(value: string | null, secret = process.env.AI_WORKER_SECRET) {
   if (!value || !secret) return false;

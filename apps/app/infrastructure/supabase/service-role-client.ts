@@ -9,10 +9,10 @@ const serviceRoleEnvSchema = z.object({
   SUPABASE_SERVICE_ROLE_KEY: z.string().min(1),
 });
 
-export function createSupabaseServiceRoleClient() {
+export function createSupabaseServiceRoleClient(environment: Readonly<Record<string, string | undefined>> = process.env) {
   const env = serviceRoleEnvSchema.parse({
-    SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL,
-    SUPABASE_SERVICE_ROLE_KEY: process.env.SUPABASE_SERVICE_ROLE_KEY,
+    SUPABASE_URL: environment.NEXT_PUBLIC_SUPABASE_URL,
+    SUPABASE_SERVICE_ROLE_KEY: environment.SUPABASE_SERVICE_ROLE_KEY,
   });
 
   return createClient<Database>(env.SUPABASE_URL, env.SUPABASE_SERVICE_ROLE_KEY, {

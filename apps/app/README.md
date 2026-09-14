@@ -2,6 +2,18 @@ This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-
 
 ## Getting Started
 
+Use pnpm for this workspace:
+
+```bash
+pnpm dev
+```
+
+Open [http://localhost:3000](http://localhost:3000).
+
+## AI provider service
+
+The provider-neutral text, structured-output, and image-input service is documented in [`docs/ai-provider-service.md`](docs/ai-provider-service.md). The guide covers profiles, task mappings, server-only callers, asset registration, offline configuration checks, paid smoke commands, and removal of the old video flow.
+
 ## AI worker configuration
 
 AI routes are backend-only. Run `POST /api/ai/worker` from a trusted cron with
@@ -28,20 +40,6 @@ pass the returned durable URLs as `referenceAssets` when creating a storyboard.
 Use the provider's verified contract for each model; unsupported fields may be
 omitted and their capability must be `false`. Local Remotion/FFmpeg composition
 is intentionally only a zero-credit `waiting_for_composer` queue boundary.
-
-First, run the development server:
-
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
-
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
 You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
 
