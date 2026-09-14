@@ -1,3 +1,0 @@
-import {describe,expect,it} from "vitest";import {imageRequestSchema,sceneUpdateSchema,storyboardRequestSchema} from "./schemas";
-const product={name:"x",description:"x",category:"x",audience:"x",sellingPoint:"x",offer:"",cta:"x",keyMessage:"x",concept:"x"};
-describe("AI request validation",()=>{it("rejects unsupported duration",()=>expect(()=>storyboardRequestSchema.parse({product,creator:"n",duration:20})).toThrow());it("requires useful idempotency keys",()=>expect(()=>imageRequestSchema.parse({idempotencyKey:"short"})).toThrow());it("does not accept empty scene edits",()=>expect(()=>sceneUpdateSchema.parse({})).toThrow())});

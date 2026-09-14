@@ -1,24 +1,6 @@
 export type Database = {
   public: {
     Tables: {
-      ai_assets: {
-        Row: { id: string; user_id: string; object_key: string; mime_type: "image/jpeg" | "image/png" | "image/webp"; byte_size: number; sha256: string; width: number; height: number; validated: boolean; deleted_at: string | null; created_at: string };
-        Insert: { id?: string; user_id: string; object_key: string; mime_type: "image/jpeg" | "image/png" | "image/webp"; byte_size: number; sha256: string; width: number; height: number; validated?: boolean; deleted_at?: string | null; created_at?: string };
-        Update: Partial<Database["public"]["Tables"]["ai_assets"]["Row"]>;
-        Relationships: [];
-      };
-      ai_service_operations: {
-        Row: { request_id: string; task: "connection_test" | "interviewer" | "planner" | "product_analysis"; user_id: string; project_id: string | null; prompt_version: string; schema_name: string | null; schema_version: string | null; profile_id: string; provider: string; model: string; status: "started" | "succeeded" | "failed"; latency_ms: number | null; attempt_count: number | null; finish_reason: string | null; input_tokens: number | null; output_tokens: number | null; total_tokens: number | null; estimated_cost: number | null; cost_currency: string | null; pricing_version: string | null; pricing_source: string | null; cost_complete: boolean; error_code: string | null; diagnostic_sanitized: string | null; completed_at: string | null; created_at: string; updated_at: string };
-        Insert: Partial<Database["public"]["Tables"]["ai_service_operations"]["Row"]> & { request_id: string; task: "connection_test" | "interviewer" | "planner" | "product_analysis"; user_id: string; prompt_version: string; profile_id: string; provider: string; model: string; status: "started" | "succeeded" | "failed" };
-        Update: Partial<Database["public"]["Tables"]["ai_service_operations"]["Row"]>;
-        Relationships: [];
-      };
-      ai_service_attempts: {
-        Row: { attempt_id: string; request_id: string; attempt_number: number; profile_id: string; provider: string; model: string; status: "started" | "succeeded" | "failed"; provider_request_id: string | null; latency_ms: number | null; input_tokens: number | null; output_tokens: number | null; total_tokens: number | null; dispatch_outcome: "not_sent" | "rejected" | "ambiguous"; usage_unknown: boolean; billing_unknown: boolean; estimated_cost: number | null; cost_currency: string | null; pricing_version: string | null; pricing_source: string | null; cost_complete: boolean; error_code: string | null; completed_at: string | null; created_at: string; updated_at: string };
-        Insert: Partial<Database["public"]["Tables"]["ai_service_attempts"]["Row"]> & { attempt_id: string; request_id: string; attempt_number: number; profile_id: string; provider: string; model: string; status: "started" | "succeeded" | "failed" };
-        Update: Partial<Database["public"]["Tables"]["ai_service_attempts"]["Row"]>;
-        Relationships: [{ foreignKeyName: "ai_service_attempts_request_id_fkey"; columns: ["request_id"]; isOneToOne: false; referencedRelation: "ai_service_operations"; referencedColumns: ["request_id"] }];
-      };
       profiles: {
         Row: {
           id: string;
@@ -118,9 +100,6 @@ export type Database = {
       credit_wallets: { Row: { user_id: string; balance: number; created_at: string; updated_at: string }; Insert: { user_id: string; balance?: number; created_at?: string; updated_at?: string }; Update: Partial<Database["public"]["Tables"]["credit_wallets"]["Row"]>; Relationships: [] };
       credit_grants: { Row: { id: string; user_id: string; billing_payment_id: string; pricing_plan_id: string; amount: number; remaining_amount: number; granted_at: string; expires_at: string; created_at: string }; Insert: Partial<Database["public"]["Tables"]["credit_grants"]["Row"]>; Update: Partial<Database["public"]["Tables"]["credit_grants"]["Row"]>; Relationships: [] };
       credit_ledger_entries: { Row: { id: string; user_id: string; billing_payment_id: string | null; credit_grant_id: string | null; entry_type: "purchase_grant" | "spend" | "expiration" | "adjustment" | "reversal"; amount: number; balance_after: number; idempotency_key: string; created_at: string }; Insert: Partial<Database["public"]["Tables"]["credit_ledger_entries"]["Row"]>; Update: Partial<Database["public"]["Tables"]["credit_ledger_entries"]["Row"]>; Relationships: [] };
-      ai_projects: { Row: { id:string; user_id:string; product:unknown; creator:string; duration_seconds:number; quality:"economy"|"standard"|"premium"; reference_assets:string[]; status:string; idempotency_key:string; created_at:string; updated_at:string }; Insert: Partial<Database["public"]["Tables"]["ai_projects"]["Row"]> & {user_id:string;product:unknown;creator:string;duration_seconds:number;quality:"economy"|"standard"|"premium";idempotency_key:string}; Update: Partial<Database["public"]["Tables"]["ai_projects"]["Row"]>; Relationships: [] };
-      ai_scenes: { Row: {id:string;project_id:string;position:number;title:string;scene_type:string;motion_complexity:string;image_prompt:string;video_prompt:string;negative_prompt:string;dialogue:string;duration_seconds:number;approved_image_generation_id:string|null;created_at:string}; Insert: Partial<Database["public"]["Tables"]["ai_scenes"]["Row"]> & {project_id:string;position:number;title:string;scene_type:string;motion_complexity:string;image_prompt:string;video_prompt:string;negative_prompt:string;duration_seconds:number}; Update: Partial<Database["public"]["Tables"]["ai_scenes"]["Row"]>; Relationships: [] };
-      ai_generations: { Row: {id:string;project_id:string;scene_id:string|null;parent_generation_id:string|null;type:string;logical_model_key:string;provider:string;provider_model_id:string;provider_generation_id:string|null;status:"awaiting_credit"|"queued"|"submitting"|"unknown"|"processing"|"succeeded"|"failed"|"cancelled"|"dead_letter";attempt_number:number;worker_attempt_count:number;max_attempts:number;next_attempt_at:string;lease_owner:string|null;lease_expires_at:string|null;is_fallback:boolean;prompt:string|null;negative_prompt:string|null;seed:number|null;input_assets:string[];output_assets:string[];provider_request:unknown;provider_response:unknown;resolution:string|null;requested_duration_seconds:number|null;billed_duration_seconds:number|null;estimated_cost_usd:number|null;actual_cost_usd:number|null;credits_charged:number;credit_reservation_key:string|null;idempotency_key:string;error_code:string|null;error_message:string|null;started_at:string|null;completed_at:string|null;created_at:string}; Insert: Partial<Database["public"]["Tables"]["ai_generations"]["Row"]> & {project_id:string;type:string;logical_model_key:string;provider:string;provider_model_id:string;idempotency_key:string}; Update: Partial<Database["public"]["Tables"]["ai_generations"]["Row"]>; Relationships: [] };
     };
     Views: Record<string, never>;
     Functions: {
@@ -128,10 +107,6 @@ export type Database = {
       receive_billing_webhook: { Args: { p_provider: string; p_environment: string; p_deduplication_key: string; p_event_type: string; p_normalized_status: string; p_provider_reference: string; p_provider_payment_id: string; p_amount: number; p_currency: string; p_occurred_at: string }; Returns: string };
       fulfill_billing_webhook: { Args: { p_event_id: string; p_max_attempts?: number; p_verified_failed_settlement?: boolean }; Returns: import("@/domain/billing/types").WebhookFulfillmentOutcome };
       record_billing_webhook_failure: { Args: { p_event_id: string; p_error_sanitized: string; p_max_attempts?: number; p_base_delay_seconds?: number; p_max_delay_seconds?: number }; Returns: boolean };
-      reserve_ai_generation_credits: { Args: {p_user_id:string;p_project_id:string;p_generation_id:string;p_idempotency_key:string;p_amount:number}; Returns:number };
-      claim_ai_generation_work: { Args: {p_worker:string;p_limit?:number;p_lease_seconds?:number}; Returns:Database["public"]["Tables"]["ai_generations"]["Row"][] };
-      record_ai_work_failure: { Args: {p_id:string;p_worker:string;p_code:string;p_message:string;p_unknown_after_send?:boolean}; Returns:undefined };
-      fail_and_reverse_ai_generation: { Args: {p_generation_id:string;p_worker:string;p_code:string}; Returns:boolean };
     };
     Enums: Record<string, never>;
     CompositeTypes: Record<string, never>;
