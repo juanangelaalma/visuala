@@ -1,7 +1,8 @@
+import { randomUUID } from "node:crypto";
 import { storyboardRequestSchema } from "@/application/ai/schemas";
 import { providerModelId } from "@/domain/ai/model-registry";
 import { normalizeSceneDurations, storyboardSchema } from "@/domain/ai/types";
-import { GoogleGeminiTextProvider } from "@/infrastructure/ai/providers";
+import { createAIService } from "@/infrastructure/ai-service/create-ai-service";
 import { createSupabaseServiceRoleClient } from "@/infrastructure/supabase/service-role-client";
 import { ApiError, authenticated, failure, sceneDto } from "../../_shared";
 
@@ -74,11 +75,13 @@ export async function POST(request: Request) {
     if (textGeneration.error) throw textGeneration.error;
 
     try {
-      const generated = await new GoogleGeminiTextProvider().generateStructured({
-        schema: storyboardSchema,
-        prompt: `Create a ${input.duration}s vertical 9:16 Indonesian UGC affiliate storyboard. Product: ${JSON.stringify(input.product)}. Creator: ${input.creator}. Return valid scenes with a shared visual style, imagePrompt, videoPrompt, negativePrompt, dialogue, and durations totaling ${input.duration}. Do not render promotional copy inside images.`,
+      const prompt = `Create a ${input.duration}s vertical 9:16 Indonesian UGC affiliate storyboard. Product: ${JSON.stringify(input.product)}. Creator: ${input.creator}. Return valid scenes with a shared visual style, imagePrompt, videoPrompt, negativePrompt, dialogue, and durations totaling ${input.duration}. Do not render promotional copy inside images.`;
+      const generated = await createAIService({ schemas: { "storyboard@1": storyboardSchema } }).generateStructured({
+        requestId: randomUUID(), task: "planner", context: { userId: user.id, projectId: project.data.id },
+        instructions: prompt, messages: [{ role: "user", content: "Create the storyboard." }], promptVersion: "storyboard-v1",
+        schema: { name: "storyboard", version: "1", schema: storyboardSchema },
       });
-      const scenes = normalizeSceneDurations(generated.value.scenes, input.duration);
+      const scenes = normalizeSceneDurations(generated.data.scenes, input.duration);
       const inserted = await db
         .from("ai_scenes")
         .insert(scenes.map((scene, position) => ({
@@ -96,7 +99,7 @@ export async function POST(request: Request) {
         .select(sceneColumns);
       if (inserted.error) throw inserted.error;
 
-      await db.from("ai_generations").update({ status: "succeeded", provider_response: generated.raw, completed_at: new Date().toISOString() }).eq("project_id", project.data.id).eq("type", "text");
+      await db.from("ai_generations").update({ status: "succeeded", provider_response: null, completed_at: new Date().toISOString() }).eq("project_id", project.data.id).eq("type", "text");
       await db.from("ai_projects").update({ status: "storyboard_ready" }).eq("id", project.data.id);
 
       return Response.json({

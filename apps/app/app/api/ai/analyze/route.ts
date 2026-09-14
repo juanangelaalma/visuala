@@ -1,3 +1,24 @@
-import { productSchema } from "@/domain/ai/types"; import { GoogleGeminiTextProvider } from "@/infrastructure/ai/providers"; import { authenticated,ApiError,failure } from "../_shared";
-const TYPES=new Set(["image/jpeg","image/png","image/webp"]); const MAX=8*1024*1024;
-export async function POST(request:Request){try{await authenticated(); const form=await request.formData(); const files=form.getAll("images").filter((x):x is File=>x instanceof File); if(files.length<1||files.length>8)throw new ApiError(400,"INVALID_IMAGES","Upload 1 to 8 images"); if(files.some(f=>!TYPES.has(f.type)||f.size>MAX))throw new ApiError(400,"INVALID_IMAGES","Images must be JPG, PNG or WEBP and no larger than 8 MB"); const images=await Promise.all(files.map(async f=>({mimeType:f.type,base64:Buffer.from(await f.arrayBuffer()).toString("base64")}))); const result=await new GoogleGeminiTextProvider().generateStructured({schema:productSchema,images,prompt:"Analyze these product and marketplace images for an Indonesian affiliate video. Return JSON with exactly: name, description, category, audience, sellingPoint, offer, cta, keyMessage, concept. Do not invent unverifiable claims."}); return Response.json({product:result.value});}catch(e){return failure(e)}}
+import { randomUUID } from "node:crypto";
+import { z } from "zod";
+import { productSchema } from "@/domain/ai/types";
+import { createAIService } from "@/infrastructure/ai-service/create-ai-service";
+import { authenticated, failure } from "../_shared";
+
+const requestSchema = z.object({ assetId: z.string().uuid() }).strict();
+const instructions = "Analyze these product and marketplace images for an Indonesian affiliate video. Return JSON with exactly: name, description, category, audience, sellingPoint, offer, cta, keyMessage, concept. Do not invent unverifiable claims.";
+
+export async function POST(request: Request) {
+  try {
+    const user = await authenticated();
+    const { assetId } = requestSchema.parse(await request.json());
+    const service = createAIService({ schemas: { "product@1": productSchema } });
+    const result = await service.generateStructured({
+      requestId: randomUUID(), task: "product_analysis", context: { userId: user.id }, instructions,
+      messages: [{ role: "user", content: "Analyze the product shown in this asset.", assetId }],
+      promptVersion: "product-analysis-v1", schema: { name: "product", version: "1", schema: productSchema },
+    });
+    return Response.json({ product: result.data });
+  } catch (error) {
+    return failure(error);
+  }
+}
