@@ -10,6 +10,10 @@ pnpm dev
 
 Open [http://localhost:3000](http://localhost:3000).
 
+## AI provider service
+
+The standalone provider-neutral AI service is documented in [`docs/ai-provider-service.md`](docs/ai-provider-service.md). It currently has no production feature caller; only configuration checks and explicitly authorized smoke commands use it.
+
 You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
 
 This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
