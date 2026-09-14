@@ -1,6 +1,24 @@
 export type Database = {
   public: {
     Tables: {
+      ai_assets: {
+        Row: { id: string; user_id: string; object_key: string; mime_type: "image/jpeg" | "image/png" | "image/webp"; byte_size: number; sha256: string; width: number; height: number; validated: boolean; deleted_at: string | null; created_at: string };
+        Insert: { id?: string; user_id: string; object_key: string; mime_type: "image/jpeg" | "image/png" | "image/webp"; byte_size: number; sha256: string; width: number; height: number; validated?: boolean; deleted_at?: string | null; created_at?: string };
+        Update: Partial<Database["public"]["Tables"]["ai_assets"]["Row"]>;
+        Relationships: [];
+      };
+      ai_service_operations: {
+        Row: { request_id: string; task: "connection_test" | "interviewer" | "planner" | "product_analysis"; user_id: string; project_id: string | null; prompt_version: string; schema_name: string | null; schema_version: string | null; profile_id: string; provider: string; model: string; status: "started" | "succeeded" | "failed"; latency_ms: number | null; attempt_count: number | null; finish_reason: string | null; input_tokens: number | null; output_tokens: number | null; total_tokens: number | null; estimated_cost: number | null; cost_currency: string | null; pricing_version: string | null; pricing_source: string | null; cost_complete: boolean; error_code: string | null; diagnostic_sanitized: string | null; completed_at: string | null; created_at: string; updated_at: string };
+        Insert: Partial<Database["public"]["Tables"]["ai_service_operations"]["Row"]> & { request_id: string; task: "connection_test" | "interviewer" | "planner" | "product_analysis"; user_id: string; prompt_version: string; profile_id: string; provider: string; model: string; status: "started" | "succeeded" | "failed" };
+        Update: Partial<Database["public"]["Tables"]["ai_service_operations"]["Row"]>;
+        Relationships: [];
+      };
+      ai_service_attempts: {
+        Row: { attempt_id: string; request_id: string; attempt_number: number; profile_id: string; provider: string; model: string; status: "started" | "succeeded" | "failed"; provider_request_id: string | null; latency_ms: number | null; input_tokens: number | null; output_tokens: number | null; total_tokens: number | null; dispatch_outcome: "not_sent" | "rejected" | "ambiguous"; usage_unknown: boolean; billing_unknown: boolean; estimated_cost: number | null; cost_currency: string | null; pricing_version: string | null; pricing_source: string | null; cost_complete: boolean; error_code: string | null; completed_at: string | null; created_at: string; updated_at: string };
+        Insert: Partial<Database["public"]["Tables"]["ai_service_attempts"]["Row"]> & { attempt_id: string; request_id: string; attempt_number: number; profile_id: string; provider: string; model: string; status: "started" | "succeeded" | "failed" };
+        Update: Partial<Database["public"]["Tables"]["ai_service_attempts"]["Row"]>;
+        Relationships: [{ foreignKeyName: "ai_service_attempts_request_id_fkey"; columns: ["request_id"]; isOneToOne: false; referencedRelation: "ai_service_operations"; referencedColumns: ["request_id"] }];
+      };
       profiles: {
         Row: {
           id: string;
