@@ -4,10 +4,14 @@ import { MAX_ASSET_BYTES } from "../../domain/ai-service/assets";
 import { AIError } from "../../domain/ai-service/errors";
 import { parseImage } from "./image-parser";
 
-type RegisterAssetInput = { userId: string; bytes: Uint8Array; declaredMimeType: string };
-type Dependencies = { repository: AssetRepository; objectStore: AssetObjectStore; createAssetId: () => string };
+export type RegisterAssetInput = { userId: string; bytes: Uint8Array; declaredMimeType: string };
+export type RegisterAssetDependencies = { repository: Pick<AssetRepository, "create">; objectStore: AssetObjectStore; createAssetId: () => string };
+export type OwnedAssetRegistration = {
+  register(input: RegisterAssetInput): ReturnType<typeof registerAsset>;
+  remove(assetId: string, userId: string): Promise<void>;
+};
 
-export async function registerAsset(input: RegisterAssetInput, dependencies: Dependencies) {
+export async function registerAsset(input: RegisterAssetInput, dependencies: RegisterAssetDependencies) {
   assertUuid(input.userId);
   const image = validateImage(input.bytes, input.declaredMimeType, MAX_ASSET_BYTES);
   const id = dependencies.createAssetId();
@@ -27,7 +31,7 @@ export function validateImage(bytes: Uint8Array, declaredMimeType: string, maxBy
 export function sha256(bytes: Uint8Array) { return createHash("sha256").update(bytes).digest("hex"); }
 export function isPositiveFinite(value: number) { return Number.isFinite(value) && value > 0; }
 
-async function createMetadataOrDeleteObject(input: Parameters<AssetRepository["create"]>[0], dependencies: Dependencies) {
+async function createMetadataOrDeleteObject(input: Parameters<AssetRepository["create"]>[0], dependencies: RegisterAssetDependencies) {
   try { return await dependencies.repository.create(input); }
   catch (error) { await dependencies.objectStore.delete(input.objectKey).catch(() => undefined); throw error; }
 }

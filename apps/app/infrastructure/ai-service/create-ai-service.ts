@@ -2,6 +2,7 @@ import "server-only";
 
 import type { ZodType } from "zod";
 import { DefaultAIService } from "../../application/ai-service/ai-service";
+import { registerAsset, type OwnedAssetRegistration } from "../../application/ai-service/register-asset";
 import { resolveOwnedAsset } from "../../application/ai-service/resolve-asset";
 import { checkAIConfig, resolveAIConfig } from "../../application/ai-service/resolve-config";
 import type { ResolvedAIConfig } from "../../domain/ai-service/config";
@@ -36,6 +37,31 @@ export type AIConfigurationCheck = {
 export function createAIService(options: FactoryOptions = {}): AIService {
   validateSchemaKeys(options.schemas);
   return buildAIService(options);
+}
+
+export function createOwnedAssetRegistration(
+  environment: Readonly<Record<string, string | undefined>> = process.env,
+): OwnedAssetRegistration {
+  const repository = new SupabaseAssetRepository(createSupabaseServiceRoleClient(environment));
+  const objectStore = new R2ObjectStore(environment);
+  return {
+    register: (input) => registerAsset(input, { repository, objectStore, createAssetId: () => crypto.randomUUID() }),
+    remove: async (assetId, userId) => {
+      const asset = await repository.getOwned(assetId, userId);
+      if (!asset) return;
+      await objectStore.delete(asset.objectKey);
+      const { error } = await createSupabaseServiceRoleClient(environment).from("ai_assets").delete().eq("id", assetId).eq("user_id", userId);
+      if (error) throw error;
+    },
+  };
+}
+
+export function createOwnedAssetResolver(
+  environment: Readonly<Record<string, string | undefined>> = process.env,
+) {
+  const repository = new SupabaseAssetRepository(createSupabaseServiceRoleClient(environment));
+  const objectStore = new R2ObjectStore(environment);
+  return { resolve: (assetId: string, userId: string) => resolveOwnedAsset({ assetId, userId }, { repository, objectStore }) };
 }
 
 export function checkConfiguredAIService(options: FactoryOptions = {}): AIConfigurationCheck {
