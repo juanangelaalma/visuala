@@ -1,0 +1,14 @@
+{
+  "extends": "@visuala/config/tsconfig/base",
+  "compilerOptions": {
+    "lib": ["ESNext"],
+    "target": "ESNext",
+    "types": ["node"],
+    "useDefineForClassFields": false,
+    "paths": {
+      "@/*": ["./src/*"]
+    }
+  },
+  "include": ["src/**/*.ts", "*.mts"],
+  "exclude": ["node_modules"]
+}

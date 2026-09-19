@@ -1,11 +1,9 @@
 import type { CreditPricingPlan } from "@visuala/ui";
 import { Badge, Button } from "@visuala/ui";
-import { redirect } from "next/navigation";
-import { getCurrentUser } from "@/application/auth/get-current-user";
-import { createAuthServices } from "@/application/auth/services";
-import { listActivePricingPlans } from "@/application/pricing/list-active-pricing-plans";
-import { createPricingServices } from "@/application/pricing/services";
+import type { PricingPlan } from "@/domain/pricing/types";
 import { BillingPlansSelector } from "@/features/billing/components/BillingPlansSelector";
+import { apiFetch } from "@/lib/api/client";
+import { requireUser } from "@/lib/auth/session";
 
 function EnterpriseBanner() {
   return (
@@ -22,12 +20,9 @@ function EnterpriseBanner() {
 }
 
 export default async function BillingPlansPage() {
-  const { authProvider } = await createAuthServices();
-  const user = await getCurrentUser(authProvider);
-  if (!user) redirect("/login");
+  await requireUser();
 
-  const { pricingPlanRepository } = await createPricingServices();
-  const activePlans = await listActivePricingPlans(pricingPlanRepository);
+  const { plans: activePlans } = await apiFetch<{ plans: PricingPlan[] }>("/pricing-plans");
 
   const plans: CreditPricingPlan[] = activePlans.map((plan) => ({
     id: plan.id,

@@ -8,7 +8,7 @@ jobs:
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: apps/app
+        working-directory: apps/backend
     steps:
       - uses: actions/checkout@v4
 

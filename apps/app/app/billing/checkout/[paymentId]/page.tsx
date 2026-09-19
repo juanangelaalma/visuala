@@ -1,32 +1,32 @@
 import Link from "next/link";
-import { notFound, redirect } from "next/navigation";
-import { getCurrentUser } from "@/application/auth/get-current-user";
-import { createAuthServices } from "@/application/auth/services";
-import { getOwnedBillingPayment } from "@/application/billing/get-owned-billing-payment";
-import { canSimulateBillingPayment } from "@/application/billing/payment-simulation-eligibility";
-import { createBillingServices } from "@/application/billing/services";
-import { BillingPaymentNotFoundError } from "@/domain/billing/errors";
+import { notFound } from "next/navigation";
+import type { BillingPaymentProjection } from "@/domain/billing/types";
 import { CheckoutSummaryCard } from "@/features/billing/components/CheckoutSummaryCard";
 import { PaymentActionPanel } from "@/features/billing/components/PaymentActionPanel";
+import { ApiError, apiFetch } from "@/lib/api/client";
+import { requireUser } from "@/lib/auth/session";
 
 type CheckoutPageProps = {
   params: Promise<{ paymentId: string }>;
 };
 
+type BillingPaymentResponse = {
+  payment: BillingPaymentProjection;
+  canSimulate: boolean;
+};
+
 export default async function BillingCheckoutPage({ params }: CheckoutPageProps) {
   const { paymentId } = await params;
-  const { authProvider } = await createAuthServices();
-  const user = await getCurrentUser(authProvider);
-  if (!user) redirect("/login");
+  await requireUser();
 
-  let payment;
-  let canSimulate;
+  let payment: BillingPaymentProjection;
+  let canSimulate: boolean;
   try {
-    const services = await createBillingServices();
-    payment = await getOwnedBillingPayment(services.payments, { paymentId, userId: user.id });
-    canSimulate = canSimulateBillingPayment(payment, services.config.environment);
+    const result = await apiFetch<BillingPaymentResponse>(`/billing/payments/${encodeURIComponent(paymentId)}`);
+    payment = result.payment;
+    canSimulate = result.canSimulate;
   } catch (error) {
-    if (error instanceof BillingPaymentNotFoundError) notFound();
+    if (error instanceof ApiError && error.status === 404) notFound();
     return <main className="flex min-h-screen items-center justify-center bg-black px-4 text-white"><p className="rounded-3xl border border-white/10 bg-surface p-8 text-center text-neutral-300">Payment details are temporarily unavailable. Try again later.</p></main>;
   }
 

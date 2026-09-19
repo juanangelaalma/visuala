@@ -1,7 +1,7 @@
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
 import { getAppEnv } from "@/shared/config/env";
-import type { Database } from "./database.types";
+import type { Database } from "@visuala/db";
 
 type CookieWriteMode = "readonly" | "writable";
 

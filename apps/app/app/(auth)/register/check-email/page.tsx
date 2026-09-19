@@ -1,9 +1,8 @@
 import { Button } from "@visuala/ui";
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { getCurrentUser } from "@/application/auth/get-current-user";
-import { createAuthServices } from "@/application/auth/services";
 import { resendConfirmationAction } from "@/features/auth/actions/auth-actions";
+import { getSessionContext } from "@/lib/auth/session";
 import { CheckEmailBackground } from "./CheckEmailBackground";
 import { ResendConfirmationForm } from "./ResendConfirmationForm";
 
@@ -12,10 +11,9 @@ type CheckEmailPageProps = {
 };
 
 export default async function CheckEmailPage({ searchParams }: CheckEmailPageProps) {
-  const [{ email }, { authProvider }] = await Promise.all([searchParams, createAuthServices()]);
-  const user = await getCurrentUser(authProvider);
+  const [{ email }, session] = await Promise.all([searchParams, getSessionContext()]);
 
-  if (user) redirect("/dashboard");
+  if (session) redirect("/dashboard");
 
   return (
     <div className="relative min-h-screen overflow-hidden bg-dark-bg px-6 py-8 text-white">

@@ -1,14 +1,13 @@
 import { NextResponse } from "next/server";
-import { logout } from "@/application/auth/logout";
-import { createWritableAuthServices } from "@/application/auth/services";
+import { createSupabaseWritableServerClient } from "@/infrastructure/supabase/server-client";
 
 export async function GET(request: Request) {
   return NextResponse.redirect(new URL("/dashboard", request.url));
 }
 
 export async function POST(request: Request) {
-  const { authProvider } = await createWritableAuthServices();
-  await logout(authProvider);
+  const supabase = await createSupabaseWritableServerClient();
+  await supabase.auth.signOut();
 
   return NextResponse.redirect(new URL("/login", request.url));
 }

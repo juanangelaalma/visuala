@@ -1,11 +1,8 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { createPricingPlan } from "@/application/pricing/create-pricing-plan";
-import { deletePricingPlan } from "@/application/pricing/delete-pricing-plan";
-import { createPricingServices } from "@/application/pricing/services";
-import { updatePricingPlan } from "@/application/pricing/update-pricing-plan";
-import { requireAdmin } from "@/application/auth/require-admin";
+import { apiFetch } from "@/lib/api/client";
+import { requireAdmin } from "@/lib/auth/session";
 import { pricingPlanSchema } from "../schemas/pricing-plan-schema";
 
 export type PricingPlanActionState = {
@@ -20,14 +17,13 @@ export async function savePricingPlanAction(_: PricingPlanActionState, formData:
 
   if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Please check pricing details." };
 
-  try {
-    const { id, ...input } = parsed.data;
-    const { pricingPlanRepository } = await createPricingServices({ writable: true });
+  const { id, ...input } = parsed.data;
 
+  try {
     if (id) {
-      await updatePricingPlan(pricingPlanRepository, id, input);
+      await apiFetch(`/admin/pricing-plans/${encodeURIComponent(id)}`, { method: "PUT", body: input });
     } else {
-      await createPricingPlan(pricingPlanRepository, input);
+      await apiFetch("/admin/pricing-plans", { method: "POST", body: input });
     }
   } catch {
     return { error: "Could not save pricing plan." };
@@ -45,8 +41,7 @@ export async function deletePricingPlanAction(formData: FormData): Promise<void>
   if (typeof id !== "string" || !id) return;
 
   try {
-    const { pricingPlanRepository } = await createPricingServices({ writable: true });
-    await deletePricingPlan(pricingPlanRepository, id);
+    await apiFetch(`/admin/pricing-plans/${encodeURIComponent(id)}`, { method: "DELETE" });
   } catch {
     return;
   }

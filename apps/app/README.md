@@ -12,7 +12,7 @@ Open [http://localhost:3000](http://localhost:3000).
 
 ## AI provider service
 
-The standalone provider-neutral AI service is documented in [`docs/ai-provider-service.md`](docs/ai-provider-service.md). It currently has no production feature caller; only configuration checks and explicitly authorized smoke commands use it.
+The provider-neutral AI service moved to the backend service in `apps/backend`, which now owns image assets, text generation, and usage telemetry. See [`../backend/docs/ai-provider-service.md`](../backend/docs/ai-provider-service.md).
 
 You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
 

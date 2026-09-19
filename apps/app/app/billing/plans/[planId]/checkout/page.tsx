@@ -1,18 +1,22 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
-import { getCurrentUser } from "@/application/auth/get-current-user";
-import { createAuthServices } from "@/application/auth/services";
-import { prepareBillingCheckout } from "@/application/billing/prepare-billing-checkout";
-import { createBillingServices } from "@/application/billing/services";
-import { createPricingServices } from "@/application/pricing/services";
 import type { PricingPlan } from "@/domain/pricing/types";
 import { BillingCheckoutForm } from "@/features/billing/components/BillingCheckoutForm";
 import type { BillingPaymentMethodOption } from "@/features/billing/components/types";
+import { ApiError, apiFetch } from "@/lib/api/client";
+import { getSessionContext } from "@/lib/auth/session";
 
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
 type CheckoutPageProps = {
   params: Promise<{ planId: string }>;
+};
+
+type PlanCheckoutResponse = {
+  plan: PricingPlan;
+  methods: BillingPaymentMethodOption[];
+  checkoutAvailable: boolean;
+  unavailableMessage?: string;
 };
 
 function formatPrice(amount: number, currency: string) {
@@ -43,32 +47,27 @@ export default async function PlanCheckoutPage({ params }: CheckoutPageProps) {
   const { planId } = await params;
   if (!UUID_PATTERN.test(planId)) notFound();
 
-  const { authProvider } = await createAuthServices();
-  const user = await getCurrentUser(authProvider);
-  if (!user) {
+  const session = await getSessionContext();
+  if (!session) {
     const checkoutPath = `/billing/plans/${planId}/checkout`;
     redirect(`/login?next=${encodeURIComponent(checkoutPath)}`);
   }
 
-  const { pricingPlanRepository } = await createPricingServices();
-  const plan = await pricingPlanRepository.findActiveById(planId);
-  if (!plan) notFound();
-
-  let methods: BillingPaymentMethodOption[] = [];
-  let checkoutAvailable = false;
-  let unavailableMessage: string | undefined;
-
+  let prepared: PlanCheckoutResponse;
   try {
-    const services = await createBillingServices();
-    const prepared = await prepareBillingCheckout(services.checkout, { plan, checkoutEnabled: services.config.checkoutEnabled });
-    methods = prepared.methods;
-    checkoutAvailable = prepared.checkoutAvailable;
-    unavailableMessage = prepared.unavailableMessage;
+    prepared = await apiFetch<PlanCheckoutResponse>(`/billing/plans/${encodeURIComponent(planId)}/checkout`);
   } catch (error) {
+    if (error instanceof ApiError && error.status === 404) notFound();
     console.error("Failed to prepare billing checkout", error);
-    unavailableMessage = "Payment methods are temporarily unavailable. Try again later.";
+
+    return (
+      <main className="flex min-h-screen items-center justify-center bg-black px-4 text-white">
+        <p className="rounded-3xl border border-white/10 bg-surface p-8 text-center text-neutral-300">Checkout is temporarily unavailable. Try again later.</p>
+      </main>
+    );
   }
 
+  const { plan, methods, checkoutAvailable, unavailableMessage } = prepared;
   const eligibleMethods = methods.filter((method) => method.enabled && (method.kind === "qris" || method.kind === "virtual_account") && method.launchPhase === 1);
   const defaultPaymentMethodId = eligibleMethods[0]?.id;
 

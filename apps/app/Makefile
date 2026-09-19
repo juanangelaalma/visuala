@@ -38,29 +38,28 @@ start:
 	pnpm start
 
 supabase-up:
-	pnpm dlx supabase start --workdir .
+	$(MAKE) -C ../backend supabase-up
 
 supabase-down:
-	pnpm dlx supabase stop --workdir .
+	$(MAKE) -C ../backend supabase-down
 
 supabase-reset:
-	pnpm dlx supabase db reset --workdir .
+	$(MAKE) -C ../backend supabase-reset
 
 seed:
-	@eval "$$(pnpm dlx supabase status -o env --override-name db.url=DATABASE_URL 2>/dev/null)"; \
-	psql "$$DATABASE_URL" -v ON_ERROR_STOP=1 -f supabase/seed.sql
+	$(MAKE) -C ../backend seed
 
 migration-new:
-	pnpm dlx supabase migration new $(name) --workdir .
+	$(MAKE) -C ../backend migration-new name=$(name)
 
 migrate:
-	pnpm dlx supabase db push --local --workdir .
+	$(MAKE) -C ../backend migrate
 
 migrate-fresh:
-	pnpm dlx supabase db reset --workdir .
+	$(MAKE) -C ../backend migrate-fresh
 
 supabase-status:
-	pnpm dlx supabase status --workdir .
+	$(MAKE) -C ../backend supabase-status
 
 supabase-logs:
-	pnpm dlx supabase logs --workdir .
+	$(MAKE) -C ../backend supabase-logs

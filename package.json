@@ -13,7 +13,10 @@
     "app:dev": "turbo dev --filter=app",
     "app:build": "turbo build --filter=app",
     "app:lint": "turbo lint --filter=app",
-    "app:test:coverage": "turbo test:coverage --filter=app"
+    "app:test:coverage": "turbo test:coverage --filter=app",
+    "backend:dev": "turbo dev --filter=backend",
+    "backend:build": "turbo build --filter=backend",
+    "backend:test:coverage": "turbo test:coverage --filter=backend"
   },
   "devDependencies": {
     "turbo": "^2.5.8"

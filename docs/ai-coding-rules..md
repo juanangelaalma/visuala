@@ -147,11 +147,13 @@ For local/static video route handlers in `apps/web`:
 
 ## 7. Database & Supabase
 
-Database changes are SQL migrations under:
+The Supabase project (config, migrations, seeds) lives with the backend service, which is the only consumer of the schema:
 
 ```txt
-apps/app/supabase/migrations
+apps/backend/supabase/migrations
 ```
+
+Shared generated row types live in `packages/db` (`@visuala/db`) and are imported by both `apps/app` and `apps/backend`.
 
 Rules:
 
@@ -163,6 +165,7 @@ Rules:
 * Add constraints and indexes near table definitions.
 * Explain impact before dropping, renaming, or changing existing columns.
 * Use transactions for multi-step database operations where needed.
+* Keep `packages/db` in sync when the schema changes.
 
 ---
 

@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { requireAdmin } from "@/application/auth/require-admin";
+import { requireAdmin } from "@/lib/auth/session";
 import DashboardShell, { adminDashboardSections } from "../_components/DashboardShell";
 
 type AdminLayoutProps = {

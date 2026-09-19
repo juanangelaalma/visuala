@@ -1,64 +1,54 @@
 "use server";
 
 import { redirect } from "next/navigation";
-import { createBillingCheckout } from "@/application/billing/create-billing-checkout";
-import { refreshOwnedBillingPayment } from "@/application/billing/refresh-owned-billing-payment";
-import { createBillingServices } from "@/application/billing/services";
-import { simulateOwnedBillingPayment } from "@/application/billing/simulate-owned-billing-payment";
-import { BillingError, BillingPaymentSimulationNotReadyError, BillingPaymentSimulationRejectedError, BillingPaymentSimulationUnknownError } from "@/domain/billing/errors";
-import type { BillingRefreshProjection } from "@/application/billing/refresh-owned-billing-payment";
+import type { BillingPaymentStatus, CheckoutAction } from "@/domain/billing/types";
+import { apiErrorMessage, apiFetch } from "@/lib/api/client";
 import { createBillingCheckoutSchema, refreshBillingPaymentSchema, simulateBillingPaymentSchema } from "../schemas/billing-schema";
+
+export type BillingRefreshProjection = { id: string; status: BillingPaymentStatus; actions: CheckoutAction[]; expiresAt: string | null; credited?: boolean };
 
 export type BillingActionState = { error?: string; message?: string; payment?: BillingRefreshProjection };
 
 export async function createBillingCheckoutAction(_: BillingActionState, formData: FormData): Promise<BillingActionState> {
   const parsed = createBillingCheckoutSchema.safeParse(Object.fromEntries(formData));
   if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Invalid checkout request." };
+
   let paymentId: string;
   try {
-    const services = await createBillingServices();
-    if (!services.config.checkoutEnabled || (!services.config.qrisEnabled && !services.config.virtualAccountEnabled)) return { error: "Checkout is unavailable." };
-    const user = await services.authProvider.getCurrentUser();
-    if (!user) return { error: "Sign in to continue." };
-    const payment = await createBillingCheckout(services.checkout, { ...parsed.data, userId: user.id });
-    if (!payment) return { error: "Could not create checkout." };
+    const { payment } = await apiFetch<{ payment: { id: string } }>("/billing/checkout", { method: "POST", body: parsed.data });
     paymentId = payment.id;
   } catch (error) {
     console.error("Failed to create billing checkout", error);
-    return { error: error instanceof BillingError ? "Could not create checkout." : "Checkout is unavailable." };
+    return { error: apiErrorMessage(error, "Checkout is unavailable.", { unauthorized: "Sign in to continue." }) };
   }
+
   redirect(`/billing/checkout/${encodeURIComponent(paymentId)}`);
 }
 
 export async function simulateBillingPaymentAction(_: BillingActionState, formData: FormData): Promise<BillingActionState> {
   const parsed = simulateBillingPaymentSchema.safeParse(Object.fromEntries(formData));
   if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Invalid payment." };
+
   try {
-    const services = await createBillingServices();
-    const user = await services.authProvider.getCurrentUser();
-    if (!user) return { error: "Sign in to continue." };
-    await simulateOwnedBillingPayment(services.simulation, { paymentId: parsed.data.paymentId, userId: user.id });
-    return { message: "Simulation sent. Wait for the webhook, then refresh payment status." };
+    const { message } = await apiFetch<{ message: string }>(`/billing/payments/${encodeURIComponent(parsed.data.paymentId)}/simulate`, { method: "POST" });
+
+    return { message };
   } catch (error) {
     console.error("Failed to simulate billing payment", error);
-    if (error instanceof BillingPaymentSimulationNotReadyError) return { error: "Payment is not ready for simulation." };
-    if (error instanceof BillingPaymentSimulationRejectedError) return { error: "Simulation could not be started." };
-    if (error instanceof BillingPaymentSimulationUnknownError) return { error: "Simulation status is unknown. Refresh payment status before retrying." };
-    return { error: "Simulation is unavailable for this payment." };
+    return { error: apiErrorMessage(error, "Simulation is unavailable for this payment.", { unauthorized: "Sign in to continue." }) };
   }
 }
 
 export async function refreshBillingPaymentAction(_: BillingActionState, formData: FormData): Promise<BillingActionState> {
   const parsed = refreshBillingPaymentSchema.safeParse(Object.fromEntries(formData));
   if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Invalid payment." };
+
   try {
-    const services = await createBillingServices();
-    const user = await services.authProvider.getCurrentUser();
-    if (!user) return { error: "Sign in to continue." };
-    const payment = await refreshOwnedBillingPayment({ payments: services.payments }, { paymentId: parsed.data.paymentId, userId: user.id });
+    const { payment } = await apiFetch<{ payment: BillingRefreshProjection }>(`/billing/payments/${encodeURIComponent(parsed.data.paymentId)}/refresh`);
+
     return { payment };
   } catch (error) {
     console.error("Failed to refresh billing payment", error);
-    return { error: "Could not refresh payment." };
+    return { error: apiErrorMessage(error, "Could not refresh payment.", { unauthorized: "Sign in to continue." }) };
   }
 }

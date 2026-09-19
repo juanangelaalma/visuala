@@ -1,7 +1,7 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 import { getAppEnv } from "@/shared/config/env";
-import type { Database } from "./database.types";
+import type { Database } from "@visuala/db";
 
 export function createSupabaseProxyClient(request: NextRequest) {
   const env = getAppEnv();

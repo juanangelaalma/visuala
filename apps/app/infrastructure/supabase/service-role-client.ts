@@ -2,7 +2,7 @@ import "server-only";
 
 import { createClient } from "@supabase/supabase-js";
 import { z } from "zod";
-import type { Database } from "./database.types";
+import type { Database } from "@visuala/db";
 
 const serviceRoleEnvSchema = z.object({
   SUPABASE_URL: z.string().url(),

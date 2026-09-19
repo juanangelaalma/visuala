@@ -1,4 +1,5 @@
 import { Badge, PricingPeriodTabs } from "@visuala/ui";
+import { getApiUrl } from "../app-api-url";
 import { getAppUrl } from "../app-url";
 import { OutlineButton } from "../_components/OutlineButton";
 import type { PricingPlan } from "./pricing-types";
@@ -16,7 +17,7 @@ function addCheckoutLinks(plans: PricingPlan[]): PricingPlan[] {
 
 async function getPricingPlans(): Promise<PricingPlan[]> {
   try {
-    const response = await fetch(getAppUrl("/api/pricing-plans"), { next: { revalidate: 300 } });
+    const response = await fetch(getApiUrl("/pricing-plans"), { next: { revalidate: 300 } });
 
     if (!response.ok) return [];
 

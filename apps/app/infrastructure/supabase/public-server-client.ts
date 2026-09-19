@@ -1,6 +1,6 @@
 import { createClient } from "@supabase/supabase-js";
 import { getAppEnv } from "@/shared/config/env";
-import type { Database } from "./database.types";
+import type { Database } from "@visuala/db";
 
 export function createSupabasePublicServerClient() {
   const env = getAppEnv();
