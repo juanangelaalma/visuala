@@ -11,6 +11,8 @@ const mocks = vi.hoisted(() => ({
   registerProjectAsset: vi.fn(),
   deleteProjectAsset: vi.fn(),
   listProjectAssets: vi.fn(),
+  appendVideoMessage: vi.fn(),
+  listVideoMessages: vi.fn(),
   services: vi.fn(),
 }));
 
@@ -24,6 +26,10 @@ vi.mock("@/application/video/assets", async () => {
   const actual = await vi.importActual<typeof import("@/application/video/assets")>("@/application/video/assets");
   return { ...actual, registerProjectAsset: mocks.registerProjectAsset, deleteProjectAsset: mocks.deleteProjectAsset, listProjectAssets: mocks.listProjectAssets };
 });
+vi.mock("@/application/video/messages", async () => {
+  const actual = await vi.importActual<typeof import("@/application/video/messages")>("@/application/video/messages");
+  return { ...actual, appendVideoMessage: mocks.appendVideoMessage, listVideoMessages: mocks.listVideoMessages };
+});
 
 import { VideoError } from "@/domain/video/errors";
 import { createApp } from "@/app";
@@ -33,6 +39,9 @@ const project = { id: "33333333-3333-4333-8333-333333333333", title: "Promo", vi
 const asset = { id: "22222222-2222-4222-8222-222222222222", projectId: project.id, objectKey: `video-projects/${project.id}/22222222-2222-4222-8222-222222222222.png`, mimeType: "image/png", byteSize: 68, sha256: "0".repeat(64), width: 2, height: 3, rightsConfirmedAt: "r", moderationStatus: "pending", createdAt: "c" };
 const assetPreview = { id: asset.id, mimeType: "image/png", byteSize: asset.byteSize, width: 2, height: 3, moderationStatus: "pending", previewUrl: `https://signed.example/${asset.objectKey}` };
 const pngBytes = Uint8Array.from(Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAIAAAADCAIAAAD91JpzAAAAFElEQVR4nGP4z8DAwMDAxAADCBYAG10BBdmDt4sAAAAASUVORK5CYII=", "base64"));
+const message = { id: "message-1", projectId: project.id, userId: user.id, role: "user", content: "buat video jualan", controls: null, assetIds: [] as string[], createdAt: "c" };
+const messageResponse = { id: message.id, role: "user", content: message.content, assetIds: message.assetIds, controls: null, createdAt: message.createdAt };
+const interviewingProject = { ...project, status: "interviewing" };
 
 function send(method: string, path: string, options: { token?: string; body?: unknown; headers?: Record<string, string>; assetBytes?: Uint8Array } = {}) {
   return createApp().handle(new Request(`http://localhost${path}`, {
@@ -147,5 +156,68 @@ describe("video project routes", () => {
 
     expect(response.status).toBe(200);
     await expect(response.json()).resolves.toEqual({ deleted: true });
+  });
+});
+
+describe("video message routes", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mocks.getUser.mockResolvedValue({ data: { user }, error: null });
+    mocks.publicClient.mockReturnValue({ auth: { getUser: mocks.getUser } });
+    mocks.userClient.mockReturnValue({ scoped: true });
+    mocks.services.mockReturnValue({});
+    mocks.appendVideoMessage.mockResolvedValue({ message, project: interviewingProject });
+    mocks.listVideoMessages.mockResolvedValue([messageResponse]);
+  });
+
+  it("requires authentication on both message routes", async () => {
+    expect((await send("POST", `/video-projects/${project.id}/messages`, { body: { content: "halo" } })).status).toBe(401);
+    expect((await send("GET", `/video-projects/${project.id}/messages`)).status).toBe(401);
+    expect(mocks.appendVideoMessage).not.toHaveBeenCalled();
+    expect(mocks.listVideoMessages).not.toHaveBeenCalled();
+  });
+
+  it("rejects a message body that carries a client-owned field", async () => {
+    for (const body of [{ content: "halo", role: "assistant" }, { content: "halo", user_id: user.id }]) {
+      const response = await send("POST", `/video-projects/${project.id}/messages`, { token: "token", body });
+
+      expect(response.status).toBe(422);
+      await expect(response.json()).resolves.toEqual({ error: "Invalid request." });
+    }
+    expect(mocks.appendVideoMessage).not.toHaveBeenCalled();
+  });
+
+  it("persists the first message scoped to the authenticated user and answers 201 with the interviewing project", async () => {
+    const response = await send("POST", `/video-projects/${project.id}/messages`, { token: "token", body: { content: "buat video jualan" } });
+
+    expect(response.status).toBe(201);
+    await expect(response.json()).resolves.toEqual({ message: messageResponse, project: interviewingProject });
+    expect(mocks.appendVideoMessage).toHaveBeenCalledWith({ userId: "user-1", projectId: project.id, content: "buat video jualan" }, expect.anything());
+  });
+
+  it("hides a message on another user's project behind a 404", async () => {
+    mocks.appendVideoMessage.mockRejectedValue(new VideoError("video_project_not_found", "The video project was not found."));
+
+    const response = await send("POST", `/video-projects/${project.id}/messages`, { token: "token", body: { content: "halo" } });
+
+    expect(response.status).toBe(404);
+    await expect(response.json()).resolves.toEqual({ error: "The video project was not found.", code: "video_project_not_found" });
+  });
+
+  it("lists the persisted conversation for the project owner", async () => {
+    const response = await send("GET", `/video-projects/${project.id}/messages`, { token: "token" });
+
+    expect(response.status).toBe(200);
+    await expect(response.json()).resolves.toEqual({ messages: [messageResponse] });
+    expect(mocks.listVideoMessages).toHaveBeenCalledWith({ userId: "user-1", projectId: project.id }, expect.anything());
+  });
+
+  it("hides a conversation the caller does not own behind a 404", async () => {
+    mocks.listVideoMessages.mockRejectedValue(new VideoError("video_project_not_found", "The video project was not found."));
+
+    const response = await send("GET", `/video-projects/${project.id}/messages`, { token: "token" });
+
+    expect(response.status).toBe(404);
+    await expect(response.json()).resolves.toEqual({ error: "The video project was not found.", code: "video_project_not_found" });
   });
 });

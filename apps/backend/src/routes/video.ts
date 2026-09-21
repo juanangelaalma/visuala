@@ -1,5 +1,7 @@
 import { Elysia, t } from "elysia";
+import { z } from "zod";
 import { deleteProjectAsset, listProjectAssets, registerProjectAsset } from "@/application/video/assets";
+import { appendVideoMessage, listVideoMessages, toMessageResponse } from "@/application/video/messages";
 import { createVideoProject, deleteVideoProject, getVideoProject, listVideoProjects, toProjectResponse } from "@/application/video/projects";
 import { createVideoProjectServices } from "@/application/video/services";
 import { MAX_ASSET_BYTES } from "@/domain/ai-service/assets";
@@ -11,6 +13,12 @@ const invalidRequest = { error: "Invalid request." } as const;
 const jsonBody = { body: t.Unknown() } as const;
 const INVALID_ASSET_MESSAGE = "Upload a valid JPEG, PNG, or WebP image up to 10 MB.";
 const DECLARED_MIME_TYPES = new Set<string>(VIDEO_ASSET_MIME_TYPES);
+
+/** `role`, `user_id`, and `created_at` are server-owned, so a strict body refuses them outright. */
+const appendMessageBodySchema = z.object({
+  content: z.string(),
+  assetIds: z.array(z.string().uuid()).optional(),
+}).strict();
 
 function invalidAsset(): VideoError {
   return new VideoError("video_asset_invalid", INVALID_ASSET_MESSAGE);
@@ -49,6 +57,29 @@ export const videoProjectRoutes = new Elysia({ name: "video-project-routes" })
   .delete(
     "/video-projects/:projectId",
     async ({ params, user }) => deleteVideoProject(params.projectId, user.id, createVideoProjectServices()),
+    { auth: true, detail: { tags: ["video"] } },
+  )
+  .post(
+    "/video-projects/:projectId/messages",
+    async ({ body, params, set, status, user }) => {
+      const parsed = appendMessageBodySchema.safeParse(body);
+      if (!parsed.success) return status(422, invalidRequest);
+
+      const { message, project } = await appendVideoMessage(
+        { userId: user.id, projectId: params.projectId, ...parsed.data },
+        createVideoProjectServices(),
+      );
+
+      set.status = 201;
+      return { message: toMessageResponse(message), project: toProjectResponse(project) };
+    },
+    { auth: true, ...jsonBody, detail: { tags: ["video"] } },
+  )
+  .get(
+    "/video-projects/:projectId/messages",
+    async ({ params, user }) => ({
+      messages: await listVideoMessages({ userId: user.id, projectId: params.projectId }, createVideoProjectServices()),
+    }),
     { auth: true, detail: { tags: ["video"] } },
   )
   .post(
