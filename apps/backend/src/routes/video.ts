@@ -1,9 +1,10 @@
 import { Elysia, t } from "elysia";
 import { z } from "zod";
+import { approveVideoProject } from "@/application/video/approval";
 import { deleteProjectAsset, listProjectAssets, registerProjectAsset } from "@/application/video/assets";
 import { appendVideoMessage, listVideoMessages, toMessageResponse } from "@/application/video/messages";
 import { createVideoProject, deleteVideoProject, getVideoProject, listVideoProjects, toProjectResponse } from "@/application/video/projects";
-import { createVideoProjectServices } from "@/application/video/services";
+import { createVideoApprovalServices, createVideoProjectServices } from "@/application/video/services";
 import { MAX_ASSET_BYTES } from "@/domain/ai-service/assets";
 import { VideoError } from "@/domain/video/errors";
 import { authPlugin } from "@/plugins/supabase";
@@ -80,6 +81,17 @@ export const videoProjectRoutes = new Elysia({ name: "video-project-routes" })
     async ({ params, user }) => ({
       messages: await listVideoMessages({ userId: user.id, projectId: params.projectId }, createVideoProjectServices()),
     }),
+    { auth: true, detail: { tags: ["video"] } },
+  )
+  .post(
+    "/video-projects/:projectId/approve",
+    async ({ params, user }) => {
+      const { project, approval } = await approveVideoProject(
+        { userId: user.id, projectId: params.projectId },
+        createVideoApprovalServices(),
+      );
+      return { project: toProjectResponse(project), approval };
+    },
     { auth: true, detail: { tags: ["video"] } },
   )
   .post(

@@ -13,11 +13,13 @@ const mocks = vi.hoisted(() => ({
   listProjectAssets: vi.fn(),
   appendVideoMessage: vi.fn(),
   listVideoMessages: vi.fn(),
+  approveVideoProject: vi.fn(),
   services: vi.fn(),
+  approvalServices: vi.fn(),
 }));
 
 vi.mock("@/infrastructure/supabase/clients", () => ({ createSupabasePublicClient: mocks.publicClient, createSupabaseUserClient: mocks.userClient, createSupabaseServiceRoleClient: vi.fn(() => ({})) }));
-vi.mock("@/application/video/services", () => ({ createVideoProjectServices: mocks.services }));
+vi.mock("@/application/video/services", () => ({ createVideoProjectServices: mocks.services, createVideoApprovalServices: mocks.approvalServices }));
 vi.mock("@/application/video/projects", async () => {
   const actual = await vi.importActual<typeof import("@/application/video/projects")>("@/application/video/projects");
   return { ...actual, createVideoProject: mocks.createVideoProject, listVideoProjects: mocks.listVideoProjects, getVideoProject: mocks.getVideoProject, deleteVideoProject: mocks.deleteVideoProject };
@@ -30,8 +32,14 @@ vi.mock("@/application/video/messages", async () => {
   const actual = await vi.importActual<typeof import("@/application/video/messages")>("@/application/video/messages");
   return { ...actual, appendVideoMessage: mocks.appendVideoMessage, listVideoMessages: mocks.listVideoMessages };
 });
+vi.mock("@/application/video/approval", async () => {
+  const actual = await vi.importActual<typeof import("@/application/video/approval")>("@/application/video/approval");
+  return { ...actual, approveVideoProject: mocks.approveVideoProject };
+});
 
+import { buildApprovalSnapshot } from "@/application/video/approval";
 import { VideoError } from "@/domain/video/errors";
+import type { VideoOutputSettings } from "@/domain/video/types";
 import { createApp } from "@/app";
 
 const user = { id: "user-1", email: "user@example.com", user_metadata: {} };
@@ -42,6 +50,17 @@ const pngBytes = Uint8Array.from(Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAIAAAADCA
 const message = { id: "message-1", projectId: project.id, userId: user.id, role: "user", content: "buat video jualan", controls: null, assetIds: [] as string[], createdAt: "c" };
 const messageResponse = { id: message.id, role: "user", content: message.content, assetIds: message.assetIds, controls: null, createdAt: message.createdAt };
 const interviewingProject = { ...project, status: "interviewing" };
+const approvalSettings: VideoOutputSettings = { durationSeconds: 10, aspectRatio: "9:16", resolution: "1080p", language: "id", voiceOverEnabled: true, musicEnabled: true };
+const approvedProject = { ...project, status: "approved", settings: approvalSettings };
+/** The row shape the use case returns, including the user id the route must strip. */
+const approvedProjectRow = { ...approvedProject, userId: user.id };
+const approvalSnapshot = buildApprovalSnapshot({
+  project: { videoType: "product_promo", styleId: "bold_pop", settings: approvalSettings },
+  briefRevision: { id: "44444444-4444-4444-8444-444444444444", version: 2 },
+  storyboardRevision: { id: "55555555-5555-4555-8555-555555555555", version: 3 },
+  generatedBy: { profileId: "primary", provider: "9router", model: "router-model", promptVersion: "planner-v1" },
+  approvedAt: "2026-09-21T10:00:00.000Z",
+});
 
 function send(method: string, path: string, options: { token?: string; body?: unknown; headers?: Record<string, string>; assetBytes?: Uint8Array } = {}) {
   return createApp().handle(new Request(`http://localhost${path}`, {
@@ -219,5 +238,42 @@ describe("video message routes", () => {
 
     expect(response.status).toBe(404);
     await expect(response.json()).resolves.toEqual({ error: "The video project was not found.", code: "video_project_not_found" });
+  });
+});
+
+describe("video approval route", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mocks.getUser.mockResolvedValue({ data: { user }, error: null });
+    mocks.publicClient.mockReturnValue({ auth: { getUser: mocks.getUser } });
+    mocks.userClient.mockReturnValue({ scoped: true });
+    mocks.approvalServices.mockReturnValue({});
+    mocks.approveVideoProject.mockResolvedValue({ project: approvedProjectRow, approval: approvalSnapshot });
+  });
+
+  it("requires authentication to approve", async () => {
+    expect((await send("POST", `/video-projects/${project.id}/approve`)).status).toBe(401);
+    expect(mocks.approveVideoProject).not.toHaveBeenCalled();
+  });
+
+  it("answers 409 with video_approval_incomplete for a brief or storyboard that cannot be approved", async () => {
+    mocks.approveVideoProject.mockRejectedValue(new VideoError("video_approval_incomplete", "The brief is missing: callToAction."));
+
+    const response = await send("POST", `/video-projects/${project.id}/approve`, { token: "token" });
+
+    expect(response.status).toBe(409);
+    await expect(response.json()).resolves.toEqual({ error: "The brief is missing: callToAction.", code: "video_approval_incomplete" });
+  });
+
+  it("answers 200 with the frozen snapshot and exposes no repository row or object key", async () => {
+    const response = await send("POST", `/video-projects/${project.id}/approve`, { token: "token" });
+
+    expect(response.status).toBe(200);
+    const body = await response.json() as { project: typeof approvedProject; approval: typeof approvalSnapshot };
+    expect(body).toEqual({ project: approvedProject, approval: approvalSnapshot });
+    expect(Object.keys(body).sort()).toEqual(["approval", "project"]);
+    expect(approvalSnapshot).toMatchObject({ schemaVersion: "video-approval@v1", storyboardRevisionId: "55555555-5555-4555-8555-555555555555" });
+    expect(JSON.stringify(body)).not.toMatch(/userId|user_id|object_key|objectKey|approval_snapshot|scenes|generated_by/);
+    expect(mocks.approveVideoProject).toHaveBeenCalledWith({ userId: "user-1", projectId: project.id }, expect.anything());
   });
 });

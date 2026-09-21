@@ -10,7 +10,26 @@ import { readAssetLimits } from "../../domain/video/limits";
 import type { ProjectAssetRepository, VideoBriefRevisionRepository, VideoMessageRepository, VideoStoryboardRevisionRepository } from "../../domain/video/contracts";
 import type { ProjectDependencies } from "./projects";
 
-/** The single place the video application layer is allowed to construct infrastructure. */
+/** This module is the single place the video application layer is allowed to construct infrastructure. */
+
+/**
+ * Approval reads the project it is moving, the latest brief revision, and the latest storyboard
+ * revision, and it stamps the snapshot from the server clock — never from client input.
+ */
+export function createVideoApprovalServices(
+  environment: Readonly<Record<string, string | undefined>> = process.env,
+) {
+  const supabase = createSupabaseServiceRoleClient(environment);
+
+  return {
+    projects: new SupabaseVideoProjectRepository(supabase),
+    briefRevisions: new SupabaseVideoBriefRevisionRepository(supabase),
+    storyboardRevisions: new SupabaseVideoStoryboardRevisionRepository(supabase),
+    now: () => new Date().toISOString(),
+  };
+}
+
+/** The project, asset, message, and revision repositories the project routes share. */
 export function createVideoProjectServices(
   environment: Readonly<Record<string, string | undefined>> = process.env,
 ): ProjectDependencies & {
