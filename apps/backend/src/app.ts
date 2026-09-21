@@ -9,6 +9,7 @@ import { billingRoutes } from "@/routes/billing";
 import { healthRoutes } from "@/routes/health";
 import { meRoutes } from "@/routes/me";
 import { pricingRoutes } from "@/routes/pricing";
+import { videoProjectRoutes } from "@/routes/video";
 import { webhookRoutes } from "@/routes/webhooks";
 
 export function createApp() {
@@ -23,7 +24,8 @@ export function createApp() {
     .use(billingRoutes)
     .use(webhookRoutes)
     .use(authRoutes)
-    .use(aiRoutes);
+    .use(aiRoutes)
+    .use(videoProjectRoutes);
 }
 
 export const app = createApp();

@@ -14,6 +14,7 @@ import {
   PricingPlanUnavailableError,
   UnsupportedBillingGatewayError,
 } from "@/domain/billing/errors";
+import { VideoError, type VideoErrorCode } from "@/domain/video/errors";
 
 type MappedError = { status: number; body: Record<string, unknown> };
 
@@ -41,6 +42,18 @@ const aiErrorStatus: Record<AIErrorCode, number> = {
   AI_TIMEOUT: 504,
 };
 
+const videoErrorStatus: Record<VideoErrorCode, number> = {
+  video_project_not_found: 404,
+  video_render_job_not_found: 404,
+  video_version_not_found: 404,
+  video_input_invalid: 422,
+  video_asset_invalid: 422,
+  video_asset_limit_reached: 422,
+  video_state_conflict: 409,
+  video_approval_incomplete: 409,
+  video_revision_quota_exhausted: 409,
+};
+
 function mapDomainError(error: unknown): MappedError | null {
   if (error instanceof AuthDomainError) return { status: authErrorStatus[error.code], body: { error: error.message } };
 
@@ -55,6 +68,10 @@ function mapDomainError(error: unknown): MappedError | null {
         ...(error.retryAfterMs !== undefined ? { retryAfterMs: error.retryAfterMs } : {}),
       },
     };
+  }
+
+  if (error instanceof VideoError) {
+    return { status: videoErrorStatus[error.code], body: { error: error.message, code: error.code } };
   }
 
   if (error instanceof BillingPaymentNotFoundError || error instanceof PricingPlanUnavailableError) return { status: 404, body: { error: "Not found." } };
