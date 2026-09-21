@@ -8,6 +8,9 @@ const mocks = vi.hoisted(() => ({
   listVideoProjects: vi.fn(),
   getVideoProject: vi.fn(),
   deleteVideoProject: vi.fn(),
+  registerProjectAsset: vi.fn(),
+  deleteProjectAsset: vi.fn(),
+  listProjectAssets: vi.fn(),
   services: vi.fn(),
 }));
 
@@ -17,18 +20,25 @@ vi.mock("@/application/video/projects", async () => {
   const actual = await vi.importActual<typeof import("@/application/video/projects")>("@/application/video/projects");
   return { ...actual, createVideoProject: mocks.createVideoProject, listVideoProjects: mocks.listVideoProjects, getVideoProject: mocks.getVideoProject, deleteVideoProject: mocks.deleteVideoProject };
 });
+vi.mock("@/application/video/assets", async () => {
+  const actual = await vi.importActual<typeof import("@/application/video/assets")>("@/application/video/assets");
+  return { ...actual, registerProjectAsset: mocks.registerProjectAsset, deleteProjectAsset: mocks.deleteProjectAsset, listProjectAssets: mocks.listProjectAssets };
+});
 
 import { VideoError } from "@/domain/video/errors";
 import { createApp } from "@/app";
 
 const user = { id: "user-1", email: "user@example.com", user_metadata: {} };
 const project = { id: "33333333-3333-4333-8333-333333333333", title: "Promo", videoType: "product_promo", styleId: "bold_pop", status: "draft", settings: {}, revisionRenderCount: 0, createdAt: "c", updatedAt: "u" };
+const asset = { id: "22222222-2222-4222-8222-222222222222", projectId: project.id, objectKey: `video-projects/${project.id}/22222222-2222-4222-8222-222222222222.png`, mimeType: "image/png", byteSize: 68, sha256: "0".repeat(64), width: 2, height: 3, rightsConfirmedAt: "r", moderationStatus: "pending", createdAt: "c" };
+const assetPreview = { id: asset.id, mimeType: "image/png", byteSize: asset.byteSize, width: 2, height: 3, moderationStatus: "pending", previewUrl: `https://signed.example/${asset.objectKey}` };
+const pngBytes = Uint8Array.from(Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAIAAAADCAIAAAD91JpzAAAAFElEQVR4nGP4z8DAwMDAxAADCBYAG10BBdmDt4sAAAAASUVORK5CYII=", "base64"));
 
-function send(method: string, path: string, options: { token?: string; body?: unknown } = {}) {
+function send(method: string, path: string, options: { token?: string; body?: unknown; headers?: Record<string, string>; assetBytes?: Uint8Array } = {}) {
   return createApp().handle(new Request(`http://localhost${path}`, {
     method,
-    headers: { "content-type": "application/json", ...(options.token ? { authorization: `Bearer ${options.token}` } : {}) },
-    ...(options.body === undefined ? {} : { body: JSON.stringify(options.body) }),
+    headers: { "content-type": "application/json", ...(options.token ? { authorization: `Bearer ${options.token}` } : {}), ...options.headers },
+    ...(options.assetBytes !== undefined ? { body: options.assetBytes } : options.body === undefined ? {} : { body: JSON.stringify(options.body) }),
   }));
 }
 
@@ -43,13 +53,17 @@ describe("video project routes", () => {
     mocks.listVideoProjects.mockResolvedValue([project]);
     mocks.getVideoProject.mockResolvedValue(project);
     mocks.deleteVideoProject.mockResolvedValue({ pendingObjectDeletions: 0 });
+    mocks.registerProjectAsset.mockResolvedValue(asset);
+    mocks.deleteProjectAsset.mockResolvedValue(undefined);
+    mocks.listProjectAssets.mockResolvedValue([assetPreview]);
   });
 
   it("requires authentication on every route", async () => {
-    for (const [method, path] of [["POST", "/video-projects"], ["GET", "/video-projects"], ["GET", `/video-projects/${project.id}`], ["DELETE", `/video-projects/${project.id}`]] as const) {
+    for (const [method, path] of [["POST", "/video-projects"], ["GET", "/video-projects"], ["GET", `/video-projects/${project.id}`], ["DELETE", `/video-projects/${project.id}`], ["POST", `/video-projects/${project.id}/assets`], ["GET", `/video-projects/${project.id}/assets`], ["DELETE", `/video-projects/${project.id}/assets/${asset.id}`]] as const) {
       expect((await send(method, path)).status).toBe(401);
     }
     expect(mocks.createVideoProject).not.toHaveBeenCalled();
+    expect(mocks.registerProjectAsset).not.toHaveBeenCalled();
   });
 
   it("creates a project scoped to the authenticated user and answers 201", async () => {
@@ -81,5 +95,57 @@ describe("video project routes", () => {
     mocks.deleteVideoProject.mockRejectedValue(new VideoError("video_state_conflict", "The project cannot move from ready to interviewing."));
 
     expect((await send("DELETE", `/video-projects/${project.id}`, { token: "token" })).status).toBe(409);
+  });
+
+  it("rejects an upload whose declared type is not an image before reading the body", async () => {
+    const response = await send("POST", `/video-projects/${project.id}/assets`, { token: "token", headers: { "content-type": "text/plain" }, assetBytes: pngBytes });
+
+    expect(response.status).toBe(422);
+    await expect(response.json()).resolves.toEqual({ error: "Upload a valid JPEG, PNG, or WebP image up to 10 MB.", code: "video_asset_invalid" });
+    expect(mocks.registerProjectAsset).not.toHaveBeenCalled();
+  });
+
+  it("rejects an upload that declares more than ten megabytes before reading the body", async () => {
+    const response = await send("POST", `/video-projects/${project.id}/assets`, { token: "token", headers: { "content-type": "image/png", "content-length": String(10 * 1024 * 1024 + 1) }, assetBytes: pngBytes });
+
+    expect(response.status).toBe(422);
+    await expect(response.json()).resolves.toEqual({ error: "Upload a valid JPEG, PNG, or WebP image up to 10 MB.", code: "video_asset_invalid" });
+    expect(mocks.registerProjectAsset).not.toHaveBeenCalled();
+  });
+
+  it("accepts an image for the authenticated user and answers 201 with the projection", async () => {
+    const response = await send("POST", `/video-projects/${project.id}/assets`, { token: "token", headers: { "content-type": "image/png", "x-asset-rights-confirmed": "true" }, assetBytes: pngBytes });
+
+    expect(response.status).toBe(201);
+    await expect(response.json()).resolves.toEqual({ asset: { id: asset.id, mimeType: "image/png", byteSize: asset.byteSize, width: 2, height: 3, moderationStatus: "pending" } });
+    expect(mocks.registerProjectAsset).toHaveBeenCalledWith(
+      expect.objectContaining({ userId: "user-1", projectId: project.id, declaredMimeType: "image/png", rightsConfirmed: true, bytes: pngBytes }),
+      expect.anything(),
+    );
+  });
+
+  it("lists assets with short-lived preview URLs for the project owner", async () => {
+    const response = await send("GET", `/video-projects/${project.id}/assets`, { token: "token" });
+
+    expect(response.status).toBe(200);
+    await expect(response.json()).resolves.toEqual({ assets: [assetPreview] });
+    expect(mocks.listProjectAssets).toHaveBeenCalledWith({ userId: "user-1", projectId: project.id }, expect.anything());
+  });
+
+  it("hides another user's asset behind a 404 on delete", async () => {
+    mocks.deleteProjectAsset.mockRejectedValue(new VideoError("video_project_not_found", "The video project was not found."));
+
+    const response = await send("DELETE", `/video-projects/${project.id}/assets/${asset.id}`, { token: "token" });
+
+    expect(response.status).toBe(404);
+    await expect(response.json()).resolves.toEqual({ error: "The video project was not found.", code: "video_project_not_found" });
+    expect(mocks.deleteProjectAsset).toHaveBeenCalledWith({ userId: "user-1", projectId: project.id, assetId: asset.id }, expect.anything());
+  });
+
+  it("deletes an owned asset", async () => {
+    const response = await send("DELETE", `/video-projects/${project.id}/assets/${asset.id}`, { token: "token" });
+
+    expect(response.status).toBe(200);
+    await expect(response.json()).resolves.toEqual({ deleted: true });
   });
 });
