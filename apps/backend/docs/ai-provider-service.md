@@ -6,7 +6,8 @@ The service currently has no production feature caller. The application-level an
 
 ## Configuration
 
-Copy the AI service variables from `.env.example` into the deployment environment. Do not commit keys or production values.
+Get the AI service variables into the deployment environment by running `make -C apps/backend env`, which copies the `AI_*`, `R2_*`, and Supabase variables through the `env:` target in
+`apps/backend/Makefile`, or by setting them directly in the environment. `apps/backend/docs/chat-video-generator.md` lists every variable this backend reads, with its default. Do not commit keys or production values.
 
 `AI_PROFILES_JSON` is an array of connection profiles. Each profile contains:
 
