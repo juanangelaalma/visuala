@@ -3,7 +3,7 @@ import { z } from "zod";
 import type { AssetMimeType, AssetObjectStore } from "../../domain/ai-service/assets";
 import type { Database } from "@visuala/db";
 
-export const DEFAULT_ASSET_BUCKET = "video-assets";
+export const DEFAULT_ASSET_BUCKET = "assets";
 
 const environmentSchema = z.object({ SUPABASE_ASSET_BUCKET: z.string().trim().min(1).default(DEFAULT_ASSET_BUCKET) });
 

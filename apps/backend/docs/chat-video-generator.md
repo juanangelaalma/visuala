@@ -90,7 +90,7 @@ offered to a user. Remove any row the spike cannot produce, together with its te
 idempotent: if `apps/backend/.env` already exists it prints
 `.env already exists - leaving it untouched` and writes nothing. Otherwise it creates `.env` from
 `apps/app/.env`, copying `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `SUPABASE_ASSET_BUCKET`,
-`ADMIN_EMAILS`, every `AI_*`, `R2_*`, `BILLING_*`, and `XENDIT_*` value, deriving
+`ADMIN_EMAILS`, every `AI_*`, `BILLING_*`, and `XENDIT_*` value, deriving
 `SUPABASE_ANON_KEY` from `NEXT_PUBLIC_SUPABASE_ANON_KEY`, and prepending `PORT`, `APP_URL`, and
 `CORS_ORIGIN`. Run it from the repository root:
 
@@ -111,7 +111,7 @@ its absence is a configuration error.
 | `SUPABASE_URL` | no default | Supabase project URL. Used by the service-role and user clients. |
 | `SUPABASE_SERVICE_ROLE_KEY` | no default | Service-role key. Used **only** inside `application/**/services.ts` factories and `infrastructure/**`. |
 | `SUPABASE_ANON_KEY` | no default | Anon/publishable key for the public client used to resolve a bearer token into a session. The `env:` target derives it from `NEXT_PUBLIC_SUPABASE_ANON_KEY`. |
-| `SUPABASE_ASSET_BUCKET` | `video-assets` | Name of the private Storage bucket that holds project image assets and rendered versions. Read by `readAssetBucket` in `apps/backend/src/infrastructure/ai-service/supabase-asset-object-store.ts`. |
+| `SUPABASE_ASSET_BUCKET` | `assets` | Name of the private Storage bucket that holds both the AI-service image assets and the project image assets and rendered versions. Read by `readAssetBucket` in `apps/backend/src/infrastructure/ai-service/supabase-asset-object-store.ts`. |
 | `VIDEO_MAX_ASSETS_PER_PROJECT` | `8` | Maximum live image assets per project. Read by `readAssetLimits` in `apps/backend/src/domain/video/limits.ts`. |
 | `VIDEO_MAX_PROJECT_ASSET_BYTES` | `41943040` (40 MiB) | Maximum total bytes across a project's live assets. |
 | `VIDEO_MIN_IMAGE_DIMENSION` | `200` | Minimum width and height, in pixels, of an accepted image. |
@@ -119,10 +119,6 @@ its absence is a configuration error.
 | `AI_PROFILES_JSON` | no default | JSON array of connection profiles (text, vision, structured output, limits, optional pricing). Read by `readAIServiceConfiguration`. |
 | `AI_TASKS_JSON` | no default | JSON array mapping each of `connection_test`, `interviewer`, `planner`, and `product_analysis` to a profile ID. |
 | `AI_MAX_CONCURRENCY` | no default | Positive integer: the initial process-wide AI request cap. A lower task/profile cap tightens the shared limiter and it never loosens until restart. |
-| `R2_ACCOUNT_ID` | no default | Cloudflare R2 account id. **The pre-existing `ai_assets` flow still uses R2**; video assets never do. |
-| `R2_ACCESS_KEY_ID` | no default | R2 access key id for `ai_assets`. |
-| `R2_SECRET_ACCESS_KEY` | no default | R2 secret for `ai_assets`. |
-| `R2_BUCKET` | no default | R2 bucket for `ai_assets`. |
 | `AI_GOOGLE_API_KEY` | no default | Read indirectly: a profile's `apiKeyEnv` typically names it. The example profile's default credential variable. |
 | `AI_GOOGLE_MODEL` | no default | Read indirectly via a profile's `modelIdEnv`. |
 | `AI_ALLOW_INSECURE_LOOPBACK` | unset (`false`) | Set to `true` to let the AI service call plain-HTTP loopback endpoints. Intended for tests only. |
@@ -133,7 +129,7 @@ Notes:
   `VIDEO_MAX_IMAGE_DIMENSION` are the PRD's **proposed MVP defaults**; the PRD leaves the asset
   count, project byte ceiling, and dimension bounds **TBD** pending storage and vision benchmarks.
   A non-numeric value is rejected with `video_input_invalid`.
-- The `AI_*`, `R2_*`, and `SUPABASE_ASSET_BUCKET` variables are all copied through by the `env:`
+- The `AI_*` and `SUPABASE_ASSET_BUCKET` variables are all copied through by the `env:`
   target's grep pattern. If you add a new variable in one of those families, the pattern already
   picks it up; a variable outside those prefixes needs the Makefile pattern extended.
 - `AI_PROFILES_JSON`, `AI_TASKS_JSON`, and `AI_MAX_CONCURRENCY` are required by the AI service
@@ -327,13 +323,23 @@ written later.
 
 ## Storage
 
-- **One private bucket, `video-assets`** (`SUPABASE_ASSET_BUCKET` override), created by
-  `apps/backend/supabase/migrations/20260921000000_create_video_asset_bucket.sql`: `public = false`,
-  a 10 MB file-size limit, and an allowlist of `image/jpeg`, `image/png`, `image/webp`. No policy is
-  added for `anon` or `authenticated`, so only service-role server code can read or write it.
-- **Object key conventions** (internal, never a canonical reference the client sees):
-  - asset: `video-projects/<projectId>/<assetId>.<ext>` (`.jpg` for JPEG, otherwise the subtype),
-    built by `objectKeyFor` in `apps/backend/src/application/video/assets.ts`.
+The product has **one** object store: a single private Supabase Storage bucket shared by the
+AI-service assets, the project image assets, and the rendered versions.
+
+- **One private bucket, `assets`** (`SUPABASE_ASSET_BUCKET` override). It was created as
+  `video-assets` by
+  `apps/backend/supabase/migrations/20260921000000_create_video_asset_bucket.sql` and renamed to
+  `assets` by `apps/backend/supabase/migrations/20260922000000_rename_asset_bucket.sql`, which also
+  drops the old bucket once it holds no objects. `public = false`, a 10 MB file-size limit, and an
+  allowlist of `image/jpeg`, `image/png`, `image/webp`. No policy is added for `anon` or
+  `authenticated`, so only service-role server code can read or write it.
+- **Both asset families live in that one bucket, separated by key prefix** (keys are internal,
+  never a canonical reference the client sees):
+  - AI-service asset: `ai-assets/<userId>/<id>.<ext>` (`.jpg` for JPEG, otherwise the subtype),
+    built by `makeObjectKey` in `apps/backend/src/application/ai-service/register-asset.ts` and
+    read/written through the same `AssetObjectStore`/`SupabaseAssetObjectStore` implementation.
+  - project asset: `video-projects/<projectId>/<assetId>.<ext>` (`.jpg` for JPEG, otherwise the
+    subtype), built by `objectKeyFor` in `apps/backend/src/application/video/assets.ts`.
   - version: `video-versions/<projectId>/<versionId>.mp4` (the render plan's worker writes these).
 - **Signed URLs are generated per request and never stored.** `createSupabaseSignedUrlFactory`
   (`apps/backend/src/infrastructure/video/supabase-signed-urls.ts`) mints a URL with a 300-second TTL

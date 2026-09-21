@@ -43,7 +43,7 @@ env:
 		  echo "APP_URL=http://localhost:3000"; \
 		  echo "CORS_ORIGIN=http://localhost:3000"; \
 		  echo ""; \
-		  grep -E '^(SUPABASE_URL|SUPABASE_SERVICE_ROLE_KEY|SUPABASE_ASSET_BUCKET|ADMIN_EMAILS|AI_[A-Z0-9_]+|R2_[A-Z0-9_]+|BILLING_[A-Z_]+|XENDIT_[A-Z_]+)=' ../app/.env; \
+		  grep -E '^(SUPABASE_URL|SUPABASE_SERVICE_ROLE_KEY|SUPABASE_ASSET_BUCKET|ADMIN_EMAILS|AI_[A-Z0-9_]+|BILLING_[A-Z_]+|XENDIT_[A-Z_]+)=' ../app/.env; \
 		  echo "SUPABASE_ANON_KEY=$$(grep -E '^NEXT_PUBLIC_SUPABASE_ANON_KEY=' ../app/.env | cut -d= -f2-)"; \
 		} > .env; \
 	fi

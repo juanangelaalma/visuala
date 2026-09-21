@@ -6,7 +6,7 @@ The service currently has no production feature caller. The application-level an
 
 ## Configuration
 
-Get the AI service variables into the deployment environment by running `make -C apps/backend env`, which copies the `AI_*`, `R2_*`, and Supabase variables through the `env:` target in
+Get the AI service variables into the deployment environment by running `make -C apps/backend env`, which copies the `AI_*` and Supabase variables through the `env:` target in
 `apps/backend/Makefile`, or by setting them directly in the environment. `apps/backend/docs/chat-video-generator.md` lists every variable this backend reads, with its default. Do not commit keys or production values.
 
 `AI_PROFILES_JSON` is an array of connection profiles. Each profile contains:
@@ -29,10 +29,8 @@ The example profile reads its credentials and model from `AI_GOOGLE_API_KEY` and
 
 - `NEXT_PUBLIC_SUPABASE_URL`
 - `SUPABASE_SERVICE_ROLE_KEY`
-- `R2_ACCOUNT_ID`
-- `R2_ACCESS_KEY_ID`
-- `R2_SECRET_ACCESS_KEY`
-- `R2_BUCKET`
+
+The service stores and reads image assets through the private Supabase Storage bucket instead of a separate object store; `SUPABASE_ASSET_BUCKET` selects the bucket (default `assets`).
 
 Smoke commands read `AI_SMOKE_USER_ID`; the vision command also reads `AI_SMOKE_ASSET_ID`.
 
@@ -122,7 +120,7 @@ Run the offline configuration check after changing profiles or task mappings:
 pnpm --filter app ai:check-config
 ```
 
-This command parses and resolves configuration without creating the provider client, Supabase client, or R2 client. It sends no provider request.
+This command parses and resolves configuration without creating the provider client or the Supabase client. It sends no provider request.
 
 The following commands send paid provider requests:
 

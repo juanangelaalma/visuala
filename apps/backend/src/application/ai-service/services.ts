@@ -14,7 +14,7 @@ import {
   type AIServiceEnvironment,
 } from "@/infrastructure/ai-service/config";
 import { GoogleGenerateContentAdapter } from "@/infrastructure/ai-service/google-generate-content-adapter";
-import { R2ObjectStore } from "@/infrastructure/ai-service/r2-object-store";
+import { SupabaseAssetObjectStore, readAssetBucket } from "../../infrastructure/ai-service/supabase-asset-object-store";
 import { SupabaseAssetRepository } from "@/infrastructure/ai-service/supabase-asset-repository";
 import { SupabaseUsageRecorder } from "@/infrastructure/ai-service/supabase-usage-recorder";
 import { createSupabaseServiceRoleClient } from "@/infrastructure/supabase/clients";
@@ -84,7 +84,7 @@ function createAIServiceInfrastructure(options: FactoryOptions) {
   return {
     supabase,
     assetRepository: new SupabaseAssetRepository(supabase),
-    objectStore: new R2ObjectStore(environment),
+    objectStore: new SupabaseAssetObjectStore(supabase, readAssetBucket(environment)),
   };
 }
 

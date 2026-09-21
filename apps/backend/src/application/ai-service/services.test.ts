@@ -6,7 +6,10 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 vi.mock("@/infrastructure/supabase/clients", () => ({
   createSupabaseServiceRoleClient: vi.fn(() => ({ from: vi.fn(), factoryEnvironment: process.env })),
 }));
-vi.mock("@/infrastructure/ai-service/r2-object-store", () => ({ R2ObjectStore: class { constructor(readonly environment?: unknown) {} } }));
+vi.mock("@/infrastructure/ai-service/supabase-asset-object-store", () => ({
+  SupabaseAssetObjectStore: class { constructor(readonly client?: unknown, readonly bucket?: unknown) {} },
+  readAssetBucket: () => "assets",
+}));
 vi.mock("./resolve-asset", () => ({ resolveOwnedAsset: vi.fn() }));
 vi.mock("@/infrastructure/ai-service/supabase-usage-recorder", () => ({
   SupabaseUsageRecorder: class {
@@ -274,10 +277,6 @@ function configuredEnvironment(overrides: Record<string, string> = {}): Record<s
     AI_GOOGLE_MODEL: "gemini-test",
     SUPABASE_URL: "https://example.supabase.co",
     SUPABASE_SERVICE_ROLE_KEY: "service-role-example",
-    R2_ACCOUNT_ID: "account-example",
-    R2_ACCESS_KEY_ID: "access-example",
-    R2_SECRET_ACCESS_KEY: "secret-example",
-    R2_BUCKET: "assets-example",
     ...overrides,
   };
 }
