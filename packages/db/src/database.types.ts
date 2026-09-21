@@ -118,6 +118,54 @@ export type Database = {
       credit_wallets: { Row: { user_id: string; balance: number; created_at: string; updated_at: string }; Insert: { user_id: string; balance?: number; created_at?: string; updated_at?: string }; Update: Partial<Database["public"]["Tables"]["credit_wallets"]["Row"]>; Relationships: [] };
       credit_grants: { Row: { id: string; user_id: string; billing_payment_id: string; pricing_plan_id: string; amount: number; remaining_amount: number; granted_at: string; expires_at: string; created_at: string }; Insert: Partial<Database["public"]["Tables"]["credit_grants"]["Row"]>; Update: Partial<Database["public"]["Tables"]["credit_grants"]["Row"]>; Relationships: [] };
       credit_ledger_entries: { Row: { id: string; user_id: string; billing_payment_id: string | null; credit_grant_id: string | null; entry_type: "purchase_grant" | "spend" | "expiration" | "adjustment" | "reversal"; amount: number; balance_after: number; idempotency_key: string; created_at: string }; Insert: Partial<Database["public"]["Tables"]["credit_ledger_entries"]["Row"]>; Update: Partial<Database["public"]["Tables"]["credit_ledger_entries"]["Row"]>; Relationships: [] };
+      video_brief_revisions: {
+        Row: { id: string; project_id: string; user_id: string; version: number; schema_version: string; brief: unknown; is_complete: boolean; generated_by: unknown; source_message_ids: string[]; created_at: string };
+        Insert: { id?: string; project_id: string; user_id: string; version: number; schema_version: string; brief: unknown; is_complete?: boolean; generated_by: unknown; source_message_ids?: string[]; created_at?: string };
+        Update: { is_complete?: boolean };
+        Relationships: [{ foreignKeyName: "video_brief_revisions_project_id_fkey"; columns: ["project_id"]; isOneToOne: false; referencedRelation: "video_projects"; referencedColumns: ["id"] }];
+      };
+      video_messages: {
+        Row: { id: string; project_id: string; user_id: string; role: "user" | "assistant"; content: string; controls: unknown; asset_ids: string[]; created_at: string };
+        Insert: { id?: string; project_id: string; user_id: string; role: "user" | "assistant"; content: string; controls?: unknown; asset_ids?: string[]; created_at?: string };
+        Update: Partial<Database["public"]["Tables"]["video_messages"]["Row"]>;
+        Relationships: [{ foreignKeyName: "video_messages_project_id_fkey"; columns: ["project_id"]; isOneToOne: false; referencedRelation: "video_projects"; referencedColumns: ["id"] }];
+      };
+      video_moderation_events: {
+        Row: { id: string; project_id: string; user_id: string; subject_type: "prompt" | "asset" | "message"; subject_id: string; provider: string; policy_version: string; decision: "allowed" | "blocked" | "review"; reason_code: string | null; created_at: string };
+        Insert: { id?: string; project_id: string; user_id: string; subject_type: "prompt" | "asset" | "message"; subject_id: string; provider: string; policy_version: string; decision: "allowed" | "blocked" | "review"; reason_code?: string | null; created_at?: string };
+        Update: Partial<Database["public"]["Tables"]["video_moderation_events"]["Row"]>;
+        Relationships: [{ foreignKeyName: "video_moderation_events_project_id_fkey"; columns: ["project_id"]; isOneToOne: false; referencedRelation: "video_projects"; referencedColumns: ["id"] }];
+      };
+      video_project_assets: {
+        Row: { id: string; project_id: string; user_id: string; object_key: string; mime_type: "image/jpeg" | "image/png" | "image/webp"; byte_size: number; sha256: string; width: number; height: number; rights_confirmed_at: string; moderation_status: "pending" | "allowed" | "blocked"; deleted_at: string | null; created_at: string };
+        Insert: { id: string; project_id: string; user_id: string; object_key: string; mime_type: "image/jpeg" | "image/png" | "image/webp"; byte_size: number; sha256: string; width: number; height: number; rights_confirmed_at: string; moderation_status?: "pending" | "allowed" | "blocked"; deleted_at?: string | null; created_at?: string };
+        Update: Partial<Database["public"]["Tables"]["video_project_assets"]["Row"]>;
+        Relationships: [{ foreignKeyName: "video_project_assets_project_id_fkey"; columns: ["project_id"]; isOneToOne: false; referencedRelation: "video_projects"; referencedColumns: ["id"] }];
+      };
+      video_projects: {
+        Row: { id: string; user_id: string; title: string; video_type: "product_promo" | "discount_promo" | "product_launch" | "menu_showcase"; style_id: "bold_pop" | "clean_product" | "warm_artisan" | "premium_dark"; duration_seconds: 6 | 10 | 15; aspect_ratio: "9:16" | "1:1" | "16:9"; resolution: "720p" | "1080p"; language: string; voice_over_enabled: boolean; music_enabled: boolean; status: "draft" | "interviewing" | "awaiting_approval" | "approved" | "rendering" | "ready" | "revision_draft" | "moderation_blocked" | "failed" | "deleted"; revision_render_count: number; deleted_at: string | null; created_at: string; updated_at: string };
+        Insert: { id?: string; user_id: string; title: string; video_type: "product_promo" | "discount_promo" | "product_launch" | "menu_showcase"; style_id: "bold_pop" | "clean_product" | "warm_artisan" | "premium_dark"; duration_seconds: 6 | 10 | 15; aspect_ratio: "9:16" | "1:1" | "16:9"; resolution: "720p" | "1080p"; language: string; voice_over_enabled?: boolean; music_enabled?: boolean; status?: "draft" | "interviewing" | "awaiting_approval" | "approved" | "rendering" | "ready" | "revision_draft" | "moderation_blocked" | "failed" | "deleted"; revision_render_count?: number; deleted_at?: string | null; created_at?: string; updated_at?: string };
+        Update: Partial<Database["public"]["Tables"]["video_projects"]["Row"]>;
+        Relationships: [];
+      };
+      video_render_jobs: {
+        Row: { id: string; project_id: string; user_id: string; idempotency_key: string; brief_revision_id: string; storyboard_revision_id: string; parent_version_id: string | null; is_revision: boolean; input_snapshot: unknown; status: "queued" | "preparing" | "rendering" | "uploading" | "succeeded" | "failed" | "cancelled"; attempts: number; queued_at: string; started_at: string | null; finished_at: string | null; error_code: string | null; created_at: string; updated_at: string };
+        Insert: { id?: string; project_id: string; user_id: string; idempotency_key: string; brief_revision_id: string; storyboard_revision_id: string; parent_version_id?: string | null; is_revision: boolean; input_snapshot: unknown; status?: "queued" | "preparing" | "rendering" | "uploading" | "succeeded" | "failed" | "cancelled"; attempts?: number; queued_at?: string; started_at?: string | null; finished_at?: string | null; error_code?: string | null; created_at?: string; updated_at?: string };
+        Update: Partial<Database["public"]["Tables"]["video_render_jobs"]["Row"]>;
+        Relationships: [{ foreignKeyName: "video_render_jobs_project_id_fkey"; columns: ["project_id"]; isOneToOne: false; referencedRelation: "video_projects"; referencedColumns: ["id"] }];
+      };
+      video_storyboard_revisions: {
+        Row: { id: string; project_id: string; user_id: string; version: number; schema_version: string; brief_revision_id: string; scenes: unknown; total_duration_seconds: 6 | 10 | 15; generated_by: unknown; approved_at: string | null; approval_snapshot: unknown; created_at: string };
+        Insert: { id?: string; project_id: string; user_id: string; version: number; schema_version: string; brief_revision_id: string; scenes: unknown; total_duration_seconds: 6 | 10 | 15; generated_by: unknown; approved_at?: string | null; approval_snapshot?: unknown; created_at?: string };
+        Update: { approved_at?: string | null; approval_snapshot?: unknown };
+        Relationships: [{ foreignKeyName: "video_storyboard_revisions_project_id_fkey"; columns: ["project_id"]; isOneToOne: false; referencedRelation: "video_projects"; referencedColumns: ["id"] }];
+      };
+      video_versions: {
+        Row: { id: string; project_id: string; user_id: string; version_number: number; render_job_id: string; parent_version_id: string | null; output_object_key: string; duration_seconds: number; aspect_ratio: string; resolution: string; manifest_hash: string; created_at: string };
+        Insert: { id?: string; project_id: string; user_id: string; version_number: number; render_job_id: string; parent_version_id?: string | null; output_object_key: string; duration_seconds: number; aspect_ratio: string; resolution: string; manifest_hash: string; created_at?: string };
+        Update: Partial<Database["public"]["Tables"]["video_versions"]["Row"]>;
+        Relationships: [{ foreignKeyName: "video_versions_project_id_fkey"; columns: ["project_id"]; isOneToOne: false; referencedRelation: "video_projects"; referencedColumns: ["id"] }];
+      };
     };
     Views: Record<string, never>;
     Functions: {
