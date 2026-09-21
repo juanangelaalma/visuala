@@ -2,8 +2,9 @@ import { VideoError } from "../../domain/video/errors";
 import { MAX_RERENDERS_PER_PROJECT } from "../../domain/video/limits";
 import { RENDER_INPUT_SCHEMA_VERSION, renderJobInputSnapshotSchema } from "../../domain/video/render-input";
 import { isRenderJobActive } from "../../domain/video/state-machine";
+import { approvalSnapshotSchema } from "./approval";
 import type {
-  VideoBriefRevisionRepository, VideoProjectRepository, VideoRenderJobRepository, VideoStoryboardRevisionRepository, VideoVersionRepository,
+  VideoProjectRepository, VideoRenderJobRepository, VideoStoryboardRevisionRepository, VideoVersionRepository,
 } from "../../domain/video/contracts";
 import type { VideoProject, VideoRenderJob, VideoRenderJobStatus } from "../../domain/video/types";
 
@@ -14,7 +15,6 @@ const MAX_IDEMPOTENCY_KEY_LENGTH = 200;
 export type RenderJobDependencies = {
   createId: () => string;
   projects: Pick<VideoProjectRepository, "getOwned" | "transition" | "consumeRerender">;
-  briefRevisions: Pick<VideoBriefRevisionRepository, "latestOwned">;
   storyboardRevisions: Pick<VideoStoryboardRevisionRepository, "latestOwned">;
   versions: Pick<VideoVersionRepository, "latestOwned">;
   jobs: VideoRenderJobRepository;
@@ -60,14 +60,14 @@ export async function createRenderJob(
 
   if (project.status !== "approved") throw new VideoError("video_state_conflict", `A project in ${project.status} cannot be rendered.`);
 
-  const [briefRevision, storyboardRevision] = await Promise.all([
-    dependencies.briefRevisions.latestOwned(project.id, command.userId),
-    dependencies.storyboardRevisions.latestOwned(project.id, command.userId),
-  ]);
-  if (!briefRevision) throw incomplete("A brief is required before rendering.");
+  const storyboardRevision = await dependencies.storyboardRevisions.latestOwned(project.id, command.userId);
   // The approval snapshot is what the user reviewed; a render may only be built from an approved
   // storyboard revision, never from a draft one.
   if (!storyboardRevision?.approvedAt) throw incomplete("The storyboard must be approved before rendering.");
+
+  // The frozen snapshot is authoritative: it, not "latest", names the brief and storyboard the user
+  // approved. A brief revision written after approval must not change what this render is built from.
+  const approval = approvalSnapshotSchema.parse(storyboardRevision.approvalSnapshot);
 
   // A version already exists, so this render supersedes it and is a revision. The quota is checked
   // here, before the transition and before the insert, so a refused render leaves no trace.
@@ -81,8 +81,8 @@ export async function createRenderJob(
   // schema refuses unknown fields, so a field may only be added by raising the schema version.
   const inputSnapshot = renderJobInputSnapshotSchema.parse({
     schemaVersion: RENDER_INPUT_SCHEMA_VERSION,
-    briefRevisionId: briefRevision.id,
-    storyboardRevisionId: storyboardRevision.id,
+    briefRevisionId: approval.briefRevisionId,
+    storyboardRevisionId: approval.storyboardRevisionId,
     styleId: project.styleId,
     settings: project.settings,
     variantSeed: dependencies.createId(),
@@ -97,8 +97,8 @@ export async function createRenderJob(
       projectId: project.id,
       userId: command.userId,
       idempotencyKey: command.idempotencyKey,
-      briefRevisionId: briefRevision.id,
-      storyboardRevisionId: storyboardRevision.id,
+      briefRevisionId: approval.briefRevisionId,
+      storyboardRevisionId: approval.storyboardRevisionId,
       ...(parentVersion ? { parentVersionId: parentVersion.id } : {}),
       isRevision,
       inputSnapshot,
@@ -126,6 +126,8 @@ export async function createRenderJob(
  * job it already resolved through an owner-scoped path.
  */
 export async function beginRenderJob(command: BeginRenderJobCommand, dependencies: RenderJobDependencies): Promise<VideoRenderJob> {
+  // The pre-read exists for the quota decision below: `isRevision` is immutable after insert, so the
+  // pre-read stays correct for it. It is *not* safe for the status, which the claim below may change.
   const job = await dependencies.jobs.getById(command.jobId);
   if (!job) throw renderJobNotFound();
 
@@ -133,8 +135,13 @@ export async function beginRenderJob(command: BeginRenderJobCommand, dependencie
   // started this job (or the job can no longer run), so nothing is consumed here.
   const started = await dependencies.jobs.begin(command.jobId);
   if (!started) {
-    if (isRenderJobActive(job.status)) return job;
-    throw new VideoError("video_state_conflict", `A job in ${job.status} cannot be started.`);
+    // `begin` returning null means the row moved under the pre-read, so the status decision must come
+    // from a fresh read: returning the stale row would tell this worker it holds a job another
+    // worker owns.
+    const current = await dependencies.jobs.getById(command.jobId);
+    if (!current) throw renderJobNotFound();
+    if (isRenderJobActive(current.status)) return current;
+    throw new VideoError("video_state_conflict", `A job in ${current.status} cannot be started.`);
   }
 
   // The rerender is spent only for a job that supersedes an existing version, and only after the

@@ -7,6 +7,8 @@ import type { ProjectAsset, VideoProject } from "../../domain/video/types";
 const USER_ID = "11111111-1111-4111-8111-111111111111";
 const PROJECT_ID = "33333333-3333-4333-8333-333333333333";
 const ASSET_ID = "22222222-2222-4222-8222-222222222222";
+/** A valid UUID with a hex letter, so an upper-cased request spelling differs from the stored id. */
+const REQUEST_PROJECT_ID = "3a333333-3333-4333-8333-333333333333";
 const PNG = Uint8Array.from(Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAIAAAADCAIAAAD91JpzAAAAFElEQVR4nGP4z8DAwMDAxAADCBYAG10BBdmDt4sAAAAASUVORK5CYII=", "base64"));
 
 /** The stored hash is the real hash of the stored bytes, which is what the resolver re-checks. */
@@ -55,6 +57,15 @@ describe("registerProjectAsset", () => {
 
     expect(deps.objectStore.write).toHaveBeenCalledWith(`video-projects/${PROJECT_ID}/${ASSET_ID}.png`, PNG, "image/png");
     expect(asset.mimeType).toBe("image/png");
+  });
+
+  it("builds the object key from the canonical project id, not the request string", async () => {
+    const deps = dependencies();
+
+    const asset = await registerProjectAsset({ userId: USER_ID, projectId: REQUEST_PROJECT_ID.toUpperCase(), bytes: PNG, declaredMimeType: "image/png", rightsConfirmed: true }, deps);
+
+    expect(deps.objectStore.write).toHaveBeenCalledWith(`video-projects/${PROJECT_ID}/${ASSET_ID}.png`, PNG, "image/png");
+    expect(asset.projectId).toBe(PROJECT_ID);
   });
 
   it("refuses an upload without a rights confirmation", async () => {
@@ -140,6 +151,15 @@ describe("deleteProjectAsset", () => {
     deps.assets.getOwned.mockResolvedValue(null);
 
     await expect(deleteProjectAsset({ userId: "user-b", projectId: PROJECT_ID, assetId: ASSET_ID }, deps)).rejects.toMatchObject({ code: "video_project_not_found" });
+  });
+
+  it("deletes an owned asset whose request spells the project id differently", async () => {
+    const deps = dependencies();
+
+    await deleteProjectAsset({ userId: USER_ID, projectId: REQUEST_PROJECT_ID.toUpperCase(), assetId: ASSET_ID }, deps);
+
+    expect(deps.assets.softDelete).toHaveBeenCalledWith(ASSET_ID, USER_ID);
+    expect(deps.objectStore.delete).toHaveBeenCalledWith(`video-projects/${PROJECT_ID}/${ASSET_ID}.png`);
   });
 });
 

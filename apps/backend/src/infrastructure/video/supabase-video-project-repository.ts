@@ -1,5 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { MAX_RERENDERS_PER_PROJECT } from "../../domain/video/limits";
+import { assertVideoProjectTransition } from "../../domain/video/state-machine";
 import type { CreateVideoProjectInput, VideoProjectRepository } from "../../domain/video/contracts";
 import type { VideoProject, VideoProjectStatus, VideoStyleId } from "../../domain/video/types";
 import type { Database } from "@visuala/db";
@@ -56,6 +57,10 @@ export class SupabaseVideoProjectRepository implements VideoProjectRepository {
   }
 
   async transition(projectId: string, userId: string, expectedStatus: VideoProjectStatus, nextStatus: VideoProjectStatus): Promise<VideoProject | null> {
+    // The transition graph is enforced here, before the update is issued: an illegal edge throws
+    // `video_state_conflict` instead of ever reaching Postgres. The conditional `status = expected`
+    // filter below stays the concurrency guard; this check is additive, not a replacement.
+    assertVideoProjectTransition(expectedStatus, nextStatus);
     const { data, error } = await this.supabase.from("video_projects")
       .update({ status: nextStatus })
       .eq("id", projectId).eq("user_id", userId).eq("status", expectedStatus)

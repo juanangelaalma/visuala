@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import { createVideoProject, deleteVideoProject, getVideoProject, listVideoProjects } from "./projects";
+import { createVideoProject, deleteVideoProject, getVideoProject, listVideoProjects, toProjectResponse } from "./projects";
 import type { VideoProject } from "../../domain/video/types";
 
 const USER_ID = "11111111-1111-4111-8111-111111111111";
@@ -117,5 +117,18 @@ describe("listVideoProjects", () => {
     await listVideoProjects(USER_ID, deps);
 
     expect(deps.projects.listOwned).toHaveBeenCalledWith(USER_ID);
+  });
+});
+
+describe("toProjectResponse", () => {
+  it("strips the owner and exposes only the public project shape", () => {
+    const response = toProjectResponse(project());
+
+    // The fixture carries `userId`; the projection is the one place a project leaves the backend, so
+    // the owner must not survive it.
+    expect("userId" in response).toBe(false);
+    expect(Object.keys(response).sort()).toEqual([
+      "createdAt", "id", "revisionRenderCount", "settings", "status", "styleId", "title", "updatedAt", "videoType",
+    ]);
   });
 });

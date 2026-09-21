@@ -80,6 +80,18 @@ describe("SupabaseVideoProjectRepository", () => {
     expect(calls[0]?.filters).toContainEqual(["status", "approved"]);
   });
 
+  it("refuses an illegal edge before issuing any update", async () => {
+    const { client, calls } = makeClient({ ...ROW, status: "ready" });
+    const repository = new SupabaseVideoProjectRepository(client as never);
+
+    await expect(repository.transition(ROW.id, ROW.user_id, "ready", "approved"))
+      .rejects.toMatchObject({ code: "video_state_conflict" });
+
+    // The graph is checked first: an illegal edge never reads or writes the database.
+    expect(client.from).not.toHaveBeenCalled();
+    expect(calls).toHaveLength(0);
+  });
+
   it("returns null when a transition matched no row", async () => {
     const { client } = makeClient(null);
     const repository = new SupabaseVideoProjectRepository(client as never);

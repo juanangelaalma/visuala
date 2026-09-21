@@ -59,8 +59,8 @@ TTS/music/moderation providers) and the 9Router provider adapter — were parked
 environment has no 9Router credentials, no HyperFrames install, and no provider accounts. As a
 result:
 
-- **No `openai-chat-completions` adapter exists.** `apps/backend/src/infrastructure/ai-service/`
-  contains only `google-generate-content-adapter.ts`.
+- **No `openai-chat-completions` adapter exists.** The AI service registers only one provider
+  adapter, `apps/backend/src/infrastructure/ai-service/google-generate-content-adapter.ts`.
 - The AI service still registers a single API format,
   `google-generate-content` (`apps/backend/src/infrastructure/ai-service/config.ts`,
   `registeredApiFormats`). Any profile whose `apiFormat` is anything else fails configuration
@@ -354,3 +354,6 @@ written later.
 - The assistant reply, the interviewer loop, prompt construction, and moderation calls are absent
   from `POST /video-projects/:projectId/messages`.
 - The HyperFrames render engine, the worker, and MP4 upload do not exist; the render plan owns them.
+- **Rate limiting is not implemented.** Upload, chat, approval, and render are not rate-limited and
+  this is deferred to the AI-orchestration/ops plan, because the PRD specifies no limits or store and
+  the eventual deployment is multi-process.

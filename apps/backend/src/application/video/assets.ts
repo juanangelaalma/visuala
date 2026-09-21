@@ -33,7 +33,9 @@ export async function registerProjectAsset(command: RegisterProjectAssetCommand,
   await enforceProjectLimits(project, command.userId, command.bytes.byteLength, dependencies);
 
   const id = dependencies.createId();
-  const objectKey = objectKeyFor(command.projectId, id, image.mimeType);
+  // The key is built from the canonical id, not the request string: Postgres accepts several
+  // spellings of a UUID, so the row's id is the only stable identity for the object path.
+  const objectKey = objectKeyFor(project.id, id, image.mimeType);
   await dependencies.objectStore.write(objectKey, command.bytes, image.mimeType);
 
   // The object and the row are committed in separate steps, so a failure after the insert has to
@@ -70,11 +72,10 @@ export async function deleteProjectAsset(
   dependencies: AssetDependencies,
 ): Promise<void> {
   const project = await requireEditableProject(command.projectId, command.userId, dependencies);
-  void project;
   const asset = await dependencies.assets.getOwned(command.assetId, command.userId);
-  // An asset that does not exist for this caller and one that belongs to another project are
-  // indistinguishable to the client: both read as the project not being found.
-  if (!asset || asset.projectId !== command.projectId) throw projectNotFound();
+  // Compared against the canonical id, so a request that spells the UUID differently still matches
+  // the stored row instead of answering 404 for an asset the caller owns.
+  if (!asset || asset.projectId !== project.id) throw projectNotFound();
 
   await dependencies.assets.softDelete(command.assetId, command.userId);
   await dependencies.objectStore.delete(asset.objectKey).catch(() => undefined);

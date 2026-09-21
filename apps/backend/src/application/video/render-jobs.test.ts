@@ -1,4 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
+import { buildApprovalSnapshot } from "./approval";
 import { beginRenderJob, cancelRenderJob, createRenderJob, getRenderJob, toRenderJobResponse } from "./render-jobs";
 import type { CreateRenderJobInput } from "../../domain/video/contracts";
 import type {
@@ -10,6 +11,10 @@ const PROJECT_ID = "33333333-3333-4333-8333-333333333333";
 const BRIEF_ID = "44444444-4444-4444-8444-444444444444";
 const STORYBOARD_ID = "55555555-5555-4555-8555-555555555555";
 const VERSION_ID = "88888888-8888-4888-8888-888888888888";
+/** A brief revision written after approval; the render intake must ignore it in favour of the snapshot. */
+const NEWER_BRIEF_ID = "66666666-6666-4666-8666-666666666666";
+const APPROVED_AT = "2026-09-21T10:00:00.000Z";
+const GENERATED_BY = { profileId: "primary", provider: "9router", model: "router-model", promptVersion: "planner-v1", requestId: "req-1" };
 
 const settings: VideoOutputSettings = { durationSeconds: 10, aspectRatio: "9:16", resolution: "1080p", language: "id", voiceOverEnabled: true, musicEnabled: true };
 
@@ -25,6 +30,25 @@ function version(overrides: Partial<VideoVersion> = {}): VideoVersion {
   return { id: VERSION_ID, projectId: PROJECT_ID, userId: USER_ID, versionNumber: 1, renderJobId: "job-0", outputObjectKey: `video-versions/${PROJECT_ID}/${VERSION_ID}.mp4`, durationSeconds: 10, aspectRatio: "9:16", resolution: "1080p", manifestHash: "hash", createdAt: "created", ...overrides };
 }
 
+/** The frozen snapshot approval stamps onto the storyboard revision; it names the approved brief. */
+function approvedSnapshot(approvedAt: string) {
+  return buildApprovalSnapshot({
+    project: { videoType: "product_promo", styleId: "bold_pop", settings },
+    briefRevision: { id: BRIEF_ID, version: 1 },
+    storyboardRevision: { id: STORYBOARD_ID, version: 1 },
+    generatedBy: GENERATED_BY,
+    approvedAt,
+  });
+}
+
+function storyboardRevision(approvedAt: string | null): VideoStoryboardRevision {
+  return {
+    id: STORYBOARD_ID, projectId: PROJECT_ID, userId: USER_ID, version: 1, schemaVersion: "storyboard@v1",
+    briefRevisionId: BRIEF_ID, scenes: [], totalDurationSeconds: 10, generatedBy: GENERATED_BY, createdAt: "created",
+    ...(approvedAt === null ? {} : { approvedAt, approvalSnapshot: approvedSnapshot(approvedAt) }),
+  };
+}
+
 function dependencies(overrides: { status?: VideoProject["status"]; revisionRenderCount?: number; existingJob?: VideoRenderJob | null; activeJob?: VideoRenderJob | null; latestVersion?: Partial<VideoVersion> | null; approvedAt?: string | null } = {}) {
   return {
     createId: () => "99999999-9999-4999-8999-999999999999",
@@ -33,11 +57,13 @@ function dependencies(overrides: { status?: VideoProject["status"]; revisionRend
       transition: vi.fn(async (): Promise<VideoProject | null> => project("rendering")),
       consumeRerender: vi.fn(async (): Promise<VideoProject | null> => project("rendering", 1)),
     },
+    // A brief revision written after approval is present in the repository, but this use case must
+    // never consult it: the approved snapshot is authoritative.
     briefRevisions: {
-      latestOwned: vi.fn(async (): Promise<VideoBriefRevision | null> => ({ id: BRIEF_ID, projectId: PROJECT_ID, userId: USER_ID, version: 1, schemaVersion: "brief@v1", brief: {}, isComplete: true, generatedBy: { profileId: "primary", provider: "9router", model: "router-model", promptVersion: "planner-v1", requestId: "req-1" }, sourceMessageIds: [], createdAt: "created" })),
+      latestOwned: vi.fn(async (): Promise<VideoBriefRevision | null> => ({ id: NEWER_BRIEF_ID, projectId: PROJECT_ID, userId: USER_ID, version: 2, schemaVersion: "brief@v1", brief: {}, isComplete: true, generatedBy: GENERATED_BY, sourceMessageIds: [], createdAt: "created" })),
     },
     storyboardRevisions: {
-      latestOwned: vi.fn(async (): Promise<VideoStoryboardRevision | null> => ({ id: STORYBOARD_ID, projectId: PROJECT_ID, userId: USER_ID, version: 1, schemaVersion: "storyboard@v1", briefRevisionId: BRIEF_ID, scenes: [], totalDurationSeconds: 10, generatedBy: { profileId: "primary", provider: "9router", model: "router-model", promptVersion: "planner-v1", requestId: "req-1" }, ...(overrides.approvedAt === undefined ? { approvedAt: "2026-09-21T10:00:00.000Z" } : overrides.approvedAt === null ? {} : { approvedAt: overrides.approvedAt }), createdAt: "created" })),
+      latestOwned: vi.fn(async (): Promise<VideoStoryboardRevision | null> => storyboardRevision(overrides.approvedAt === undefined ? APPROVED_AT : overrides.approvedAt)),
     },
     versions: { latestOwned: vi.fn(async (): Promise<VideoVersion | null> => (overrides.latestVersion ? version(overrides.latestVersion) : null)) },
     jobs: {
@@ -163,12 +189,18 @@ describe("createRenderJob", () => {
     expect(deps.jobs.create).not.toHaveBeenCalled();
   });
 
-  it("refuses a render with no brief revision to build from", async () => {
+  it("pins the job to the brief in the approved snapshot, not to a newer brief revision", async () => {
     const deps = dependencies();
-    deps.briefRevisions.latestOwned.mockResolvedValue(null);
 
-    await expect(createRenderJob({ userId: USER_ID, projectId: PROJECT_ID, idempotencyKey: "render-0001" }, deps)).rejects.toMatchObject({ code: "video_approval_incomplete" });
-    expect(deps.projects.transition).not.toHaveBeenCalled();
+    const { job: created } = await createRenderJob({ userId: USER_ID, projectId: PROJECT_ID, idempotencyKey: "render-0001" }, deps);
+
+    // The repository holds a brief revision written after approval (NEWER_BRIEF_ID), but the job must
+    // be built from the brief the snapshot froze, so it never reads the latest brief at all.
+    expect(created.briefRevisionId).toBe(BRIEF_ID);
+    expect(created.storyboardRevisionId).toBe(STORYBOARD_ID);
+    expect(deps.jobs.create.mock.calls[0]?.[0]).toMatchObject({ briefRevisionId: BRIEF_ID, storyboardRevisionId: STORYBOARD_ID });
+    expect(deps.briefRevisions.latestOwned).not.toHaveBeenCalled();
+    expect(deps.projects.transition).toHaveBeenCalledWith(PROJECT_ID, USER_ID, "approved", "rendering");
   });
 });
 
@@ -216,6 +248,19 @@ describe("beginRenderJob", () => {
     deps.jobs.getById.mockResolvedValue(job({ status: "rendering" }));
 
     await expect(beginRenderJob({ jobId: "job-1" }, deps)).resolves.toMatchObject({ status: "rendering" });
+    expect(deps.projects.consumeRerender).not.toHaveBeenCalled();
+  });
+
+  it("reports the fresh status when the claim is lost, not the stale pre-read row", async () => {
+    const deps = dependencies();
+    deps.jobs.begin.mockResolvedValue(null);
+    deps.jobs.getById
+      .mockResolvedValueOnce(job({ status: "queued" }))
+      .mockResolvedValueOnce(job({ status: "preparing" }));
+
+    const started = await beginRenderJob({ jobId: "job-1" }, deps);
+
+    expect(started.status).toBe("preparing");
     expect(deps.projects.consumeRerender).not.toHaveBeenCalled();
   });
 
