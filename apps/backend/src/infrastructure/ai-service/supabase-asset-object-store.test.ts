@@ -3,21 +3,23 @@ import { resolve } from "node:path";
 import { describe, expect, it, vi } from "vitest";
 import { DEFAULT_ASSET_BUCKET, SupabaseAssetObjectStore, readAssetBucket } from "./supabase-asset-object-store";
 
-const migration = readFileSync(resolve(process.cwd(), "supabase/migrations/20260922000000_rename_asset_bucket.sql"), "utf8");
+const migration = readFileSync(resolve(process.cwd(), "supabase/migrations/20260921000000_create_video_asset_bucket.sql"), "utf8");
+/** Comments explain this migration's constraints, and one of them quotes the statement below. */
+const sql = migration.split("\n").filter((line) => !line.trimStart().startsWith("--")).join("\n");
 
-describe("video asset bucket migration", () => {
+describe("asset bucket migration", () => {
   it("creates one private bucket with an image-only allowlist", () => {
-    expect(migration).toMatch(/insert into storage\.buckets[\s\S]*values \('assets', 'assets', false/i);
-    expect(migration).toMatch(/allowed_mime_types[\s\S]*image\/jpeg[\s\S]*image\/png[\s\S]*image\/webp/i);
-  });
-
-  it("drops the legacy bucket only when it holds no objects", () => {
-    expect(migration).toMatch(/if not exists \(select 1 from storage\.objects where bucket_id = 'video-assets'\)[\s\S]*delete from storage\.buckets where id = 'video-assets'/i);
-    expect(migration).toMatch(/else[\s\S]*raise exception/i);
+    expect(sql).toMatch(/insert into storage\.buckets[\s\S]*values \('assets', 'assets', false/i);
+    expect(sql).toMatch(/allowed_mime_types[\s\S]*image\/jpeg[\s\S]*image\/png[\s\S]*image\/webp/i);
   });
 
   it("grants no storage.objects access to browser roles", () => {
-    expect(migration).not.toMatch(/create policy[\s\S]*to (anon|authenticated)/i);
+    expect(sql).not.toMatch(/create policy[\s\S]*to (anon|authenticated)/i);
+    expect(sql).not.toMatch(/grant[\s\S]*to (anon|authenticated)/i);
+  });
+
+  it("never attempts to delete a bucket, which Supabase rejects from SQL", () => {
+    expect(sql).not.toMatch(/delete from storage\.buckets/i);
   });
 });
 

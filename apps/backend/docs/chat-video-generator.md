@@ -326,13 +326,14 @@ written later.
 The product has **one** object store: a single private Supabase Storage bucket shared by the
 AI-service assets, the project image assets, and the rendered versions.
 
-- **One private bucket, `assets`** (`SUPABASE_ASSET_BUCKET` override). It was created as
-  `video-assets` by
-  `apps/backend/supabase/migrations/20260921000000_create_video_asset_bucket.sql` and renamed to
-  `assets` by `apps/backend/supabase/migrations/20260922000000_rename_asset_bucket.sql`, which also
-  drops the old bucket once it holds no objects. `public = false`, a 10 MB file-size limit, and an
-  allowlist of `image/jpeg`, `image/png`, `image/webp`. No policy is added for `anon` or
-  `authenticated`, so only service-role server code can read or write it.
+- **One private bucket, `assets`** (`SUPABASE_ASSET_BUCKET` override), created by
+  `apps/backend/supabase/migrations/20260921000000_create_video_asset_bucket.sql`. `public = false`,
+  a 10 MB file-size limit, and an allowlist of `image/jpeg`, `image/png`, `image/webp`. No policy is
+  added for `anon` or `authenticated`, so only service-role server code can read or write it.
+  Supabase rejects `delete from storage.buckets`, so a bucket cannot be renamed from a migration; if
+  a database already ran an earlier revision of that migration under the name `video-assets`, create
+  `assets` there through the Storage API (or set `SUPABASE_ASSET_BUCKET=video-assets` on that
+  environment) rather than expecting a migration to move it.
 - **Both asset families live in that one bucket, separated by key prefix** (keys are internal,
   never a canonical reference the client sees):
   - AI-service asset: `ai-assets/<userId>/<id>.<ext>` (`.jpg` for JPEG, otherwise the subtype),

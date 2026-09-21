@@ -12,10 +12,10 @@ describe("createSupabaseSignedUrlFactory", () => {
     const createSignedUrl = vi.fn().mockResolvedValue({ data: { signedUrl: "https://signed.example/video-projects/p/a.png" }, error: null });
     const { client: supabase, from } = client(createSignedUrl);
 
-    const sign = createSupabaseSignedUrlFactory(supabase, "video-assets");
+    const sign = createSupabaseSignedUrlFactory(supabase, "assets");
 
     await expect(sign("video-projects/p/a.png")).resolves.toBe("https://signed.example/video-projects/p/a.png");
-    expect(from).toHaveBeenCalledWith("video-assets");
+    expect(from).toHaveBeenCalledWith("assets");
     expect(createSignedUrl).toHaveBeenCalledWith("video-projects/p/a.png", SIGNED_URL_TTL_SECONDS);
     // The TTL is the documented 300 seconds, not merely whatever the constant happens to be.
     expect(SIGNED_URL_TTL_SECONDS).toBe(300);
@@ -26,7 +26,7 @@ describe("createSupabaseSignedUrlFactory", () => {
     const createSignedUrl = vi.fn().mockResolvedValue({ data: null, error: failure });
     const { client: supabase } = client(createSignedUrl);
 
-    const sign = createSupabaseSignedUrlFactory(supabase, "video-assets");
+    const sign = createSupabaseSignedUrlFactory(supabase, "assets");
 
     await expect(sign("video-projects/p/a.png")).rejects.toBe(failure);
   });
@@ -35,7 +35,7 @@ describe("createSupabaseSignedUrlFactory", () => {
     const createSignedUrl = vi.fn().mockResolvedValue({ data: null, error: null });
     const { client: supabase } = client(createSignedUrl);
 
-    const sign = createSupabaseSignedUrlFactory(supabase, "video-assets");
+    const sign = createSupabaseSignedUrlFactory(supabase, "assets");
 
     await expect(sign("video-projects/p/a.png")).rejects.toThrowError("Could not sign the object.");
   });
