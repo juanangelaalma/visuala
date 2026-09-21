@@ -91,6 +91,19 @@ describe("registerProjectAsset", () => {
     expect(deps.objectStore.delete).toHaveBeenCalledWith(`video-projects/${PROJECT_ID}/${ASSET_ID}.png`);
   });
 
+  it("drops the inserted row as well as the object when the project closes during the upload", async () => {
+    const deps = dependencies();
+    deps.projects.getOwned
+      .mockResolvedValueOnce({ id: PROJECT_ID, status: "interviewing" } as VideoProject)
+      .mockResolvedValueOnce({ id: PROJECT_ID, status: "rendering" } as VideoProject);
+
+    await expect(registerProjectAsset({ userId: USER_ID, projectId: PROJECT_ID, bytes: PNG, declaredMimeType: "image/png", rightsConfirmed: true }, deps))
+      .rejects.toMatchObject({ code: "video_project_not_found" });
+    expect(deps.assets.create).toHaveBeenCalled();
+    expect(deps.objectStore.delete).toHaveBeenCalledWith(`video-projects/${PROJECT_ID}/${ASSET_ID}.png`);
+    expect(deps.assets.softDelete).toHaveBeenCalledWith(ASSET_ID, USER_ID);
+  });
+
   it("enforces the configured asset count and byte ceiling", async () => {
     const full = dependencies({ existingAssets: [{ id: "a" }, { id: "b" }] });
     await expect(registerProjectAsset({ userId: USER_ID, projectId: PROJECT_ID, bytes: PNG, declaredMimeType: "image/png", rightsConfirmed: true }, full))

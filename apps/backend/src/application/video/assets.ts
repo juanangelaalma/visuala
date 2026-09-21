@@ -36,6 +36,11 @@ export async function registerProjectAsset(command: RegisterProjectAssetCommand,
   const objectKey = objectKeyFor(command.projectId, id, image.mimeType);
   await dependencies.objectStore.write(objectKey, command.bytes, image.mimeType);
 
+  // The object and the row are committed in separate steps, so a failure after the insert has to
+  // undo whichever write landed. `insertedAssetId` stays undefined when the insert itself failed,
+  // where there is no row to compensate.
+  let insertedAssetId: string | undefined;
+
   try {
     const asset = await dependencies.assets.create({
       id,
@@ -49,10 +54,13 @@ export async function registerProjectAsset(command: RegisterProjectAssetCommand,
       height: image.height,
       rightsConfirmedAt: new Date().toISOString(),
     });
+    insertedAssetId = asset.id;
     await assertProjectStillEditable(command.projectId, command.userId, dependencies);
     return asset;
   } catch (error) {
+    // Both compensations are best-effort: a cleanup failure must never mask the original error.
     await dependencies.objectStore.delete(objectKey).catch(() => undefined);
+    if (insertedAssetId !== undefined) await dependencies.assets.softDelete(insertedAssetId, command.userId).catch(() => undefined);
     throw error;
   }
 }
