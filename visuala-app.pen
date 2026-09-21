@@ -1,0 +1,3440 @@
+{
+  "version": "2.18",
+  "children": [
+    {
+      "type": "frame",
+      "id": "nHmBl",
+      "x": 0,
+      "y": 0,
+      "name": "01 — Projects Library",
+      "clip": true,
+      "width": 1440,
+      "height": 960,
+      "fill": "$bg",
+      "cornerRadius": 28,
+      "children": [
+        {
+          "type": "frame",
+          "id": "Yq6Wf",
+          "name": "Sidebar",
+          "width": 244,
+          "height": "fill_container",
+          "fill": "#0A0A0A",
+          "layout": "vertical",
+          "gap": 28,
+          "padding": [
+            28,
+            20
+          ],
+          "children": [
+            {
+              "type": "frame",
+              "id": "yFMbI",
+              "name": "Brand",
+              "width": "fill_container",
+              "gap": 10,
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "jFuk0",
+                  "name": "Brand Mark",
+                  "width": 28,
+                  "height": 28,
+                  "fill": "$accent",
+                  "cornerRadius": 8
+                },
+                {
+                  "type": "text",
+                  "id": "v6G3M",
+                  "name": "Brand Name",
+                  "fill": "#FFFFFF",
+                  "content": "visuala",
+                  "fontFamily": "$font-body",
+                  "fontSize": 20,
+                  "fontWeight": "600"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "TKCNP",
+              "name": "New Video Button",
+              "width": "fill_container",
+              "height": 44,
+              "fill": "$accent",
+              "cornerRadius": 10,
+              "gap": 10,
+              "justifyContent": "center",
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "icon",
+                  "id": "oIZns",
+                  "name": "Plus Icon",
+                  "width": 17,
+                  "height": 17,
+                  "icon": "plus",
+                  "library": "lucide",
+                  "fill": "#000000"
+                },
+                {
+                  "type": "text",
+                  "id": "D4pZM",
+                  "name": "New Video Label",
+                  "fill": "#000000",
+                  "content": "Video baru",
+                  "fontFamily": "$font-body",
+                  "fontSize": 14,
+                  "fontWeight": "600"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "Iynff",
+              "name": "Primary Navigation",
+              "width": "fill_container",
+              "layout": "vertical",
+              "gap": 6,
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "pKxQu",
+                  "name": "Nav — Proyek",
+                  "width": "fill_container",
+                  "height": 40,
+                  "fill": "#202020",
+                  "cornerRadius": 7,
+                  "stroke": "#3A3A3A",
+                  "strokeWidth": 1,
+                  "gap": 12,
+                  "padding": [
+                    0,
+                    12
+                  ],
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "icon",
+                      "id": "soWKE",
+                      "name": "Proyek Icon",
+                      "width": 17,
+                      "height": 17,
+                      "icon": "folder",
+                      "library": "lucide",
+                      "fill": "#FFFFFF"
+                    },
+                    {
+                      "type": "text",
+                      "id": "yEKmq",
+                      "name": "Proyek Label",
+                      "fill": "#FFFFFF",
+                      "content": "Proyek",
+                      "fontFamily": "$font-body",
+                      "fontSize": 14,
+                      "fontWeight": "600"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "gcRwO",
+                  "name": "Nav — Inspirasi",
+                  "width": "fill_container",
+                  "height": 40,
+                  "fill": "#111214",
+                  "cornerRadius": 7,
+                  "gap": 12,
+                  "padding": [
+                    0,
+                    12
+                  ],
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "icon",
+                      "id": "io8xI",
+                      "name": "Inspirasi Icon",
+                      "width": 17,
+                      "height": 17,
+                      "icon": "sparkles",
+                      "library": "lucide",
+                      "fill": "#969AA2"
+                    },
+                    {
+                      "type": "text",
+                      "id": "yWge1",
+                      "name": "Inspirasi Label",
+                      "fill": "#BABABA",
+                      "content": "Inspirasi",
+                      "fontFamily": "$font-body",
+                      "fontSize": 14
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "ks0yE",
+                  "name": "Nav — Pengaturan",
+                  "width": "fill_container",
+                  "height": 40,
+                  "fill": "#111214",
+                  "cornerRadius": 7,
+                  "gap": 12,
+                  "padding": [
+                    0,
+                    12
+                  ],
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "icon",
+                      "id": "VjTAH",
+                      "name": "Pengaturan Icon",
+                      "width": 17,
+                      "height": 17,
+                      "icon": "settings-2",
+                      "library": "lucide",
+                      "fill": "#969AA2"
+                    },
+                    {
+                      "type": "text",
+                      "id": "QFnlp",
+                      "name": "Pengaturan Label",
+                      "fill": "#BABABA",
+                      "content": "Pengaturan",
+                      "fontFamily": "$font-body",
+                      "fontSize": 14
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "PvA2L",
+              "name": "Sidebar Spacer",
+              "width": "fill_container",
+              "height": "fill_container"
+            },
+            {
+              "type": "frame",
+              "id": "Zh7cx",
+              "name": "Usage Note",
+              "width": "fill_container",
+              "fill": "#161616",
+              "cornerRadius": 8,
+              "stroke": "#333333",
+              "strokeWidth": 1,
+              "layout": "vertical",
+              "gap": 7,
+              "padding": 12,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "m006qh",
+                  "name": "Usage Title",
+                  "fill": "#FFFFFF",
+                  "content": "Render MVP",
+                  "fontFamily": "$font-body",
+                  "fontSize": 12,
+                  "fontWeight": "600"
+                },
+                {
+                  "type": "text",
+                  "id": "OKPS9",
+                  "name": "Usage Copy",
+                  "fill": "#BABABA",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "Setiap proyek memiliki 3 kesempatan render revisi.",
+                  "lineHeight": 1.4,
+                  "fontFamily": "$font-body",
+                  "fontSize": 12,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "NSRfw",
+              "name": "User Profile",
+              "width": "fill_container",
+              "gap": 10,
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "ellipse",
+                  "id": "TR4WY",
+                  "name": "Avatar",
+                  "fill": "#DCEEFF",
+                  "width": 30,
+                  "height": 30
+                },
+                {
+                  "type": "frame",
+                  "id": "Q6qbs8",
+                  "name": "Profile Text",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": 2,
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "JDDqM",
+                      "name": "Profile Name",
+                      "fill": "#FFFFFF",
+                      "content": "Kedai Rasa",
+                      "fontFamily": "$font-body",
+                      "fontSize": 13,
+                      "fontWeight": "600"
+                    },
+                    {
+                      "type": "text",
+                      "id": "y1ByS5",
+                      "name": "Profile Plan",
+                      "fill": "#BABABA",
+                      "content": "Workspace pribadi",
+                      "fontFamily": "$font-body",
+                      "fontSize": 11,
+                      "fontWeight": "normal"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "k9bNb",
+          "name": "Projects Main",
+          "width": "fill_container",
+          "height": "fill_container",
+          "fill": "$bg",
+          "layout": "vertical",
+          "gap": 32,
+          "padding": [
+            48,
+            56
+          ],
+          "children": [
+            {
+              "type": "frame",
+              "id": "xMGlg",
+              "name": "Page Header",
+              "width": "fill_container",
+              "justifyContent": "space_between",
+              "alignItems": "end",
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "h53Fo4",
+                  "name": "Header Copy",
+                  "layout": "vertical",
+                  "gap": 8,
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "qxKe7",
+                      "name": "Eyebrow",
+                      "fill": "$accent",
+                      "content": "VIDEO WORKSPACE",
+                      "fontFamily": "$font-mono",
+                      "fontSize": 11,
+                      "fontWeight": "600",
+                      "letterSpacing": 1.2
+                    },
+                    {
+                      "type": "text",
+                      "id": "vZTtf",
+                      "name": "Page Title",
+                      "fill": "$ink",
+                      "content": "Proyek video",
+                      "fontFamily": "$font-body",
+                      "fontSize": 36,
+                      "fontWeight": "650",
+                      "letterSpacing": -1
+                    },
+                    {
+                      "type": "text",
+                      "id": "od4JP",
+                      "name": "Page Subtitle",
+                      "fill": "$muted",
+                      "content": "Lanjutkan brief, pantau render, atau unduh versi yang sudah siap.",
+                      "fontFamily": "$font-body",
+                      "fontSize": 15,
+                      "fontWeight": "normal"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "vT1oP",
+                  "name": "Header Controls",
+                  "gap": 10,
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "sRQOw",
+                      "name": "Search",
+                      "width": 230,
+                      "height": 42,
+                      "fill": "$surface",
+                      "cornerRadius": 8,
+                      "stroke": "$line",
+                      "strokeWidth": 1,
+                      "gap": 9,
+                      "padding": [
+                        0,
+                        13
+                      ],
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "icon",
+                          "id": "hTpqd",
+                          "name": "Search Icon",
+                          "width": 16,
+                          "height": 16,
+                          "icon": "search",
+                          "library": "lucide",
+                          "fill": "$muted"
+                        },
+                        {
+                          "type": "text",
+                          "id": "gIGMi",
+                          "name": "Search Placeholder",
+                          "fill": "#BABABA",
+                          "content": "Cari proyek",
+                          "fontFamily": "$font-body",
+                          "fontSize": 13,
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "i28TY",
+                      "name": "Filter",
+                      "height": 42,
+                      "fill": "$surface",
+                      "cornerRadius": 8,
+                      "stroke": "$line",
+                      "strokeWidth": 1,
+                      "gap": 8,
+                      "padding": [
+                        0,
+                        14
+                      ],
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "icon",
+                          "id": "pyJcg",
+                          "name": "Filter Icon",
+                          "width": 16,
+                          "height": 16,
+                          "icon": "sliders-horizontal",
+                          "library": "lucide",
+                          "fill": "$ink"
+                        },
+                        {
+                          "type": "text",
+                          "id": "IolNG",
+                          "name": "Filter Label",
+                          "fill": "$ink",
+                          "content": "Semua status",
+                          "fontFamily": "$font-body",
+                          "fontSize": 13,
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "PKdmW",
+              "name": "Project Stats",
+              "width": "fill_container",
+              "height": 96,
+              "gap": 12,
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "Nnbk0",
+                  "name": "Stat — Total proyek",
+                  "width": "fill_container",
+                  "height": "fill_container",
+                  "fill": "$surface",
+                  "cornerRadius": 10,
+                  "stroke": "$line",
+                  "strokeWidth": 1,
+                  "gap": 14,
+                  "padding": [
+                    0,
+                    20
+                  ],
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "zdTk2",
+                      "name": "Stat Value",
+                      "fill": "$ink",
+                      "content": "5",
+                      "fontFamily": "$font-mono",
+                      "fontSize": 28,
+                      "fontWeight": "600"
+                    },
+                    {
+                      "type": "frame",
+                      "id": "BekIn",
+                      "name": "Stat Copy",
+                      "layout": "vertical",
+                      "gap": 3,
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "u4aVO",
+                          "name": "Stat Label",
+                          "fill": "$ink",
+                          "content": "Total proyek",
+                          "fontFamily": "$font-body",
+                          "fontSize": 13,
+                          "fontWeight": "550"
+                        },
+                        {
+                          "type": "text",
+                          "id": "GJWCX",
+                          "name": "Stat Period",
+                          "fill": "$muted",
+                          "content": "30 hari terakhir",
+                          "fontFamily": "$font-body",
+                          "fontSize": 11,
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "k0DXm",
+                  "name": "Stat — Siap diunduh",
+                  "width": "fill_container",
+                  "height": "fill_container",
+                  "fill": "$surface",
+                  "cornerRadius": 10,
+                  "stroke": "$line",
+                  "strokeWidth": 1,
+                  "gap": 14,
+                  "padding": [
+                    0,
+                    20
+                  ],
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "UtcdN",
+                      "name": "Stat Value",
+                      "fill": "$ink",
+                      "content": "2",
+                      "fontFamily": "$font-mono",
+                      "fontSize": 28,
+                      "fontWeight": "600"
+                    },
+                    {
+                      "type": "frame",
+                      "id": "DRZaM",
+                      "name": "Stat Copy",
+                      "layout": "vertical",
+                      "gap": 3,
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "ymrlg",
+                          "name": "Stat Label",
+                          "fill": "$ink",
+                          "content": "Siap diunduh",
+                          "fontFamily": "$font-body",
+                          "fontSize": 13,
+                          "fontWeight": "550"
+                        },
+                        {
+                          "type": "text",
+                          "id": "wF005",
+                          "name": "Stat Period",
+                          "fill": "$muted",
+                          "content": "30 hari terakhir",
+                          "fontFamily": "$font-body",
+                          "fontSize": 11,
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "pbk8u",
+                  "name": "Stat — Sedang dirender",
+                  "width": "fill_container",
+                  "height": "fill_container",
+                  "fill": "$surface",
+                  "cornerRadius": 10,
+                  "stroke": "$line",
+                  "strokeWidth": 1,
+                  "gap": 14,
+                  "padding": [
+                    0,
+                    20
+                  ],
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "BWQZ7",
+                      "name": "Stat Value",
+                      "fill": "$ink",
+                      "content": "1",
+                      "fontFamily": "$font-mono",
+                      "fontSize": 28,
+                      "fontWeight": "600"
+                    },
+                    {
+                      "type": "frame",
+                      "id": "xzJQl",
+                      "name": "Stat Copy",
+                      "layout": "vertical",
+                      "gap": 3,
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "UAv2l",
+                          "name": "Stat Label",
+                          "fill": "$ink",
+                          "content": "Sedang dirender",
+                          "fontFamily": "$font-body",
+                          "fontSize": 13,
+                          "fontWeight": "550"
+                        },
+                        {
+                          "type": "text",
+                          "id": "wbZxX",
+                          "name": "Stat Period",
+                          "fill": "$muted",
+                          "content": "30 hari terakhir",
+                          "fontFamily": "$font-body",
+                          "fontSize": 11,
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "m1v1Tp",
+              "name": "Project Grid",
+              "width": "fill_container",
+              "gap": 16,
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "skVSp",
+                  "name": "Project — Es Kopi Gula Aren",
+                  "width": "fill_container",
+                  "height": 352,
+                  "fill": "$surface",
+                  "cornerRadius": 10,
+                  "stroke": "$line",
+                  "strokeWidth": 1,
+                  "layout": "vertical",
+                  "gap": 14,
+                  "padding": 12,
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "P2jhp",
+                      "name": "Thumbnail",
+                      "width": "fill_container",
+                      "height": 190,
+                      "fill": "#D8A06D",
+                      "cornerRadius": 7,
+                      "layout": "vertical",
+                      "padding": 14,
+                      "justifyContent": "end",
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "yh6YK",
+                          "name": "Status Badge",
+                          "fill": "#292B09",
+                          "cornerRadius": 4,
+                          "stroke": "#4A4D0C",
+                          "strokeWidth": 1,
+                          "padding": [
+                            6,
+                            8
+                          ],
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "OI9yB",
+                              "name": "Status Text",
+                              "fill": "$accent",
+                              "content": "Siap",
+                              "fontFamily": "$font-mono",
+                              "fontSize": 10,
+                              "fontWeight": "600"
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "fbZce",
+                      "name": "Project Copy",
+                      "width": "fill_container",
+                      "layout": "vertical",
+                      "gap": 6,
+                      "padding": [
+                        0,
+                        4
+                      ],
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "zTwrp",
+                          "name": "Project Title",
+                          "fill": "$ink",
+                          "content": "Es Kopi Gula Aren",
+                          "fontFamily": "$font-body",
+                          "fontSize": 17,
+                          "fontWeight": "620"
+                        },
+                        {
+                          "type": "text",
+                          "id": "cjCei",
+                          "name": "Project Type",
+                          "fill": "$muted",
+                          "content": "Promosi produk",
+                          "fontFamily": "$font-body",
+                          "fontSize": 12,
+                          "fontWeight": "normal"
+                        },
+                        {
+                          "type": "text",
+                          "id": "ClJKS",
+                          "name": "Project Settings",
+                          "fill": "#BABABA",
+                          "content": "9:16 • 10 dtk • 1080p",
+                          "fontFamily": "$font-mono",
+                          "fontSize": 10,
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "e6OEb",
+                      "name": "Project Footer",
+                      "width": "fill_container",
+                      "padding": [
+                        2,
+                        4
+                      ],
+                      "justifyContent": "space_between",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "n05Sqn",
+                          "name": "Updated",
+                          "fill": "$muted",
+                          "content": "Diperbarui 2j lalu",
+                          "fontFamily": "$font-body",
+                          "fontSize": 11,
+                          "fontWeight": "normal"
+                        },
+                        {
+                          "type": "icon",
+                          "id": "imQEW",
+                          "name": "More",
+                          "width": 18,
+                          "height": 18,
+                          "icon": "ellipsis",
+                          "library": "lucide",
+                          "fill": "$muted"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "vqnlG",
+                  "name": "Project — Paket Hemat Siang",
+                  "width": "fill_container",
+                  "height": 352,
+                  "fill": "$surface",
+                  "cornerRadius": 10,
+                  "stroke": "$line",
+                  "strokeWidth": 1,
+                  "layout": "vertical",
+                  "gap": 14,
+                  "padding": 12,
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "rG77k",
+                      "name": "Thumbnail",
+                      "width": "fill_container",
+                      "height": 190,
+                      "fill": "#E9C452",
+                      "cornerRadius": 7,
+                      "layout": "vertical",
+                      "padding": 14,
+                      "justifyContent": "end",
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "JKG9K",
+                          "name": "Status Badge",
+                          "fill": "#292B09",
+                          "cornerRadius": 4,
+                          "stroke": "#4A4D0C",
+                          "strokeWidth": 1,
+                          "padding": [
+                            6,
+                            8
+                          ],
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "edfjU",
+                              "name": "Status Text",
+                              "fill": "$accent",
+                              "content": "Render 64%",
+                              "fontFamily": "$font-mono",
+                              "fontSize": 10,
+                              "fontWeight": "600"
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "TzKpy",
+                      "name": "Project Copy",
+                      "width": "fill_container",
+                      "layout": "vertical",
+                      "gap": 6,
+                      "padding": [
+                        0,
+                        4
+                      ],
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "bh3zh",
+                          "name": "Project Title",
+                          "fill": "$ink",
+                          "content": "Paket Hemat Siang",
+                          "fontFamily": "$font-body",
+                          "fontSize": 17,
+                          "fontWeight": "620"
+                        },
+                        {
+                          "type": "text",
+                          "id": "wmuD4",
+                          "name": "Project Type",
+                          "fill": "$muted",
+                          "content": "Diskon / promo",
+                          "fontFamily": "$font-body",
+                          "fontSize": 12,
+                          "fontWeight": "normal"
+                        },
+                        {
+                          "type": "text",
+                          "id": "qQrc9",
+                          "name": "Project Settings",
+                          "fill": "#BABABA",
+                          "content": "1:1 • 15 dtk • 1080p",
+                          "fontFamily": "$font-mono",
+                          "fontSize": 10,
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "kDVDU",
+                      "name": "Project Footer",
+                      "width": "fill_container",
+                      "padding": [
+                        2,
+                        4
+                      ],
+                      "justifyContent": "space_between",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "uWSGe",
+                          "name": "Updated",
+                          "fill": "$muted",
+                          "content": "Diperbarui 2j lalu",
+                          "fontFamily": "$font-body",
+                          "fontSize": 11,
+                          "fontWeight": "normal"
+                        },
+                        {
+                          "type": "icon",
+                          "id": "XwD52",
+                          "name": "More",
+                          "width": 18,
+                          "height": 18,
+                          "icon": "ellipsis",
+                          "library": "lucide",
+                          "fill": "$muted"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "A3bQJ",
+                  "name": "Project — Croissant Almond",
+                  "width": 350,
+                  "height": 352,
+                  "fill": "$surface",
+                  "cornerRadius": 10,
+                  "stroke": "$line",
+                  "strokeWidth": 1,
+                  "layout": "vertical",
+                  "gap": 14,
+                  "padding": 12,
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "jqz2s",
+                      "name": "Thumbnail",
+                      "width": "fill_container",
+                      "height": 190,
+                      "fill": "#C99175",
+                      "cornerRadius": 7,
+                      "layout": "vertical",
+                      "padding": 14,
+                      "justifyContent": "end",
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "Wp8Dn",
+                          "name": "Status Badge",
+                          "fill": "#292B09",
+                          "cornerRadius": 4,
+                          "stroke": "#4A4D0C",
+                          "strokeWidth": 1,
+                          "padding": [
+                            6,
+                            8
+                          ],
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "sApzP",
+                              "name": "Status Text",
+                              "fill": "$accent",
+                              "content": "Menunggu persetujuan",
+                              "fontFamily": "$font-mono",
+                              "fontSize": 10,
+                              "fontWeight": "600"
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "E284N",
+                      "name": "Project Copy",
+                      "width": "fill_container",
+                      "layout": "vertical",
+                      "gap": 6,
+                      "padding": [
+                        0,
+                        4
+                      ],
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "a3OFN",
+                          "name": "Project Title",
+                          "fill": "$ink",
+                          "content": "Croissant Almond",
+                          "fontFamily": "$font-body",
+                          "fontSize": 17,
+                          "fontWeight": "620"
+                        },
+                        {
+                          "type": "text",
+                          "id": "bDD6l",
+                          "name": "Project Type",
+                          "fill": "$muted",
+                          "content": "Peluncuran produk",
+                          "fontFamily": "$font-body",
+                          "fontSize": 12,
+                          "fontWeight": "normal"
+                        },
+                        {
+                          "type": "text",
+                          "id": "mNQ46",
+                          "name": "Project Settings",
+                          "fill": "#BABABA",
+                          "content": "9:16 • 6 dtk • 720p",
+                          "fontFamily": "$font-mono",
+                          "fontSize": 10,
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "L0Xv2",
+                      "name": "Project Footer",
+                      "width": "fill_container",
+                      "padding": [
+                        2,
+                        4
+                      ],
+                      "justifyContent": "space_between",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "Y0Db8M",
+                          "name": "Updated",
+                          "fill": "$muted",
+                          "content": "Diperbarui 2j lalu",
+                          "fontFamily": "$font-body",
+                          "fontSize": 11,
+                          "fontWeight": "normal"
+                        },
+                        {
+                          "type": "icon",
+                          "id": "G3tlP",
+                          "name": "More",
+                          "width": 18,
+                          "height": 18,
+                          "icon": "ellipsis",
+                          "library": "lucide",
+                          "fill": "$muted"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "nUtnP",
+      "x": 1560,
+      "y": 0,
+      "name": "02 — AI Video Workspace",
+      "clip": true,
+      "width": 1440,
+      "height": 960,
+      "fill": "$bg",
+      "cornerRadius": 28,
+      "children": [
+        {
+          "type": "frame",
+          "id": "SD1bt",
+          "name": "Conversation Sidebar",
+          "width": 232,
+          "height": 960,
+          "fill": "#0A0A0A",
+          "layout": "vertical",
+          "gap": 20,
+          "padding": [
+            24,
+            16
+          ],
+          "children": [
+            {
+              "type": "frame",
+              "id": "Hw6eO",
+              "name": "Workspace Brand",
+              "width": "fill_container",
+              "height": 32,
+              "gap": 9,
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "B3TKa",
+                  "name": "Workspace Brand Mark",
+                  "width": 26,
+                  "height": 26,
+                  "fill": "$accent",
+                  "cornerRadius": 7
+                },
+                {
+                  "type": "text",
+                  "id": "WeXTA",
+                  "name": "Workspace Brand Name",
+                  "fill": "#FFFFFF",
+                  "content": "visuala",
+                  "fontFamily": "$font-body",
+                  "fontSize": 18,
+                  "fontWeight": "600"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "fV6IJ",
+              "name": "Back to Projects",
+              "width": "fill_container",
+              "height": 38,
+              "cornerRadius": 7,
+              "gap": 10,
+              "padding": [
+                0,
+                10
+              ],
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "icon",
+                  "id": "u09RlG",
+                  "name": "Back Icon",
+                  "width": 16,
+                  "height": 16,
+                  "icon": "arrow-left",
+                  "library": "lucide",
+                  "fill": "#A6AAB2"
+                },
+                {
+                  "type": "text",
+                  "id": "NVDRT",
+                  "name": "Back Label",
+                  "fill": "#CED0D5",
+                  "content": "Semua proyek",
+                  "fontFamily": "$font-body",
+                  "fontSize": 13,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "text",
+              "id": "kegNt",
+              "name": "Recent Heading",
+              "fill": "#BABABA",
+              "content": "TERBARU",
+              "fontFamily": "$font-mono",
+              "fontSize": 10,
+              "fontWeight": "600",
+              "letterSpacing": 1
+            },
+            {
+              "type": "frame",
+              "id": "WCz7S",
+              "name": "Conversation — Es Kopi Gula Aren",
+              "width": "fill_container",
+              "height": 62,
+              "fill": "#202020",
+              "cornerRadius": 8,
+              "stroke": "#333333",
+              "strokeWidth": 1,
+              "layout": "vertical",
+              "gap": 4,
+              "padding": [
+                11,
+                12
+              ],
+              "children": [
+                {
+                  "type": "text",
+                  "id": "F08vv",
+                  "name": "Conversation Title",
+                  "fill": "#FFFFFF",
+                  "content": "Es Kopi Gula Aren",
+                  "fontFamily": "$font-body",
+                  "fontSize": 13,
+                  "fontWeight": "600"
+                },
+                {
+                  "type": "text",
+                  "id": "Gpv3i",
+                  "name": "Conversation Status",
+                  "fill": "#91CDEF",
+                  "content": "Brief sedang disusun",
+                  "fontFamily": "$font-body",
+                  "fontSize": 11,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "j5v0S7",
+              "name": "Conversation — Paket Hemat Siang",
+              "width": "fill_container",
+              "height": 62,
+              "fill": "#111214",
+              "cornerRadius": 8,
+              "layout": "vertical",
+              "gap": 4,
+              "padding": [
+                11,
+                12
+              ],
+              "children": [
+                {
+                  "type": "text",
+                  "id": "GtBDl",
+                  "name": "Conversation Title",
+                  "fill": "#D0D2D6",
+                  "content": "Paket Hemat Siang",
+                  "fontFamily": "$font-body",
+                  "fontSize": 13,
+                  "fontWeight": "450"
+                },
+                {
+                  "type": "text",
+                  "id": "iVtUH",
+                  "name": "Conversation Status",
+                  "fill": "#BABABA",
+                  "content": "Render 64%",
+                  "fontFamily": "$font-body",
+                  "fontSize": 11,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "P0T8W8",
+              "name": "Conversation — Croissant Almond",
+              "width": "fill_container",
+              "height": 62,
+              "fill": "#111214",
+              "cornerRadius": 8,
+              "layout": "vertical",
+              "gap": 4,
+              "padding": [
+                11,
+                12
+              ],
+              "children": [
+                {
+                  "type": "text",
+                  "id": "uQlIW",
+                  "name": "Conversation Title",
+                  "fill": "#D0D2D6",
+                  "content": "Croissant Almond",
+                  "fontFamily": "$font-body",
+                  "fontSize": 13,
+                  "fontWeight": "450"
+                },
+                {
+                  "type": "text",
+                  "id": "LbstZ",
+                  "name": "Conversation Status",
+                  "fill": "#BABABA",
+                  "content": "Menunggu persetujuan",
+                  "fontFamily": "$font-body",
+                  "fontSize": 11,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "gl3iW",
+              "name": "Conversation Spacer",
+              "width": "fill_container",
+              "height": 468
+            },
+            {
+              "type": "frame",
+              "id": "B2unq",
+              "name": "Workspace Account",
+              "width": "fill_container",
+              "height": 38,
+              "gap": 9,
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "ellipse",
+                  "id": "KcAMT",
+                  "name": "Workspace Avatar",
+                  "fill": "#DCEEFF",
+                  "width": 28,
+                  "height": 28
+                },
+                {
+                  "type": "text",
+                  "id": "No5ND",
+                  "name": "Workspace Account Name",
+                  "fill": "#FFFFFF",
+                  "content": "Kedai Rasa",
+                  "fontFamily": "$font-body",
+                  "fontSize": 12,
+                  "fontWeight": "550"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "tbcSa",
+          "name": "Conversation Main",
+          "width": 736,
+          "height": 960,
+          "fill": "$surface",
+          "stroke": "$line",
+          "strokeWidth": {
+            "right": 1
+          },
+          "layout": "vertical",
+          "children": [
+            {
+              "type": "frame",
+              "id": "Mu9Kn",
+              "name": "Conversation Header",
+              "width": "fill_container",
+              "height": 74,
+              "fill": "$surface",
+              "stroke": "$line",
+              "strokeWidth": {
+                "bottom": 1
+              },
+              "padding": [
+                0,
+                24
+              ],
+              "justifyContent": "space_between",
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "b0KiA",
+                  "name": "Conversation Identity",
+                  "layout": "vertical",
+                  "gap": 4,
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "y678d",
+                      "name": "Conversation Project Title",
+                      "fill": "$ink",
+                      "content": "Es Kopi Gula Aren",
+                      "fontFamily": "$font-body",
+                      "fontSize": 16,
+                      "fontWeight": "620"
+                    },
+                    {
+                      "type": "text",
+                      "id": "bHaOQ",
+                      "name": "Conversation Project Meta",
+                      "fill": "$muted",
+                      "content": "Promosi produk • 9:16 • 10 detik",
+                      "fontFamily": "$font-mono",
+                      "fontSize": 10,
+                      "fontWeight": "normal"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "XGB2o",
+                  "name": "Draft Status",
+                  "fill": "#292B09",
+                  "cornerRadius": 4,
+                  "stroke": "#4A4D0C",
+                  "strokeWidth": 1,
+                  "padding": [
+                    6,
+                    8
+                  ],
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "t2BXU",
+                      "name": "Draft Status Text",
+                      "fill": "$accent",
+                      "content": "Menyusun brief",
+                      "fontFamily": "$font-mono",
+                      "fontSize": 10,
+                      "fontWeight": "600"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "Bpifx",
+              "name": "Messages",
+              "width": "fill_container",
+              "height": 704,
+              "layout": "vertical",
+              "gap": 18,
+              "padding": [
+                26,
+                28
+              ],
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "vAsRT",
+                  "name": "Conversation Date",
+                  "width": "fill_container",
+                  "justifyContent": "center",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "fe5uG",
+                      "name": "Conversation Date Text",
+                      "fill": "#BABABA",
+                      "content": "HARI INI, 10.24",
+                      "fontFamily": "$font-mono",
+                      "fontSize": 9,
+                      "fontWeight": "normal",
+                      "letterSpacing": 0.7
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "C4u3pI",
+                  "name": "User Message Row",
+                  "width": "fill_container",
+                  "justifyContent": "end",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "xScp3",
+                      "name": "User Message",
+                      "width": 430,
+                      "fill": "#EFF31B",
+                      "cornerRadius": [
+                        12,
+                        12,
+                        4,
+                        12
+                      ],
+                      "padding": [
+                        12,
+                        15
+                      ],
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "PlVgf",
+                          "name": "User Message Text",
+                          "fill": "#000000",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "Buat video jualan untuk es kopi gula aren ini. Tonjolkan rasa creamy dan cocok diminum siang hari.",
+                          "lineHeight": 1.45,
+                          "fontFamily": "$font-body",
+                          "fontSize": 14,
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "Y1Le3Y",
+                  "name": "AI Message Row",
+                  "width": "fill_container",
+                  "gap": 10,
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "Zc1fg",
+                      "name": "AI Avatar",
+                      "width": 28,
+                      "height": 28,
+                      "fill": "#292B09",
+                      "cornerRadius": 7,
+                      "justifyContent": "center",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "icon",
+                          "id": "PWgUF",
+                          "name": "AI Spark Icon",
+                          "width": 14,
+                          "height": 14,
+                          "icon": "sparkles",
+                          "library": "lucide",
+                          "fill": "$accent"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "c6BVC5",
+                      "name": "AI Question Stack",
+                      "width": 570,
+                      "layout": "vertical",
+                      "gap": 12,
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "OaqHg",
+                          "name": "AI Question",
+                          "width": "fill_container",
+                          "fill": "#202020",
+                          "cornerRadius": [
+                            4,
+                            12,
+                            12,
+                            12
+                          ],
+                          "stroke": "#333333",
+                          "strokeWidth": 1,
+                          "layout": "vertical",
+                          "gap": 8,
+                          "padding": [
+                            14,
+                            16
+                          ],
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "KXukY",
+                              "name": "AI Acknowledgement",
+                              "fill": "$muted",
+                              "textGrowth": "fixed-width",
+                              "width": "fill_container",
+                              "content": "Untuk produk kopi dengan warna karamel, saya merekomendasikan style yang kontras agar produk terlihat kuat di layar ponsel.",
+                              "lineHeight": 1.45,
+                              "fontFamily": "$font-body",
+                              "fontSize": 13,
+                              "fontWeight": "normal"
+                            },
+                            {
+                              "type": "text",
+                              "id": "b9pLeE",
+                              "name": "AI Question Text",
+                              "fill": "$ink",
+                              "textGrowth": "fixed-width",
+                              "width": "fill_container",
+                              "content": "Style visual mana yang paling sesuai untuk video ini?",
+                              "lineHeight": 1.4,
+                              "fontFamily": "$font-body",
+                              "fontSize": 15,
+                              "fontWeight": "600"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "RK7Ql",
+                          "name": "Answer Options",
+                          "width": "fill_container",
+                          "height": 202,
+                          "layout": "vertical",
+                          "gap": 8,
+                          "children": [
+                            {
+                              "type": "frame",
+                              "id": "yfnNF",
+                              "name": "Option — Pesan via WhatsApp",
+                              "width": "fill_container",
+                              "height": 58,
+                              "fill": "#292B09",
+                              "cornerRadius": 8,
+                              "stroke": "#EFF31B",
+                              "strokeWidth": 1,
+                              "gap": 11,
+                              "padding": [
+                                0,
+                                13
+                              ],
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "ellipse",
+                                  "id": "NRD7X",
+                                  "name": "Option Radio",
+                                  "fill": "$accent",
+                                  "width": 16,
+                                  "height": 16,
+                                  "stroke": "$accent",
+                                  "strokeWidth": 1
+                                },
+                                {
+                                  "type": "frame",
+                                  "id": "bXw1W",
+                                  "name": "Option Copy",
+                                  "width": "fill_container",
+                                  "layout": "vertical",
+                                  "gap": 3,
+                                  "children": [
+                                    {
+                                      "type": "text",
+                                      "id": "LvXWm",
+                                      "name": "Option Label",
+                                      "fill": "$ink",
+                                      "content": "BOLD POP  ·  REKOMENDASI",
+                                      "fontFamily": "$font-mono",
+                                      "fontSize": 11,
+                                      "fontWeight": "600"
+                                    },
+                                    {
+                                      "type": "text",
+                                      "id": "Xy7D2",
+                                      "name": "Option Reason",
+                                      "fill": "$muted",
+                                      "content": "Kontras tinggi, typography tegas, dan motion energik",
+                                      "fontFamily": "$font-body",
+                                      "fontSize": 11,
+                                      "fontWeight": "normal"
+                                    }
+                                  ]
+                                }
+                              ]
+                            },
+                            {
+                              "type": "frame",
+                              "id": "D831Xf",
+                              "name": "Option — Kunjungi toko",
+                              "width": "fill_container",
+                              "height": 44,
+                              "fill": "#161616",
+                              "cornerRadius": 8,
+                              "stroke": "#3A3A3A",
+                              "strokeWidth": 1,
+                              "gap": 11,
+                              "padding": [
+                                0,
+                                13
+                              ],
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "ellipse",
+                                  "id": "QPl5B",
+                                  "name": "Option Radio",
+                                  "fill": "#FFFFFF",
+                                  "width": 16,
+                                  "height": 16,
+                                  "stroke": "#BFC3CA",
+                                  "strokeWidth": 1
+                                },
+                                {
+                                  "type": "frame",
+                                  "id": "fiVFU",
+                                  "name": "Option Copy",
+                                  "width": "fill_container",
+                                  "layout": "vertical",
+                                  "gap": 3,
+                                  "children": [
+                                    {
+                                      "type": "text",
+                                      "id": "UBXVX",
+                                      "name": "Option Label",
+                                      "fill": "$ink",
+                                      "content": "Clean Product",
+                                      "fontFamily": "$font-body",
+                                      "fontSize": 13,
+                                      "fontWeight": "450"
+                                    }
+                                  ]
+                                }
+                              ]
+                            },
+                            {
+                              "type": "frame",
+                              "id": "fmQwp",
+                              "name": "Option — Lihat menu lengkap",
+                              "width": "fill_container",
+                              "height": 44,
+                              "fill": "#161616",
+                              "cornerRadius": 8,
+                              "stroke": "#3A3A3A",
+                              "strokeWidth": 1,
+                              "gap": 11,
+                              "padding": [
+                                0,
+                                13
+                              ],
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "ellipse",
+                                  "id": "t3pRSQ",
+                                  "name": "Option Radio",
+                                  "fill": "#FFFFFF",
+                                  "width": 16,
+                                  "height": 16,
+                                  "stroke": "#BFC3CA",
+                                  "strokeWidth": 1
+                                },
+                                {
+                                  "type": "frame",
+                                  "id": "qdD4v",
+                                  "name": "Option Copy",
+                                  "width": "fill_container",
+                                  "layout": "vertical",
+                                  "gap": 3,
+                                  "children": [
+                                    {
+                                      "type": "text",
+                                      "id": "pKHGH",
+                                      "name": "Option Label",
+                                      "fill": "$ink",
+                                      "content": "Lainnya / jelaskan style sendiri",
+                                      "fontFamily": "$font-body",
+                                      "fontSize": 13,
+                                      "fontWeight": "450"
+                                    }
+                                  ]
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "I1a3Qv",
+              "name": "Composer Area",
+              "width": "fill_container",
+              "height": 182,
+              "stroke": "$line",
+              "strokeWidth": {
+                "top": 1
+              },
+              "layout": "vertical",
+              "gap": 9,
+              "padding": [
+                18,
+                24,
+                20,
+                24
+              ],
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "KAHKA",
+                  "name": "Message Composer",
+                  "width": "fill_container",
+                  "height": 94,
+                  "fill": "#161616",
+                  "cornerRadius": 10,
+                  "stroke": "#3A3A3A",
+                  "strokeWidth": 1,
+                  "effect": {
+                    "type": "shadow",
+                    "shadowType": "outer",
+                    "color": "#00000066",
+                    "offset": {
+                      "x": 0,
+                      "y": 8
+                    },
+                    "blur": 24
+                  },
+                  "layout": "vertical",
+                  "gap": 12,
+                  "padding": [
+                    12,
+                    14
+                  ],
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "Fr1Pt",
+                      "name": "Composer Placeholder",
+                      "fill": "#BABABA",
+                      "content": "Pilih style atau tulis preferensi visual lain…",
+                      "fontFamily": "$font-body",
+                      "fontSize": 13,
+                      "fontWeight": "normal"
+                    },
+                    {
+                      "type": "frame",
+                      "id": "TDdV6",
+                      "name": "Composer Footer",
+                      "width": "fill_container",
+                      "justifyContent": "space_between",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "kycRZ",
+                          "name": "Attachment Action",
+                          "gap": 7,
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "id": "x25NI",
+                              "name": "Attachment Icon",
+                              "width": 17,
+                              "height": 17,
+                              "icon": "paperclip",
+                              "library": "lucide",
+                              "fill": "$muted"
+                            },
+                            {
+                              "type": "text",
+                              "id": "nlkTM",
+                              "name": "Attachment Label",
+                              "fill": "$muted",
+                              "content": "Tambah foto",
+                              "fontFamily": "$font-body",
+                              "fontSize": 11,
+                              "fontWeight": "normal"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "F9eM3",
+                          "name": "Send Button",
+                          "width": 34,
+                          "height": 34,
+                          "fill": "$accent",
+                          "cornerRadius": 8,
+                          "justifyContent": "center",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "id": "vPFBp",
+                              "name": "Send Icon",
+                              "width": 17,
+                              "height": 17,
+                              "icon": "arrow-up",
+                              "library": "lucide",
+                              "fill": "#000000"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "text",
+                  "id": "A41su",
+                  "name": "Composer Note",
+                  "fill": "#BABABA",
+                  "content": "AI hanya memakai fakta komersial yang Anda konfirmasi.",
+                  "fontFamily": "$font-body",
+                  "fontSize": 10,
+                  "fontWeight": "normal"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "ExuEW",
+          "name": "Project Context Panel",
+          "width": "fill_container",
+          "height": 960,
+          "fill": "#101010",
+          "layout": "vertical",
+          "gap": 20,
+          "padding": [
+            24,
+            22
+          ],
+          "children": [
+            {
+              "type": "frame",
+              "id": "twuB6",
+              "name": "Context Header",
+              "width": "fill_container",
+              "justifyContent": "space_between",
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "text",
+                  "id": "I2vAT",
+                  "name": "Context Title",
+                  "fill": "$ink",
+                  "content": "Konteks proyek",
+                  "fontFamily": "$font-body",
+                  "fontSize": 15,
+                  "fontWeight": "620"
+                },
+                {
+                  "type": "icon",
+                  "id": "T5ewKu",
+                  "name": "Context More",
+                  "width": 18,
+                  "height": 18,
+                  "icon": "ellipsis",
+                  "library": "lucide",
+                  "fill": "$muted"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "cJgQx",
+              "name": "Video Preview",
+              "width": "fill_container",
+              "height": 250,
+              "fill": {
+                "type": "gradient",
+                "gradientType": "linear",
+                "enabled": true,
+                "rotation": 155,
+                "size": {
+                  "height": 1
+                },
+                "colors": [
+                  {
+                    "color": "#E9B16D",
+                    "position": 0
+                  },
+                  {
+                    "color": "#4D2414",
+                    "position": 1
+                  }
+                ]
+              },
+              "cornerRadius": 10,
+              "layout": "vertical",
+              "justifyContent": "center",
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "C2lzW1",
+                  "name": "Preview Play",
+                  "width": 44,
+                  "height": 44,
+                  "fill": "#FFFFFFD9",
+                  "cornerRadius": 22,
+                  "justifyContent": "center",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "icon",
+                      "id": "tendP",
+                      "name": "Preview Play Icon",
+                      "width": 18,
+                      "height": 18,
+                      "icon": "play",
+                      "library": "lucide",
+                      "fill": "$ink"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "w5yMyp",
+              "name": "Output Settings",
+              "width": "fill_container",
+              "height": 184,
+              "fill": "#161616",
+              "cornerRadius": 9,
+              "stroke": "#333333",
+              "strokeWidth": 1,
+              "layout": "vertical",
+              "gap": 13,
+              "padding": 15,
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "oqk6o",
+                  "name": "Settings Header",
+                  "width": "fill_container",
+                  "justifyContent": "space_between",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "UGONv",
+                      "name": "Settings Title",
+                      "fill": "$ink",
+                      "content": "Output",
+                      "fontFamily": "$font-body",
+                      "fontSize": 13,
+                      "fontWeight": "600"
+                    },
+                    {
+                      "type": "text",
+                      "id": "H6jwF",
+                      "name": "Settings Edit",
+                      "fill": "$accent",
+                      "content": "Ubah",
+                      "fontFamily": "$font-body",
+                      "fontSize": 12,
+                      "fontWeight": "550"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "aOPqw",
+                  "name": "Setting — Style",
+                  "width": "fill_container",
+                  "justifyContent": "space_between",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "BRQ4C",
+                      "name": "Setting Label",
+                      "fill": "$muted",
+                      "content": "Style",
+                      "fontFamily": "$font-body",
+                      "fontSize": 11,
+                      "fontWeight": "normal"
+                    },
+                    {
+                      "type": "text",
+                      "id": "sRP2T",
+                      "name": "Setting Value",
+                      "fill": "$accent",
+                      "content": "Bold Pop",
+                      "fontFamily": "$font-mono",
+                      "fontSize": 10,
+                      "fontWeight": "550"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "kPECL",
+                  "name": "Setting — Format",
+                  "width": "fill_container",
+                  "justifyContent": "space_between",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "QeFWU",
+                      "name": "Setting Label",
+                      "fill": "$muted",
+                      "content": "Format",
+                      "fontFamily": "$font-body",
+                      "fontSize": 11,
+                      "fontWeight": "normal"
+                    },
+                    {
+                      "type": "text",
+                      "id": "agneo",
+                      "name": "Setting Value",
+                      "fill": "$ink",
+                      "content": "9:16 · 1080p",
+                      "fontFamily": "$font-mono",
+                      "fontSize": 10,
+                      "fontWeight": "550"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "h8Jv9",
+                  "name": "Setting — Durasi",
+                  "width": "fill_container",
+                  "justifyContent": "space_between",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "Iif8l",
+                      "name": "Setting Label",
+                      "fill": "$muted",
+                      "content": "Durasi",
+                      "fontFamily": "$font-body",
+                      "fontSize": 11,
+                      "fontWeight": "normal"
+                    },
+                    {
+                      "type": "text",
+                      "id": "iLmpa",
+                      "name": "Setting Value",
+                      "fill": "$ink",
+                      "content": "10 detik",
+                      "fontFamily": "$font-mono",
+                      "fontSize": 10,
+                      "fontWeight": "550"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "fm2Vw",
+                  "name": "Setting — Voice-over",
+                  "width": "fill_container",
+                  "justifyContent": "space_between",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "MfKHr",
+                      "name": "Setting Label",
+                      "fill": "$muted",
+                      "content": "Voice-over",
+                      "fontFamily": "$font-body",
+                      "fontSize": 11,
+                      "fontWeight": "normal"
+                    },
+                    {
+                      "type": "text",
+                      "id": "XU59w",
+                      "name": "Setting Value",
+                      "fill": "$ink",
+                      "content": "Bahasa Indonesia",
+                      "fontFamily": "$font-mono",
+                      "fontSize": 10,
+                      "fontWeight": "550"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "NV9DG",
+                  "name": "Setting — Musik & caption",
+                  "width": "fill_container",
+                  "justifyContent": "space_between",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "iyIZ8",
+                      "name": "Setting Label",
+                      "fill": "$muted",
+                      "content": "Musik & caption",
+                      "fontFamily": "$font-body",
+                      "fontSize": 11,
+                      "fontWeight": "normal"
+                    },
+                    {
+                      "type": "text",
+                      "id": "w3W9Y",
+                      "name": "Setting Value",
+                      "fill": "$ink",
+                      "content": "Aktif",
+                      "fontFamily": "$font-mono",
+                      "fontSize": 10,
+                      "fontWeight": "550"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "Yr15b",
+              "name": "Assets Section",
+              "width": "fill_container",
+              "layout": "vertical",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "G6W54",
+                  "name": "Assets Header",
+                  "width": "fill_container",
+                  "justifyContent": "space_between",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "ve7PR",
+                      "name": "Assets Title",
+                      "fill": "$ink",
+                      "content": "Aset produk",
+                      "fontFamily": "$font-body",
+                      "fontSize": 13,
+                      "fontWeight": "600"
+                    },
+                    {
+                      "type": "text",
+                      "id": "SMsJl",
+                      "name": "Assets Count",
+                      "fill": "$muted",
+                      "content": "3 foto",
+                      "fontFamily": "$font-mono",
+                      "fontSize": 10,
+                      "fontWeight": "normal"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "KZi8m",
+                  "name": "Asset Thumbnails",
+                  "width": "fill_container",
+                  "height": 86,
+                  "gap": 8,
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "NickU",
+                      "name": "Asset Thumbnail",
+                      "width": "fill_container",
+                      "height": "fill_container",
+                      "fill": "#D8A06D",
+                      "cornerRadius": 7
+                    },
+                    {
+                      "type": "frame",
+                      "id": "DoYBE",
+                      "name": "Asset Thumbnail",
+                      "width": "fill_container",
+                      "height": "fill_container",
+                      "fill": "#C17E4E",
+                      "cornerRadius": 7
+                    },
+                    {
+                      "type": "frame",
+                      "id": "I7GUk",
+                      "name": "Asset Thumbnail",
+                      "width": 137,
+                      "height": "fill_container",
+                      "fill": "#F0C994",
+                      "cornerRadius": 7
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "XUb4R",
+              "name": "Brief Progress",
+              "width": "fill_container",
+              "fill": "#0A0A0A",
+              "cornerRadius": 9,
+              "stroke": "#333333",
+              "strokeWidth": 1,
+              "layout": "vertical",
+              "gap": 12,
+              "padding": 15,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "FcEDD",
+                  "name": "Brief Progress Title",
+                  "fill": "#FFFFFF",
+                  "content": "Brief 5 dari 8 lengkap",
+                  "fontFamily": "$font-body",
+                  "fontSize": 13,
+                  "fontWeight": "600"
+                },
+                {
+                  "type": "frame",
+                  "id": "d3fX6O",
+                  "name": "Brief Progress Bar",
+                  "width": "fill_container",
+                  "height": 4,
+                  "fill": "#303238",
+                  "cornerRadius": 2,
+                  "layout": "none",
+                  "children": [
+                    {
+                      "type": "rectangle",
+                      "cornerRadius": 2,
+                      "id": "LSKMi",
+                      "x": 0,
+                      "y": 0,
+                      "name": "Brief Progress Fill",
+                      "fill": "$accent",
+                      "width": 178,
+                      "height": 4
+                    }
+                  ]
+                },
+                {
+                  "type": "text",
+                  "id": "wXjhL",
+                  "name": "Brief Progress Hint",
+                  "fill": "#BABABA",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "Selanjutnya: CTA, tujuan pemesanan, dan detail penawaran.",
+                  "lineHeight": 1.4,
+                  "fontFamily": "$font-body",
+                  "fontSize": 11,
+                  "fontWeight": "normal"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "eCrt9",
+      "x": 3120,
+      "y": 0,
+      "name": "03 — New Video Setup",
+      "clip": true,
+      "width": 1280,
+      "height": 900,
+      "fill": "$bg",
+      "cornerRadius": 28,
+      "layout": "vertical",
+      "children": [
+        {
+          "type": "frame",
+          "id": "oxaY8",
+          "name": "Setup Topbar",
+          "width": "fill_container",
+          "height": 72,
+          "fill": "$surface",
+          "stroke": "$line",
+          "strokeWidth": {
+            "bottom": 1
+          },
+          "padding": [
+            0,
+            36
+          ],
+          "justifyContent": "space_between",
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "frame",
+              "id": "zhLQH",
+              "name": "Setup Brand",
+              "gap": 9,
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "zDTy7",
+                  "name": "Setup Brand Mark",
+                  "width": 26,
+                  "height": 26,
+                  "fill": "$accent",
+                  "cornerRadius": 7
+                },
+                {
+                  "type": "text",
+                  "id": "MxXLJ",
+                  "name": "Setup Brand Name",
+                  "fill": "$ink",
+                  "content": "visuala",
+                  "fontFamily": "$font-body",
+                  "fontSize": 18,
+                  "fontWeight": "600"
+                }
+              ]
+            },
+            {
+              "type": "text",
+              "id": "AUhuQ",
+              "name": "Setup Step",
+              "fill": "$muted",
+              "content": "LANGKAH 1 DARI 2",
+              "fontFamily": "$font-mono",
+              "fontSize": 10,
+              "fontWeight": "600",
+              "letterSpacing": 1
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "gEVyM",
+          "name": "Setup Body",
+          "width": "fill_container",
+          "height": "fill_container",
+          "fill": "$bg",
+          "gap": 40,
+          "padding": [
+            46,
+            72
+          ],
+          "children": [
+            {
+              "type": "frame",
+              "id": "G8x6q",
+              "name": "Setup Form",
+              "width": 690,
+              "height": "fill_container",
+              "layout": "vertical",
+              "gap": 28,
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "IyaG1",
+                  "name": "Setup Intro",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": 9,
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "tsxnM",
+                      "name": "Setup Eyebrow",
+                      "fill": "$accent",
+                      "content": "VIDEO BARU",
+                      "fontFamily": "$font-mono",
+                      "fontSize": 10,
+                      "fontWeight": "600",
+                      "letterSpacing": 1
+                    },
+                    {
+                      "type": "text",
+                      "id": "zkDmY",
+                      "name": "Setup Title",
+                      "fill": "$ink",
+                      "content": "Atur hasil yang Anda butuhkan",
+                      "fontFamily": "$font-body",
+                      "fontSize": 32,
+                      "fontWeight": "650",
+                      "letterSpacing": -0.8
+                    },
+                    {
+                      "type": "text",
+                      "id": "ycitX",
+                      "name": "Setup Subtitle",
+                      "fill": "$muted",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "Pengaturan ini membantu AI memberi pertanyaan yang lebih relevan dan menjaga setiap versi tetap konsisten.",
+                      "lineHeight": 1.5,
+                      "fontFamily": "$font-body",
+                      "fontSize": 14,
+                      "fontWeight": "normal"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "wYmf1",
+                  "name": "Field — Tipe video",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": 10,
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "haU5T",
+                      "name": "Field Label",
+                      "fill": "$ink",
+                      "content": "Tipe video",
+                      "fontFamily": "$font-body",
+                      "fontSize": 12,
+                      "fontWeight": "600"
+                    },
+                    {
+                      "type": "frame",
+                      "id": "Uxur1",
+                      "name": "Choices — Tipe video",
+                      "width": "fill_container",
+                      "gap": 8,
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "H5z8x",
+                          "name": "Choice — Promosi produk",
+                          "width": "fill_container",
+                          "height": 40,
+                          "fill": "#292B09",
+                          "cornerRadius": 7,
+                          "stroke": "#EFF31B",
+                          "strokeWidth": 1,
+                          "justifyContent": "center",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "bqOPD",
+                              "name": "Choice Label",
+                              "fill": "$accent",
+                              "content": "Promosi produk",
+                              "fontFamily": "$font-body",
+                              "fontSize": 11,
+                              "fontWeight": "600"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "aEI4w",
+                          "name": "Choice — Diskon / promo harga",
+                          "width": "fill_container",
+                          "height": 40,
+                          "fill": "#161616",
+                          "cornerRadius": 7,
+                          "stroke": "#333333",
+                          "strokeWidth": 1,
+                          "justifyContent": "center",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "LGgs9",
+                              "name": "Choice Label",
+                              "fill": "$ink",
+                              "content": "Diskon / promo harga",
+                              "fontFamily": "$font-body",
+                              "fontSize": 11,
+                              "fontWeight": "450"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "GAtqZ",
+                          "name": "Choice — Peluncuran produk",
+                          "width": "fill_container",
+                          "height": 40,
+                          "fill": "#161616",
+                          "cornerRadius": 7,
+                          "stroke": "#333333",
+                          "strokeWidth": 1,
+                          "justifyContent": "center",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "IHndh",
+                              "name": "Choice Label",
+                              "fill": "$ink",
+                              "content": "Peluncuran produk",
+                              "fontFamily": "$font-body",
+                              "fontSize": 11,
+                              "fontWeight": "450"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "Wvqd0",
+                          "name": "Choice — Menu / etalase",
+                          "width": "fill_container",
+                          "height": 40,
+                          "fill": "#161616",
+                          "cornerRadius": 7,
+                          "stroke": "#333333",
+                          "strokeWidth": 1,
+                          "justifyContent": "center",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "D4EXb4",
+                              "name": "Choice Label",
+                              "fill": "$ink",
+                              "content": "Menu / etalase",
+                              "fontFamily": "$font-body",
+                              "fontSize": 11,
+                              "fontWeight": "450"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "U6w5i",
+                  "name": "Field — Style video",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": 10,
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "r2hVf",
+                      "name": "Field Label",
+                      "fill": "$ink",
+                      "content": "Style video",
+                      "fontFamily": "$font-body",
+                      "fontSize": 12,
+                      "fontWeight": "600"
+                    },
+                    {
+                      "type": "frame",
+                      "id": "w0huf",
+                      "name": "Choices — Tipe video",
+                      "width": "fill_container",
+                      "gap": 8,
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "exMxv",
+                          "name": "Style — Bold Pop",
+                          "width": "fill_container",
+                          "height": 40,
+                          "fill": "#292B09",
+                          "cornerRadius": 7,
+                          "stroke": "#EFF31B",
+                          "strokeWidth": 1,
+                          "justifyContent": "center",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "Iqj6I",
+                              "name": "Choice Label",
+                              "fill": "$accent",
+                              "content": "Bold Pop · AI",
+                              "fontFamily": "$font-body",
+                              "fontSize": 10,
+                              "fontWeight": "600"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "SAxge",
+                          "name": "Style — Clean Product",
+                          "width": "fill_container",
+                          "height": 40,
+                          "fill": "#161616",
+                          "cornerRadius": 7,
+                          "stroke": "#333333",
+                          "strokeWidth": 1,
+                          "justifyContent": "center",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "N9qFz",
+                              "name": "Choice Label",
+                              "fill": "$ink",
+                              "content": "Clean Product",
+                              "fontFamily": "$font-body",
+                              "fontSize": 10,
+                              "fontWeight": "450"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "OELby",
+                          "name": "Style — Warm Artisan",
+                          "width": "fill_container",
+                          "height": 40,
+                          "fill": "#161616",
+                          "cornerRadius": 7,
+                          "stroke": "#333333",
+                          "strokeWidth": 1,
+                          "justifyContent": "center",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "iPNFs",
+                              "name": "Choice Label",
+                              "fill": "$ink",
+                              "content": "Warm Artisan",
+                              "fontFamily": "$font-body",
+                              "fontSize": 10,
+                              "fontWeight": "450"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "cAf9h",
+                          "name": "Style — Premium Dark",
+                          "width": "fill_container",
+                          "height": 40,
+                          "fill": "#161616",
+                          "cornerRadius": 7,
+                          "stroke": "#333333",
+                          "strokeWidth": 1,
+                          "justifyContent": "center",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "lvM9l",
+                              "name": "Choice Label",
+                              "fill": "$ink",
+                              "content": "Premium Dark",
+                              "fontFamily": "$font-body",
+                              "fontSize": 10,
+                              "fontWeight": "450"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "cvohd",
+                  "name": "Field — Durasi",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": 10,
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "uTiCd",
+                      "name": "Field Label",
+                      "fill": "$ink",
+                      "content": "Durasi",
+                      "fontFamily": "$font-body",
+                      "fontSize": 12,
+                      "fontWeight": "600"
+                    },
+                    {
+                      "type": "frame",
+                      "id": "zagkG",
+                      "name": "Choices — Durasi",
+                      "width": "fill_container",
+                      "gap": 8,
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "A4znnf",
+                          "name": "Choice — 6 detik",
+                          "width": "fill_container",
+                          "height": 40,
+                          "fill": "#292B09",
+                          "cornerRadius": 7,
+                          "stroke": "#EFF31B",
+                          "strokeWidth": 1,
+                          "justifyContent": "center",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "XejpS",
+                              "name": "Choice Label",
+                              "fill": "$accent",
+                              "content": "6 detik",
+                              "fontFamily": "$font-body",
+                              "fontSize": 11,
+                              "fontWeight": "600"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "kltS2",
+                          "name": "Choice — 10 detik",
+                          "width": "fill_container",
+                          "height": 40,
+                          "fill": "#161616",
+                          "cornerRadius": 7,
+                          "stroke": "#333333",
+                          "strokeWidth": 1,
+                          "justifyContent": "center",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "h3HLO",
+                              "name": "Choice Label",
+                              "fill": "$ink",
+                              "content": "10 detik",
+                              "fontFamily": "$font-body",
+                              "fontSize": 11,
+                              "fontWeight": "450"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "Y4jvK",
+                          "name": "Choice — 15 detik",
+                          "width": "fill_container",
+                          "height": 40,
+                          "fill": "#161616",
+                          "cornerRadius": 7,
+                          "stroke": "#333333",
+                          "strokeWidth": 1,
+                          "justifyContent": "center",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "ITuhj",
+                              "name": "Choice Label",
+                              "fill": "$ink",
+                              "content": "15 detik",
+                              "fontFamily": "$font-body",
+                              "fontSize": 11,
+                              "fontWeight": "450"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "haf3u",
+                  "name": "Field — Rasio",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": 10,
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "zEzjW",
+                      "name": "Field Label",
+                      "fill": "$ink",
+                      "content": "Rasio",
+                      "fontFamily": "$font-body",
+                      "fontSize": 12,
+                      "fontWeight": "600"
+                    },
+                    {
+                      "type": "frame",
+                      "id": "B7aima",
+                      "name": "Choices — Rasio",
+                      "width": "fill_container",
+                      "gap": 8,
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "Wqzff",
+                          "name": "Choice — 9:16",
+                          "width": "fill_container",
+                          "height": 40,
+                          "fill": "#292B09",
+                          "cornerRadius": 7,
+                          "stroke": "#EFF31B",
+                          "strokeWidth": 1,
+                          "justifyContent": "center",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "x2Fmx2",
+                              "name": "Choice Label",
+                              "fill": "$accent",
+                              "content": "9:16",
+                              "fontFamily": "$font-body",
+                              "fontSize": 11,
+                              "fontWeight": "600"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "w4K5y1",
+                          "name": "Choice — 1:1",
+                          "width": "fill_container",
+                          "height": 40,
+                          "fill": "#161616",
+                          "cornerRadius": 7,
+                          "stroke": "#333333",
+                          "strokeWidth": 1,
+                          "justifyContent": "center",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "HX2oS",
+                              "name": "Choice Label",
+                              "fill": "$ink",
+                              "content": "1:1",
+                              "fontFamily": "$font-body",
+                              "fontSize": 11,
+                              "fontWeight": "450"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "xqGT3",
+                          "name": "Choice — 16:9",
+                          "width": "fill_container",
+                          "height": 40,
+                          "fill": "#161616",
+                          "cornerRadius": 7,
+                          "stroke": "#333333",
+                          "strokeWidth": 1,
+                          "justifyContent": "center",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "g1zAnJ",
+                              "name": "Choice Label",
+                              "fill": "$ink",
+                              "content": "16:9",
+                              "fontFamily": "$font-body",
+                              "fontSize": 11,
+                              "fontWeight": "450"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "gKs25",
+                  "name": "Field — Resolusi",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": 10,
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "sr6ft",
+                      "name": "Field Label",
+                      "fill": "$ink",
+                      "content": "Resolusi",
+                      "fontFamily": "$font-body",
+                      "fontSize": 12,
+                      "fontWeight": "600"
+                    },
+                    {
+                      "type": "frame",
+                      "id": "zBZCd",
+                      "name": "Choices — Resolusi",
+                      "width": "fill_container",
+                      "gap": 8,
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "V4qgtH",
+                          "name": "Choice — 720p",
+                          "width": "fill_container",
+                          "height": 40,
+                          "fill": "#292B09",
+                          "cornerRadius": 7,
+                          "stroke": "#EFF31B",
+                          "strokeWidth": 1,
+                          "justifyContent": "center",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "Cxtar",
+                              "name": "Choice Label",
+                              "fill": "$accent",
+                              "content": "720p",
+                              "fontFamily": "$font-body",
+                              "fontSize": 11,
+                              "fontWeight": "600"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "B4f6r6",
+                          "name": "Choice — 1080p",
+                          "width": "fill_container",
+                          "height": 40,
+                          "fill": "#161616",
+                          "cornerRadius": 7,
+                          "stroke": "#333333",
+                          "strokeWidth": 1,
+                          "justifyContent": "center",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "J9Qpj",
+                              "name": "Choice Label",
+                              "fill": "$ink",
+                              "content": "1080p",
+                              "fontFamily": "$font-body",
+                              "fontSize": 11,
+                              "fontWeight": "450"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "phAow",
+                  "name": "Audio Settings",
+                  "width": "fill_container",
+                  "gap": 10,
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "qORPb",
+                      "name": "Audio — Voice-over",
+                      "width": "fill_container",
+                      "height": 68,
+                      "fill": "$surface",
+                      "cornerRadius": 8,
+                      "stroke": "$line",
+                      "strokeWidth": 1,
+                      "padding": [
+                        0,
+                        13
+                      ],
+                      "justifyContent": "space_between",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "SjXmM",
+                          "name": "Audio Copy",
+                          "layout": "vertical",
+                          "gap": 4,
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "L22sX5",
+                              "name": "Audio Label",
+                              "fill": "$ink",
+                              "content": "Voice-over",
+                              "fontFamily": "$font-body",
+                              "fontSize": 11,
+                              "fontWeight": "600"
+                            },
+                            {
+                              "type": "text",
+                              "id": "ycgJu",
+                              "name": "Audio Value",
+                              "fill": "$muted",
+                              "content": "Bahasa Indonesia",
+                              "fontFamily": "$font-mono",
+                              "fontSize": 9,
+                              "fontWeight": "normal"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "Gs31l",
+                          "name": "Toggle",
+                          "width": 32,
+                          "height": 18,
+                          "fill": "$accent",
+                          "cornerRadius": 9,
+                          "padding": 2,
+                          "justifyContent": "end",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "ellipse",
+                              "id": "CJjAX",
+                              "name": "Toggle Thumb",
+                              "fill": "#000000",
+                              "width": 14,
+                              "height": 14
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "FgIkp",
+                      "name": "Audio — Musik latar",
+                      "width": "fill_container",
+                      "height": 68,
+                      "fill": "$surface",
+                      "cornerRadius": 8,
+                      "stroke": "$line",
+                      "strokeWidth": 1,
+                      "padding": [
+                        0,
+                        13
+                      ],
+                      "justifyContent": "space_between",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "fbod3",
+                          "name": "Audio Copy",
+                          "layout": "vertical",
+                          "gap": 4,
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "p5Bpkg",
+                              "name": "Audio Label",
+                              "fill": "$ink",
+                              "content": "Musik latar",
+                              "fontFamily": "$font-body",
+                              "fontSize": 11,
+                              "fontWeight": "600"
+                            },
+                            {
+                              "type": "text",
+                              "id": "QV5cY",
+                              "name": "Audio Value",
+                              "fill": "$muted",
+                              "content": "Aktif",
+                              "fontFamily": "$font-mono",
+                              "fontSize": 9,
+                              "fontWeight": "normal"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "puNvz",
+                          "name": "Toggle",
+                          "width": 32,
+                          "height": 18,
+                          "fill": "$accent",
+                          "cornerRadius": 9,
+                          "padding": 2,
+                          "justifyContent": "end",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "ellipse",
+                              "id": "RdPm6",
+                              "name": "Toggle Thumb",
+                              "fill": "#000000",
+                              "width": 14,
+                              "height": 14
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "NHomS",
+                      "name": "Audio — Caption",
+                      "width": "fill_container",
+                      "height": 68,
+                      "fill": "$surface",
+                      "cornerRadius": 8,
+                      "stroke": "$line",
+                      "strokeWidth": 1,
+                      "padding": [
+                        0,
+                        13
+                      ],
+                      "justifyContent": "space_between",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "p9KPFc",
+                          "name": "Audio Copy",
+                          "layout": "vertical",
+                          "gap": 4,
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "R4p3g",
+                              "name": "Audio Label",
+                              "fill": "$ink",
+                              "content": "Caption",
+                              "fontFamily": "$font-body",
+                              "fontSize": 11,
+                              "fontWeight": "600"
+                            },
+                            {
+                              "type": "text",
+                              "id": "aQZvu",
+                              "name": "Audio Value",
+                              "fill": "$muted",
+                              "content": "Otomatis",
+                              "fontFamily": "$font-mono",
+                              "fontSize": 9,
+                              "fontWeight": "normal"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "GVL0D",
+                          "name": "Toggle",
+                          "width": 32,
+                          "height": 18,
+                          "fill": "$accent",
+                          "cornerRadius": 9,
+                          "padding": 2,
+                          "justifyContent": "end",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "ellipse",
+                              "id": "Y8Vkdh",
+                              "name": "Toggle Thumb",
+                              "fill": "#000000",
+                              "width": 14,
+                              "height": 14
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "BVkkm",
+              "name": "Asset Upload Panel",
+              "width": "fill_container",
+              "height": "fill_container",
+              "fill": "$surface",
+              "cornerRadius": 14,
+              "stroke": "$line",
+              "strokeWidth": 1,
+              "layout": "vertical",
+              "gap": 18,
+              "padding": 24,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "lnZCU",
+                  "name": "Upload Title",
+                  "fill": "$ink",
+                  "content": "Tambahkan foto produk",
+                  "fontFamily": "$font-body",
+                  "fontSize": 18,
+                  "fontWeight": "620"
+                },
+                {
+                  "type": "text",
+                  "id": "SYLZm",
+                  "name": "Upload Help",
+                  "fill": "$muted",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "Gunakan foto JPEG, PNG, atau WebP. Pilih beberapa sudut produk agar AI punya konteks visual yang cukup.",
+                  "lineHeight": 1.5,
+                  "fontFamily": "$font-body",
+                  "fontSize": 12,
+                  "fontWeight": "normal"
+                },
+                {
+                  "type": "frame",
+                  "id": "fcV0c",
+                  "name": "Upload Dropzone",
+                  "width": "fill_container",
+                  "height": 250,
+                  "fill": "#101010",
+                  "cornerRadius": 10,
+                  "stroke": "#555555",
+                  "strokeWidth": 1,
+                  "layout": "vertical",
+                  "gap": 12,
+                  "justifyContent": "center",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "tAYDG",
+                      "name": "Upload Icon Circle",
+                      "width": 46,
+                      "height": 46,
+                      "fill": "#292B09",
+                      "cornerRadius": 23,
+                      "justifyContent": "center",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "icon",
+                          "id": "jm9Vn",
+                          "name": "Upload Icon",
+                          "width": 20,
+                          "height": 20,
+                          "icon": "image-plus",
+                          "library": "lucide",
+                          "fill": "$accent"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "text",
+                      "id": "bb3uy",
+                      "name": "Upload CTA",
+                      "fill": "$ink",
+                      "content": "Tarik foto ke sini atau pilih file",
+                      "fontFamily": "$font-body",
+                      "fontSize": 13,
+                      "fontWeight": "600"
+                    },
+                    {
+                      "type": "text",
+                      "id": "ANYNG",
+                      "name": "Upload Formats",
+                      "fill": "$muted",
+                      "content": "JPEG, PNG, WEBP",
+                      "fontFamily": "$font-mono",
+                      "fontSize": 9,
+                      "fontWeight": "normal",
+                      "letterSpacing": 0.7
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "f0Wpvs",
+                  "name": "Rights Confirmation",
+                  "width": "fill_container",
+                  "gap": 10,
+                  "padding": [
+                    4,
+                    0
+                  ],
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "J4vwf",
+                      "name": "Rights Checkbox",
+                      "width": 18,
+                      "height": 18,
+                      "fill": "$accent",
+                      "cornerRadius": 4,
+                      "justifyContent": "center",
+                      "alignItems": "center"
+                    },
+                    {
+                      "type": "text",
+                      "id": "zzyyt",
+                      "name": "Rights Copy",
+                      "fill": "$ink",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "Saya memiliki hak untuk menggunakan semua aset yang diunggah dalam video ini.",
+                      "lineHeight": 1.45,
+                      "fontFamily": "$font-body",
+                      "fontSize": 11,
+                      "fontWeight": "normal"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "OPbZ5",
+                  "name": "Upload Spacer",
+                  "width": "fill_container",
+                  "height": "fill_container"
+                },
+                {
+                  "type": "frame",
+                  "id": "M4MPSP",
+                  "name": "Continue Button",
+                  "width": "fill_container",
+                  "height": 46,
+                  "fill": "$accent",
+                  "cornerRadius": 10,
+                  "justifyContent": "center",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "HQZGn",
+                      "name": "Continue Label",
+                      "fill": "#000000",
+                      "content": "Lanjut ke percakapan",
+                      "fontFamily": "$font-body",
+                      "fontSize": 13,
+                      "fontWeight": "600"
+                    }
+                  ]
+                },
+                {
+                  "type": "text",
+                  "id": "bLvEx",
+                  "name": "Privacy Note",
+                  "fill": "$muted",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "Aset bersifat privat dan hanya diproses untuk proyek ini.",
+                  "textAlign": "center",
+                  "fontFamily": "$font-body",
+                  "fontSize": 10,
+                  "fontWeight": "normal"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "variables": {
+    "bg": {
+      "type": "color",
+      "value": "#000000"
+    },
+    "surface": {
+      "type": "color",
+      "value": "#161616"
+    },
+    "surface-2": {
+      "type": "color",
+      "value": "#202020"
+    },
+    "ink": {
+      "type": "color",
+      "value": "#F9FAFB"
+    },
+    "muted": {
+      "type": "color",
+      "value": "#BABABA"
+    },
+    "line": {
+      "type": "color",
+      "value": "#333333"
+    },
+    "accent": {
+      "type": "color",
+      "value": "#EFF31B"
+    },
+    "accent-soft": {
+      "type": "color",
+      "value": "#292B09"
+    },
+    "success": {
+      "type": "color",
+      "value": "#75D689"
+    },
+    "warning": {
+      "type": "color",
+      "value": "#F4BF4F"
+    },
+    "danger": {
+      "type": "color",
+      "value": "#E04141"
+    },
+    "font-body": {
+      "type": "string",
+      "value": "Geist"
+    },
+    "font-mono": {
+      "type": "string",
+      "value": "Geist Mono"
+    }
+  },
+  "fileToken": "2f646cd4-928c-40a0-a8b3-97f66aaa20b6"
+}

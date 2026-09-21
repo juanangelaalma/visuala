@@ -1,0 +1,15 @@
+# Taste
+- Prefers TDD: for new/converted code, write failing tests first, then implement to green. Confidence: 0.75
+- Wants the existing code fully inventoried and a mapping/plan presented for review before any code is written; agrees on scope/approach in chat first. Confidence: 0.7
+- Prefers incremental vertical-slice migrations (each phase shippable and leaving the app deployable) over big-bang rewrites. Confidence: 0.6
+- Uses Elysia (Bun-first) as the backend framework. Confidence: 0.6
+- Prefers a single backend API as the source of truth for data reads, rather than frontend pages reading the database directly. Confidence: 0.6
+- Prefers stateless Bearer JWT auth for APIs over cookie-based sessions. Confidence: 0.55
+- Expects the existing database/schema to be reused unchanged during backend migrations. Confidence: 0.55
+- Uses Makefiles as the primary entry point for dev/build/test/db commands, with per-package Makefiles mirroring the existing app's target style (dev, build, test, coverage, refresh) rather than ad-hoc scripts; when new commands are only exposed as package.json scripts, asks for them to be added to the Makefile instead. Confidence: 0.6
+- Expects code and infrastructure artifacts to live with the service that owns them (e.g. moving DB schema/migrations out of the frontend app into the backend service that is the only schema consumer). Confidence: 0.6
+- Prefers removing duplication across workspace apps by extracting shared/generated code into a shared `packages/*` module rather than keeping a copy in each app. Confidence: 0.6
+- Writes in Indonesian and expects replies in the same language — mirror the user's language. Confidence: 0.6
+- Pushes for a complete, consistent relocation when migrating: challenges anything left behind that "could" stay — DB migrations and even code with no production caller — and wants it moved to the owning service. Confidence: 0.6
+- Expects each service to have its own working local `.env` (gitignored, with a committed `.env.example` template) and notices when a new service has none, so it can be booted locally. Confidence: 0.55
+- When asked to commit after a cohesive change, expects the whole set committed together rather than split into incremental commits. Confidence: 0.5
