@@ -10,6 +10,7 @@ const sql = migration.split("\n").filter((line) => !line.trimStart().startsWith(
 describe("asset bucket migration", () => {
   it("creates one private bucket with an image-only allowlist", () => {
     expect(sql).toMatch(/insert into storage\.buckets[\s\S]*values \('assets', 'assets', false/i);
+    expect(sql).toMatch(/file_size_limit[\s\S]*10485760/i);
     expect(sql).toMatch(/allowed_mime_types[\s\S]*image\/jpeg[\s\S]*image\/png[\s\S]*image\/webp/i);
   });
 
