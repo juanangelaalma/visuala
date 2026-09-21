@@ -6,7 +6,7 @@ vi.mock("server-only", () => ({}));
 vi.mock("@/infrastructure/supabase/server-client", () => ({ createSupabaseServerClient: mocks.createServerClient }));
 vi.mock("@/shared/config/env", () => ({ getAppEnv: mocks.env }));
 
-import { ApiError, apiFetch } from "./client";
+import { ApiError, apiFetch, apiUpload } from "./client";
 
 describe("apiFetch", () => {
   beforeEach(() => {
@@ -74,5 +74,59 @@ describe("apiFetch", () => {
     mocks.fetch.mockResolvedValue(new Response("gateway timeout", { status: 503 }));
 
     await expect(apiFetch("/me")).rejects.toMatchObject({ status: 503, payload: null });
+  });
+});
+
+describe("apiUpload", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mocks.env.mockReturnValue({ NEXT_PUBLIC_API_URL: "http://localhost:4000" });
+    mocks.createServerClient.mockResolvedValue({ auth: { getSession: mocks.getSession } });
+    vi.stubGlobal("fetch", mocks.fetch);
+  });
+
+  afterEach(() => vi.unstubAllGlobals());
+
+  it("posts raw bytes with the declared content type, extra headers, and the access token", async () => {
+    mocks.getSession.mockResolvedValue({ data: { session: { access_token: "jwt-1" } } });
+    mocks.fetch.mockResolvedValue(new Response(JSON.stringify({ asset: { id: "asset-1" } }), { status: 201 }));
+    const bytes = new Uint8Array([1, 2, 3]);
+
+    await expect(
+      apiUpload("/video-projects/project-1/assets", {
+        body: bytes,
+        contentType: "image/png",
+        headers: { "x-asset-rights-confirmed": "true" },
+      }),
+    ).resolves.toEqual({ asset: { id: "asset-1" } });
+
+    const [url, init] = mocks.fetch.mock.calls[0];
+    expect(url.toString()).toBe("http://localhost:4000/video-projects/project-1/assets");
+    expect(init).toMatchObject({
+      method: "POST",
+      headers: { "content-type": "image/png", "x-asset-rights-confirmed": "true", authorization: "Bearer jwt-1" },
+      body: bytes,
+      cache: "no-store",
+    });
+  });
+
+  it("omits the authorization header when there is no session", async () => {
+    mocks.getSession.mockResolvedValue({ data: { session: null } });
+    mocks.fetch.mockResolvedValue(new Response(JSON.stringify({ asset: { id: "asset-1" } }), { status: 201 }));
+
+    await apiUpload("/video-projects/project-1/assets", { body: new Uint8Array([1]), contentType: "image/png" });
+
+    expect(mocks.fetch.mock.calls[0][1].headers).toEqual({ "content-type": "image/png" });
+  });
+
+  it("throws an ApiError carrying the status and payload", async () => {
+    mocks.getSession.mockResolvedValue({ data: { session: null } });
+    mocks.fetch.mockResolvedValue(new Response(JSON.stringify({ error: "The image is unavailable or invalid." }), { status: 422 }));
+
+    await expect(apiUpload("/video-projects/project-1/assets", { body: new Uint8Array([1]), contentType: "image/png" })).rejects.toMatchObject({
+      name: "ApiError",
+      status: 422,
+      payload: { error: "The image is unavailable or invalid." },
+    });
   });
 });

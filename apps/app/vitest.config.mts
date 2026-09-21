@@ -24,6 +24,7 @@ export default defineConfig({
         "domain/auth/types.ts",
         "domain/billing/types.ts",
         "domain/pricing/types.ts",
+        "domain/video/types.ts",
         "features/billing/components/types.ts",
         "domain/**/*-provider.ts",
         "domain/**/*-repository.ts",

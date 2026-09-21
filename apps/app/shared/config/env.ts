@@ -6,6 +6,8 @@ const envSchema = z.object({
   NEXT_PUBLIC_SUPABASE_URL: z.string().url(),
   NEXT_PUBLIC_SUPABASE_ANON_KEY: z.string().min(1),
   ADMIN_EMAILS: z.string().default(""),
+  NEXT_PUBLIC_VIDEO_MOCK: z.string().default("1"),
+  NEXT_PUBLIC_VIDEO_MOCK_SRC: z.string().default(""),
 });
 
 type AppEnv = z.infer<typeof envSchema>;
@@ -19,6 +21,8 @@ export function getAppEnv(): AppEnv {
     NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL,
     NEXT_PUBLIC_SUPABASE_ANON_KEY: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
     ADMIN_EMAILS: process.env.ADMIN_EMAILS,
+    NEXT_PUBLIC_VIDEO_MOCK: process.env.NEXT_PUBLIC_VIDEO_MOCK,
+    NEXT_PUBLIC_VIDEO_MOCK_SRC: process.env.NEXT_PUBLIC_VIDEO_MOCK_SRC,
   });
 
   return cachedEnv;

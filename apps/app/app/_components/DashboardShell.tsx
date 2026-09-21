@@ -6,10 +6,20 @@ import { useMemo, useRef, type ReactNode } from "react";
 import { logoutAction } from "@/features/auth/actions/auth-actions";
 import type { AuthUser } from "@/domain/auth/types";
 
+function VideoIcon() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" className="h-6 w-6">
+      <rect x="3" y="6" width="12" height="12" rx="3" />
+      <path d="m15 11 5-3v8l-5-3" />
+    </svg>
+  );
+}
+
 const defaultDashboardSections: DashboardSidebarSection[] = [
   {
     title: "Main",
     items: [
+      { id: "videos", label: "Video", href: "/dashboard/videos", icon: <VideoIcon /> },
       { id: "home", label: "Home", href: "/dashboard/home" },
       { id: "analytics", label: "Analytics", href: "/dashboard/analytics" },
     ],
@@ -66,7 +76,8 @@ function getActiveItemId(pathname: string, sections: DashboardSidebarSection[]) 
 export default function DashboardShell({ children, sections = defaultDashboardSections, showCreateButton = false, currentUser, creditBalance }: DashboardShellProps) {
   const pathname = usePathname();
   const logoutFormRef = useRef<HTMLFormElement>(null);
-  const showPricingCta = sections === defaultDashboardSections;
+  const isDefaultSections = sections === defaultDashboardSections;
+  const showPricingCta = isDefaultSections;
   const pricingIsActive = pathname === "/billing/plans" || pathname.startsWith("/billing/plans/");
   const activeItemId = useMemo(() => getActiveItemId(pathname, sections), [pathname, sections]);
 
@@ -89,7 +100,9 @@ export default function DashboardShell({ children, sections = defaultDashboardSe
 
         <div className="flex min-w-0 flex-1 flex-col gap-4 overflow-y-auto">
           <DashboardNavbar
-            showCreateButton={showCreateButton}
+            showCreateButton={showCreateButton || isDefaultSections}
+            createHref="/dashboard/videos/new"
+            createLabel="Buat video"
             showPricingCta={showPricingCta}
             pricingIsActive={pricingIsActive}
           />
