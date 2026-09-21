@@ -5,9 +5,10 @@ import { SupabaseProjectAssetRepository } from "../../infrastructure/video/supab
 import { SupabaseVideoMessageRepository } from "../../infrastructure/video/supabase-video-message-repository";
 import { SupabaseVideoBriefRevisionRepository, SupabaseVideoStoryboardRevisionRepository } from "../../infrastructure/video/supabase-video-revision-repositories";
 import { SupabaseVideoVersionRepository } from "../../infrastructure/video/supabase-version-repository";
+import { SupabaseRenderJobRepository } from "../../infrastructure/video/supabase-render-job-repository";
 import { createSupabaseSignedUrlFactory } from "../../infrastructure/video/supabase-signed-urls";
 import { readAssetLimits } from "../../domain/video/limits";
-import type { ProjectAssetRepository, VideoBriefRevisionRepository, VideoMessageRepository, VideoStoryboardRevisionRepository } from "../../domain/video/contracts";
+import type { ProjectAssetRepository, VideoBriefRevisionRepository, VideoMessageRepository, VideoRenderJobRepository, VideoStoryboardRevisionRepository, VideoVersionRepository } from "../../domain/video/contracts";
 import type { ProjectDependencies } from "./projects";
 
 /** This module is the single place the video application layer is allowed to construct infrastructure. */
@@ -29,7 +30,7 @@ export function createVideoApprovalServices(
   };
 }
 
-/** The project, asset, message, and revision repositories the project routes share. */
+/** The project, asset, message, revision, render job, and version repositories the video routes share. */
 export function createVideoProjectServices(
   environment: Readonly<Record<string, string | undefined>> = process.env,
 ): ProjectDependencies & {
@@ -39,6 +40,9 @@ export function createVideoProjectServices(
   messages: VideoMessageRepository;
   briefRevisions: VideoBriefRevisionRepository;
   storyboardRevisions: VideoStoryboardRevisionRepository;
+  versions: VideoVersionRepository;
+  /** The render job repository, named `jobs` because that is the key the render use cases depend on. */
+  jobs: VideoRenderJobRepository;
 } {
   const supabase = createSupabaseServiceRoleClient(environment);
   const bucket = readAssetBucket(environment);
@@ -50,6 +54,7 @@ export function createVideoProjectServices(
     briefRevisions: new SupabaseVideoBriefRevisionRepository(supabase),
     storyboardRevisions: new SupabaseVideoStoryboardRevisionRepository(supabase),
     versions: new SupabaseVideoVersionRepository(supabase),
+    jobs: new SupabaseRenderJobRepository(supabase),
     objectStore: new SupabaseAssetObjectStore(supabase, bucket),
     limits: readAssetLimits(environment),
     createId: () => crypto.randomUUID(),

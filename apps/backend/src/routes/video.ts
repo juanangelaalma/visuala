@@ -4,7 +4,9 @@ import { approveVideoProject } from "@/application/video/approval";
 import { deleteProjectAsset, listProjectAssets, registerProjectAsset } from "@/application/video/assets";
 import { appendVideoMessage, listVideoMessages, toMessageResponse } from "@/application/video/messages";
 import { createVideoProject, deleteVideoProject, getVideoProject, listVideoProjects, toProjectResponse } from "@/application/video/projects";
+import { cancelRenderJob, createRenderJob, getRenderJob, toRenderJobResponse } from "@/application/video/render-jobs";
 import { createVideoApprovalServices, createVideoProjectServices } from "@/application/video/services";
+import { createVersionDownloadUrl, listVideoVersions } from "@/application/video/versions";
 import { MAX_ASSET_BYTES } from "@/domain/ai-service/assets";
 import { VideoError } from "@/domain/video/errors";
 import { authPlugin } from "@/plugins/supabase";
@@ -19,6 +21,11 @@ const DECLARED_MIME_TYPES = new Set<string>(VIDEO_ASSET_MIME_TYPES);
 const appendMessageBodySchema = z.object({
   content: z.string(),
   assetIds: z.array(z.string().uuid()).optional(),
+}).strict();
+
+/** `userId`, `status`, and the snapshot are server-owned, so a strict body refuses them outright. */
+const createRenderJobBodySchema = z.object({
+  idempotencyKey: z.string(),
 }).strict();
 
 function invalidAsset(): VideoError {
@@ -126,5 +133,54 @@ export const videoProjectRoutes = new Elysia({ name: "video-project-routes" })
       await deleteProjectAsset({ userId: user.id, projectId: params.projectId, assetId: params.assetId }, createVideoProjectServices());
       return { deleted: true };
     },
+    { auth: true, detail: { tags: ["video"] } },
+  )
+  .post(
+    "/video-projects/:projectId/render-jobs",
+    async ({ body, params, set, status, user }) => {
+      const parsed = createRenderJobBodySchema.safeParse(body);
+      if (!parsed.success) return status(422, invalidRequest);
+
+      const { job, created } = await createRenderJob(
+        { userId: user.id, projectId: params.projectId, idempotencyKey: parsed.data.idempotencyKey },
+        createVideoProjectServices(),
+      );
+
+      // A repeated idempotency key answers with the job the first request created; the status is
+      // what tells the client whether this request is the one that queued it.
+      set.status = created ? 201 : 200;
+      return { job: toRenderJobResponse(job) };
+    },
+    { auth: true, ...jsonBody, detail: { tags: ["video"] } },
+  )
+  .get(
+    "/video-projects/:projectId/render-jobs/:jobId",
+    async ({ params, user }) => {
+      const job = await getRenderJob({ userId: user.id, projectId: params.projectId, jobId: params.jobId }, createVideoProjectServices());
+      return { job: toRenderJobResponse(job) };
+    },
+    { auth: true, detail: { tags: ["video"] } },
+  )
+  .post(
+    "/video-projects/:projectId/render-jobs/:jobId/cancel",
+    async ({ params, user }) => {
+      const job = await cancelRenderJob({ userId: user.id, projectId: params.projectId, jobId: params.jobId }, createVideoProjectServices());
+      return { job: toRenderJobResponse(job) };
+    },
+    { auth: true, detail: { tags: ["video"] } },
+  )
+  .get(
+    "/video-projects/:projectId/versions",
+    async ({ params, user }) => ({
+      versions: await listVideoVersions({ userId: user.id, projectId: params.projectId }, createVideoProjectServices()),
+    }),
+    { auth: true, detail: { tags: ["video"] } },
+  )
+  .get(
+    "/video-projects/:projectId/versions/:versionId/download",
+    async ({ params, user }) => createVersionDownloadUrl(
+      { userId: user.id, projectId: params.projectId, versionId: params.versionId },
+      createVideoProjectServices(),
+    ),
     { auth: true, detail: { tags: ["video"] } },
   );

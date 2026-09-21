@@ -14,6 +14,11 @@ const mocks = vi.hoisted(() => ({
   appendVideoMessage: vi.fn(),
   listVideoMessages: vi.fn(),
   approveVideoProject: vi.fn(),
+  createRenderJob: vi.fn(),
+  getRenderJob: vi.fn(),
+  cancelRenderJob: vi.fn(),
+  listVideoVersions: vi.fn(),
+  createVersionDownloadUrl: vi.fn(),
   services: vi.fn(),
   approvalServices: vi.fn(),
 }));
@@ -36,10 +41,19 @@ vi.mock("@/application/video/approval", async () => {
   const actual = await vi.importActual<typeof import("@/application/video/approval")>("@/application/video/approval");
   return { ...actual, approveVideoProject: mocks.approveVideoProject };
 });
+vi.mock("@/application/video/render-jobs", async () => {
+  const actual = await vi.importActual<typeof import("@/application/video/render-jobs")>("@/application/video/render-jobs");
+  return { ...actual, createRenderJob: mocks.createRenderJob, getRenderJob: mocks.getRenderJob, cancelRenderJob: mocks.cancelRenderJob };
+});
+vi.mock("@/application/video/versions", async () => {
+  const actual = await vi.importActual<typeof import("@/application/video/versions")>("@/application/video/versions");
+  return { ...actual, listVideoVersions: mocks.listVideoVersions, createVersionDownloadUrl: mocks.createVersionDownloadUrl };
+});
 
 import { buildApprovalSnapshot } from "@/application/video/approval";
+import { toRenderJobResponse } from "@/application/video/render-jobs";
 import { VideoError } from "@/domain/video/errors";
-import type { VideoOutputSettings } from "@/domain/video/types";
+import type { VideoOutputSettings, VideoRenderJob } from "@/domain/video/types";
 import { createApp } from "@/app";
 
 const user = { id: "user-1", email: "user@example.com", user_metadata: {} };
@@ -61,6 +75,9 @@ const approvalSnapshot = buildApprovalSnapshot({
   generatedBy: { profileId: "primary", provider: "9router", model: "router-model", promptVersion: "planner-v1" },
   approvedAt: "2026-09-21T10:00:00.000Z",
 });
+const versionId = "88888888-8888-4888-8888-888888888888";
+const renderJob: VideoRenderJob = { id: "66666666-6666-4666-8666-666666666666", projectId: project.id, userId: user.id, idempotencyKey: "render-0001", briefRevisionId: "44444444-4444-4444-8444-444444444444", storyboardRevisionId: "55555555-5555-4555-8555-555555555555", isRevision: false, inputSnapshot: { schemaVersion: "render-input@v1", variantSeed: "77777777-7777-4777-8777-777777777777" }, status: "queued", attempts: 0, queuedAt: "2026-09-21T00:00:00.000Z", createdAt: "2026-09-21T00:00:00.000Z", updatedAt: "2026-09-21T00:00:00.000Z" };
+const versionResponse = { id: versionId, versionNumber: 2, durationSeconds: 10, aspectRatio: "9:16", resolution: "1080p", createdAt: "2026-09-21T00:00:00.000Z", playbackUrl: `https://signed.example/video-versions/${project.id}/${versionId}.mp4` };
 
 function send(method: string, path: string, options: { token?: string; body?: unknown; headers?: Record<string, string>; assetBytes?: Uint8Array } = {}) {
   return createApp().handle(new Request(`http://localhost${path}`, {
@@ -275,5 +292,119 @@ describe("video approval route", () => {
     expect(approvalSnapshot).toMatchObject({ schemaVersion: "video-approval@v1", storyboardRevisionId: "55555555-5555-4555-8555-555555555555" });
     expect(JSON.stringify(body)).not.toMatch(/userId|user_id|object_key|objectKey|approval_snapshot|scenes|generated_by/);
     expect(mocks.approveVideoProject).toHaveBeenCalledWith({ userId: "user-1", projectId: project.id }, expect.anything());
+  });
+});
+
+describe("video render job routes", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mocks.getUser.mockResolvedValue({ data: { user }, error: null });
+    mocks.publicClient.mockReturnValue({ auth: { getUser: mocks.getUser } });
+    mocks.userClient.mockReturnValue({ scoped: true });
+    mocks.services.mockReturnValue({});
+    mocks.createRenderJob.mockResolvedValue({ job: renderJob, created: true });
+    mocks.getRenderJob.mockResolvedValue(renderJob);
+    mocks.cancelRenderJob.mockResolvedValue({ ...renderJob, status: "cancelled" });
+    mocks.listVideoVersions.mockResolvedValue([versionResponse]);
+    mocks.createVersionDownloadUrl.mockResolvedValue({ url: versionResponse.playbackUrl });
+  });
+
+  it("requires authentication on the render job and version routes", async () => {
+    for (const [method, path] of [
+      ["POST", `/video-projects/${project.id}/render-jobs`],
+      ["GET", `/video-projects/${project.id}/render-jobs/${renderJob.id}`],
+      ["POST", `/video-projects/${project.id}/render-jobs/${renderJob.id}/cancel`],
+      ["GET", `/video-projects/${project.id}/versions`],
+      ["GET", `/video-projects/${project.id}/versions/${versionId}/download`],
+    ] as const) {
+      expect((await send(method, path)).status).toBe(401);
+    }
+    expect(mocks.createRenderJob).not.toHaveBeenCalled();
+    expect(mocks.listVideoVersions).not.toHaveBeenCalled();
+  });
+
+  it("rejects a render body that carries a client-owned field", async () => {
+    for (const body of [{ idempotencyKey: "render-0001", userId: user.id }, { idempotencyKey: "render-0001", status: "queued" }]) {
+      const response = await send("POST", `/video-projects/${project.id}/render-jobs`, { token: "token", body });
+
+      expect(response.status).toBe(422);
+      await expect(response.json()).resolves.toEqual({ error: "Invalid request." });
+    }
+    expect(mocks.createRenderJob).not.toHaveBeenCalled();
+  });
+
+  it("queues a render for the authenticated user and answers 201 with the projection", async () => {
+    const response = await send("POST", `/video-projects/${project.id}/render-jobs`, { token: "token", body: { idempotencyKey: "render-0001" } });
+
+    expect(response.status).toBe(201);
+    const body = await response.json() as { job: ReturnType<typeof toRenderJobResponse> };
+    expect(body).toEqual({ job: toRenderJobResponse(renderJob) });
+    expect(Object.keys(body.job).sort()).toEqual(["attempts", "createdAt", "id", "isRevision", "queuedAt", "status"]);
+    expect(JSON.stringify(body)).not.toMatch(/inputSnapshot|idempotencyKey|userId|user_id|variantSeed/);
+    expect(mocks.createRenderJob).toHaveBeenCalledWith({ userId: "user-1", projectId: project.id, idempotencyKey: "render-0001" }, expect.anything());
+  });
+
+  it("answers 200 with the same job for a repeated idempotency key", async () => {
+    mocks.createRenderJob.mockResolvedValue({ job: renderJob, created: false });
+
+    const response = await send("POST", `/video-projects/${project.id}/render-jobs`, { token: "token", body: { idempotencyKey: "render-0001" } });
+
+    expect(response.status).toBe(200);
+    await expect(response.json()).resolves.toMatchObject({ job: { id: renderJob.id, status: "queued" } });
+  });
+
+  it("answers 409 with video_revision_quota_exhausted for a fourth rerender", async () => {
+    mocks.createRenderJob.mockRejectedValue(new VideoError("video_revision_quota_exhausted", "This project has used all three rerenders."));
+
+    const response = await send("POST", `/video-projects/${project.id}/render-jobs`, { token: "token", body: { idempotencyKey: "render-0004" } });
+
+    expect(response.status).toBe(409);
+    await expect(response.json()).resolves.toEqual({ error: "This project has used all three rerenders.", code: "video_revision_quota_exhausted" });
+  });
+
+  it("reads one owned render job and hides another user's job behind a 404", async () => {
+    const response = await send("GET", `/video-projects/${project.id}/render-jobs/${renderJob.id}`, { token: "token" });
+
+    expect(response.status).toBe(200);
+    await expect(response.json()).resolves.toEqual({ job: toRenderJobResponse(renderJob) });
+    expect(mocks.getRenderJob).toHaveBeenCalledWith({ userId: "user-1", projectId: project.id, jobId: renderJob.id }, expect.anything());
+
+    mocks.getRenderJob.mockRejectedValue(new VideoError("video_render_job_not_found", "The render job was not found."));
+    const hidden = await send("GET", `/video-projects/${project.id}/render-jobs/${renderJob.id}`, { token: "token" });
+
+    expect(hidden.status).toBe(404);
+    await expect(hidden.json()).resolves.toEqual({ error: "The render job was not found.", code: "video_render_job_not_found" });
+  });
+
+  it("cancels a queued render and answers 409 once the worker started", async () => {
+    const cancelled = await send("POST", `/video-projects/${project.id}/render-jobs/${renderJob.id}/cancel`, { token: "token" });
+
+    expect(cancelled.status).toBe(200);
+    await expect(cancelled.json()).resolves.toMatchObject({ job: { id: renderJob.id, status: "cancelled" } });
+    expect(mocks.cancelRenderJob).toHaveBeenCalledWith({ userId: "user-1", projectId: project.id, jobId: renderJob.id }, expect.anything());
+
+    mocks.cancelRenderJob.mockRejectedValue(new VideoError("video_state_conflict", "This render has already started and cannot be cancelled."));
+    const refused = await send("POST", `/video-projects/${project.id}/render-jobs/${renderJob.id}/cancel`, { token: "token" });
+
+    expect(refused.status).toBe(409);
+    await expect(refused.json()).resolves.toEqual({ error: "This render has already started and cannot be cancelled.", code: "video_state_conflict" });
+  });
+
+  it("lists versions with signed playback urls and exposes no object key", async () => {
+    const response = await send("GET", `/video-projects/${project.id}/versions`, { token: "token" });
+
+    expect(response.status).toBe(200);
+    const body = await response.json();
+    expect(body).toEqual({ versions: [versionResponse] });
+    expect(JSON.stringify(body)).not.toMatch(/outputObjectKey|output_object_key|manifestHash/);
+    expect(mocks.listVideoVersions).toHaveBeenCalledWith({ userId: "user-1", projectId: project.id }, expect.anything());
+  });
+
+  it("signs a version download for the authenticated owner only", async () => {
+    const response = await send("GET", `/video-projects/${project.id}/versions/${versionId}/download`, { token: "token" });
+
+    expect(response.status).toBe(200);
+    await expect(response.json()).resolves.toEqual({ url: versionResponse.playbackUrl });
+    expect(mocks.createVersionDownloadUrl).toHaveBeenCalledWith({ userId: "user-1", projectId: project.id, versionId }, expect.anything());
   });
 });
