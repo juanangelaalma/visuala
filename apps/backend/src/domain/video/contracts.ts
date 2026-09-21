@@ -103,10 +103,17 @@ export type CreateRenderJobInput = {
 export interface VideoRenderJobRepository {
   create(input: CreateRenderJobInput): Promise<VideoRenderJob>;
   getOwned(jobId: string, userId: string): Promise<VideoRenderJob | null>;
-  /** No owner scope: the render worker is server-side and runs without a user session. */
+  /**
+   * No owner scope: `getById`, `begin`, and `fail` are worker/queue-facing and the render worker is
+   * server-side and runs without a user session. The worker only calls them for a job that was
+   * already resolved through an owner-scoped path (`create` or `getOwned`), so the row's owner is
+   * established before these run; they never discover a job on their own.
+   */
   getById(jobId: string): Promise<VideoRenderJob | null>;
-  findByIdempotencyKey(projectId: string, idempotencyKey: string): Promise<VideoRenderJob | null>;
-  findActiveForProject(projectId: string): Promise<VideoRenderJob | null>;
+  /** Owner filter is part of the query, not the caller's responsibility. */
+  findByIdempotencyKey(projectId: string, userId: string, idempotencyKey: string): Promise<VideoRenderJob | null>;
+  /** Owner filter is part of the query, not the caller's responsibility. */
+  findActiveForProject(projectId: string, userId: string): Promise<VideoRenderJob | null>;
   /** Conditional `queued -> preparing` update that also increments `attempts`. Null when the row was not queued. */
   begin(jobId: string): Promise<VideoRenderJob | null>;
   fail(jobId: string, errorCode: string): Promise<VideoRenderJob | null>;
