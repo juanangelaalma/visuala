@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { findMissingBriefFields, findUnsupportedCommercialFacts, videoBriefSchema } from "./brief";
+import { findMissingBriefFields, findUnsupportedCommercialFacts, isBriefDraftComplete, videoBriefDraftSchema, videoBriefSchema } from "./brief";
 import type { VideoBrief } from "./brief";
 
 const baseBrief: VideoBrief = {
@@ -70,5 +70,35 @@ describe("video brief", () => {
     };
 
     expect(findUnsupportedCommercialFacts(brief)).toEqual(["menuItems[0].price"]);
+  });
+});
+
+describe("video brief draft", () => {
+  const confirmedOffer = {
+    offer: { label: "Promo Mingguan", detail: "Diskon 30%" },
+    facts: [
+      { field: "offer.label", value: "Promo Mingguan", source: "user_confirmation" as const },
+      { field: "offer.detail", value: "Diskon 30%", source: "user_confirmation" as const },
+    ],
+  };
+
+  it("parses a draft whose required fields are still empty", () => {
+    const draft = { ...baseBrief, productName: null, audience: null, objective: null, keyMessage: null, callToAction: null };
+
+    expect(videoBriefDraftSchema.safeParse(draft).success).toBe(true);
+  });
+
+  it("keeps the draft and the approvable shape in step, and still refuses an unknown field", () => {
+    expect(videoBriefDraftSchema.safeParse(videoBriefSchema.parse(baseBrief)).success).toBe(true);
+    expect(videoBriefDraftSchema.safeParse({ ...baseBrief, price: 1 }).success).toBe(false);
+  });
+
+  it("calls a draft complete only once its type's fields and every commercial fact are settled", () => {
+    expect(isBriefDraftComplete(baseBrief, "product_promo")).toBe(true);
+    expect(isBriefDraftComplete(baseBrief, "discount_promo")).toBe(false);
+    expect(isBriefDraftComplete({ ...baseBrief, callToAction: null }, "product_promo")).toBe(false);
+    expect(isBriefDraftComplete({ ...baseBrief, audience: null, ...confirmedOffer }, "discount_promo")).toBe(false);
+    expect(isBriefDraftComplete({ ...baseBrief, ...confirmedOffer }, "discount_promo")).toBe(true);
+    expect(isBriefDraftComplete({ ...baseBrief, ...confirmedOffer, facts: [] }, "discount_promo")).toBe(false);
   });
 });

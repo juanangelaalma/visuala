@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 import { findMissingBriefFields } from "../../domain/video/brief";
-import { saveBriefRevision, saveStoryboardRevision } from "./revisions";
-import type { VideoBriefRevision, VideoOutputSettings, VideoProject } from "../../domain/video/types";
+import { getLatestBriefRevision, getLatestStoryboardRevision, saveBriefRevision, saveStoryboardRevision } from "./revisions";
+import type { VideoBriefRevision, VideoOutputSettings, VideoProject, VideoStoryboardRevision } from "../../domain/video/types";
 
 const USER_ID = "11111111-1111-4111-8111-111111111111";
 const PROJECT_ID = "33333333-3333-4333-8333-333333333333";
@@ -33,10 +33,14 @@ function briefRevision(): VideoBriefRevision {
 function dependencies() {
   return {
     projects: { getOwned: vi.fn(async (): Promise<VideoProject | null> => project()) },
-    briefRevisions: { create: vi.fn(async (input) => ({ ...input, id: BRIEF_ID, version: 1, createdAt: "created" })), latestOwned: vi.fn(async () => null), getOwned: vi.fn(async (): Promise<VideoBriefRevision | null> => briefRevision()) },
-    storyboardRevisions: { create: vi.fn(async (input) => ({ ...input, id: "sb-1", version: 1, createdAt: "created" })), latestOwned: vi.fn(async () => null) },
+    briefRevisions: { create: vi.fn(async (input) => ({ ...input, id: BRIEF_ID, version: 1, createdAt: "created" })), latestOwned: vi.fn(async (): Promise<VideoBriefRevision | null> => null), getOwned: vi.fn(async (): Promise<VideoBriefRevision | null> => briefRevision()) },
+    storyboardRevisions: { create: vi.fn(async (input) => ({ ...input, id: "sb-1", version: 1, createdAt: "created" })), latestOwned: vi.fn(async (): Promise<VideoStoryboardRevision | null> => null) },
     createId: () => "id-1",
   };
+}
+
+function storyboardRevision(): VideoStoryboardRevision {
+  return { id: "sb-1", projectId: PROJECT_ID, userId: USER_ID, version: 2, schemaVersion: "storyboard@v1", briefRevisionId: BRIEF_ID, scenes, totalDurationSeconds: 10, generatedBy, approvedAt: "approved", approvalSnapshot: {}, createdAt: "created" };
 }
 
 describe("saveBriefRevision", () => {
@@ -100,5 +104,77 @@ describe("saveStoryboardRevision", () => {
 
     await expect(saveStoryboardRevision({ userId: USER_ID, projectId: PROJECT_ID, schemaVersion: "storyboard@v1", briefRevisionId: BRIEF_ID, scenes, generatedBy }, deps))
       .rejects.toMatchObject({ code: "video_input_invalid" });
+  });
+});
+
+describe("saveBriefRevision drafts", () => {
+  it("accepts and stores a draft whose required fields are still empty", async () => {
+    const draft = { ...brief, productName: null, audience: null, objective: null, keyMessage: null, callToAction: null };
+    const deps = dependencies();
+
+    const revision = await saveBriefRevision({ userId: USER_ID, projectId: PROJECT_ID, schemaVersion: "video-brief-draft@v1", brief: draft, generatedBy, sourceMessageIds: [] }, deps);
+
+    expect(revision.isComplete).toBe(false);
+    expect(deps.briefRevisions.create.mock.calls[0]?.[0].brief).toEqual(draft);
+    expect(deps.briefRevisions.create.mock.calls[0]?.[0].schemaVersion).toBe("video-brief-draft@v1");
+  });
+
+  it("never lets a caller declare its own draft complete", async () => {
+    const deps = dependencies();
+
+    const revision = await saveBriefRevision(
+      { userId: USER_ID, projectId: PROJECT_ID, schemaVersion: "video-brief-draft@v1", brief: { ...brief, callToAction: null }, generatedBy, sourceMessageIds: [], isComplete: true } as never,
+      deps,
+    );
+
+    expect(revision.isComplete).toBe(false);
+  });
+});
+
+describe("video revision reads", () => {
+  it("returns null before the first revision exists", async () => {
+    const deps = dependencies();
+
+    await expect(getLatestBriefRevision({ userId: USER_ID, projectId: PROJECT_ID }, deps)).resolves.toBeNull();
+    await expect(getLatestStoryboardRevision({ userId: USER_ID, projectId: PROJECT_ID }, deps)).resolves.toBeNull();
+  });
+
+  it("returns the latest brief revision without the owner id", async () => {
+    const deps = dependencies();
+    deps.briefRevisions.latestOwned.mockResolvedValue(briefRevision());
+
+    const result = await getLatestBriefRevision({ userId: USER_ID, projectId: PROJECT_ID }, deps);
+
+    expect(result).toMatchObject({ id: BRIEF_ID, version: 1, schemaVersion: "brief@v1", isComplete: true, brief });
+    expect(result).not.toHaveProperty("userId");
+  });
+
+  it("returns the latest storyboard revision with its approval time, and nothing internal", async () => {
+    const deps = dependencies();
+    deps.storyboardRevisions.latestOwned.mockResolvedValue(storyboardRevision());
+
+    const result = await getLatestStoryboardRevision({ userId: USER_ID, projectId: PROJECT_ID }, deps);
+
+    expect(result).toMatchObject({ id: "sb-1", version: 2, briefRevisionId: BRIEF_ID, totalDurationSeconds: 10, approvedAt: "approved" });
+    expect(result).not.toHaveProperty("userId");
+    expect(result).not.toHaveProperty("approvalSnapshot");
+    expect(result).not.toHaveProperty("generatedBy");
+  });
+
+  it("omits the approval time for an unapproved storyboard", async () => {
+    const deps = dependencies();
+    deps.storyboardRevisions.latestOwned.mockResolvedValue({ ...storyboardRevision(), approvedAt: undefined });
+
+    const result = await getLatestStoryboardRevision({ userId: USER_ID, projectId: PROJECT_ID }, deps);
+
+    expect(result).not.toHaveProperty("approvedAt");
+  });
+
+  it("refuses a project the caller does not own", async () => {
+    const deps = dependencies();
+    deps.projects.getOwned.mockResolvedValue(null);
+
+    await expect(getLatestBriefRevision({ userId: USER_ID, projectId: PROJECT_ID }, deps))
+      .rejects.toMatchObject({ code: "video_project_not_found" });
   });
 });

@@ -1,4 +1,4 @@
-import { findMissingBriefFields, findUnsupportedCommercialFacts, videoBriefSchema } from "../../domain/video/brief";
+import { isBriefDraftComplete, videoBriefDraftSchema } from "../../domain/video/brief";
 import { VideoError } from "../../domain/video/errors";
 import { findStoryboardProblems, storyboardSchema, storyboardTotalDurationSeconds } from "../../domain/video/storyboard";
 import type {
@@ -7,8 +7,8 @@ import type {
 import type { GeneratedBy, VideoBriefRevision, VideoProject, VideoStoryboardRevision } from "../../domain/video/types";
 
 /**
- * Both revision use cases are internal: the AI orchestration layer calls them after generating a
- * brief or a storyboard, and approval later consumes the rows they write. Neither has a route.
+ * These use cases are internal: the video orchestration layer calls them after a model turn, and
+ * approval later consumes the rows they write. The reads below are what the workspace renders.
  *
  * The repositories own the revision numbering, so `version` is never a caller concern here.
  */
@@ -26,18 +26,19 @@ export type SaveBriefRevisionCommand = {
   sourceMessageIds: string[];
 };
 
+/**
+ * The one brief write path. It accepts a draft: the interviewer stores what it knows each turn and
+ * leaves the rest null, so an unanswerable field is never invented to satisfy a schema.
+ *
+ * `isComplete` is derived, never supplied. A brief counts as finished only once every required field
+ * for the video type is present and every commercial claim traces to something the user said or
+ * confirmed, which is what keeps an unfinished draft away from the approval gate.
+ */
 export async function saveBriefRevision(command: SaveBriefRevisionCommand, dependencies: BriefRevisionDependencies): Promise<VideoBriefRevision> {
   const project = await requireActiveProject(command.projectId, command.userId, dependencies);
 
-  const parsed = videoBriefSchema.safeParse(command.brief);
+  const parsed = videoBriefDraftSchema.safeParse(command.brief);
   if (!parsed.success) throw invalidInput("The brief does not match the expected shape.");
-
-  // `isComplete` is derived, never supplied: a brief is ready for approval only once every required
-  // field for the project's video type is present and every commercial claim is traceable to
-  // something the user said or confirmed. The validators read the *parsed* brief, because their
-  // satisfaction test is `!== null` and an absent field would read as satisfied.
-  const brief = parsed.data;
-  const isComplete = findMissingBriefFields(brief, project.videoType).length === 0 && findUnsupportedCommercialFacts(brief).length === 0;
 
   return dependencies.briefRevisions.create({
     projectId: project.id,
@@ -45,7 +46,7 @@ export async function saveBriefRevision(command: SaveBriefRevisionCommand, depen
     schemaVersion: command.schemaVersion,
     // The row records what the orchestrator produced; the parse above only proves it is representable.
     brief: command.brief,
-    isComplete,
+    isComplete: isBriefDraftComplete(parsed.data, project.videoType),
     generatedBy: command.generatedBy,
     sourceMessageIds: command.sourceMessageIds,
   });
@@ -93,6 +94,79 @@ export async function saveStoryboardRevision(command: SaveStoryboardRevisionComm
     totalDurationSeconds: project.settings.durationSeconds,
     generatedBy: command.generatedBy,
   });
+}
+
+export type RevisionReadDependencies = {
+  projects: Pick<VideoProjectRepository, "getOwned">;
+  briefRevisions: Pick<VideoBriefRevisionRepository, "latestOwned">;
+  storyboardRevisions: Pick<VideoStoryboardRevisionRepository, "latestOwned">;
+};
+
+export type BriefRevisionResponse = {
+  id: string;
+  version: number;
+  schemaVersion: string;
+  isComplete: boolean;
+  brief: unknown;
+  createdAt: string;
+};
+
+export type StoryboardRevisionResponse = {
+  id: string;
+  version: number;
+  schemaVersion: string;
+  briefRevisionId: string;
+  scenes: unknown;
+  totalDurationSeconds: number;
+  approvedAt?: string;
+  createdAt: string;
+};
+
+/**
+ * The latest brief revision, draft or complete. `null` rather than a 404, so the workspace can tell
+ * "the interview has not started" apart from "this project is not yours".
+ */
+export async function getLatestBriefRevision(
+  command: { userId: string; projectId: string },
+  dependencies: RevisionReadDependencies,
+): Promise<BriefRevisionResponse | null> {
+  const project = await requireActiveProject(command.projectId, command.userId, dependencies);
+  const revision = await dependencies.briefRevisions.latestOwned(project.id, command.userId);
+  return revision ? toBriefRevisionResponse(revision) : null;
+}
+
+export async function getLatestStoryboardRevision(
+  command: { userId: string; projectId: string },
+  dependencies: RevisionReadDependencies,
+): Promise<StoryboardRevisionResponse | null> {
+  const project = await requireActiveProject(command.projectId, command.userId, dependencies);
+  const revision = await dependencies.storyboardRevisions.latestOwned(project.id, command.userId);
+  return revision ? toStoryboardRevisionResponse(revision) : null;
+}
+
+/** The only shape a brief revision is allowed to leave the backend in: no `user_id`. */
+export function toBriefRevisionResponse(revision: VideoBriefRevision): BriefRevisionResponse {
+  return {
+    id: revision.id,
+    version: revision.version,
+    schemaVersion: revision.schemaVersion,
+    isComplete: revision.isComplete,
+    brief: revision.brief,
+    createdAt: revision.createdAt,
+  };
+}
+
+export function toStoryboardRevisionResponse(revision: VideoStoryboardRevision): StoryboardRevisionResponse {
+  return {
+    id: revision.id,
+    version: revision.version,
+    schemaVersion: revision.schemaVersion,
+    briefRevisionId: revision.briefRevisionId,
+    scenes: revision.scenes,
+    totalDurationSeconds: revision.totalDurationSeconds,
+    ...(revision.approvedAt ? { approvedAt: revision.approvedAt } : {}),
+    createdAt: revision.createdAt,
+  };
 }
 
 async function requireActiveProject(

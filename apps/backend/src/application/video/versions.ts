@@ -3,7 +3,7 @@ import type { VideoProjectRepository, VideoVersionRepository } from "../../domai
 import type { VideoVersion } from "../../domain/video/types";
 
 export type VersionDependencies = {
-  signedUrl: (objectKey: string) => Promise<string>;
+  signedUrl: (objectKey: string) => Promise<string | null>;
   projects: Pick<VideoProjectRepository, "getOwned">;
   versions: Pick<VideoVersionRepository, "listOwned" | "getOwned">;
 };
@@ -15,7 +15,8 @@ export type VersionResponse = {
   aspectRatio: string;
   resolution: string;
   createdAt: string;
-  playbackUrl: string;
+  /** Null when the object is gone; the version row is still reported. */
+  playbackUrl: string | null;
 };
 
 /**
@@ -43,11 +44,15 @@ export async function createVersionDownloadUrl(
   const version = await dependencies.versions.getOwned(command.versionId, command.userId);
   if (!version || version.projectId !== command.projectId) throw versionNotFound();
 
-  return { url: await dependencies.signedUrl(version.outputObjectKey) };
+  // A row without its object is a missing download, not a server fault.
+  const url = await dependencies.signedUrl(version.outputObjectKey);
+  if (url === null) throw versionNotFound();
+
+  return { url };
 }
 
 /** The only shape a version is allowed to leave the backend in: no user id, no object key. */
-function toVersionResponse(version: VideoVersion, playbackUrl: string): VersionResponse {
+function toVersionResponse(version: VideoVersion, playbackUrl: string | null): VersionResponse {
   return {
     id: version.id,
     versionNumber: version.versionNumber,

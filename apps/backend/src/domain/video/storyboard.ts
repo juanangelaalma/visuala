@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { VideoError } from "./errors";
 import type { VideoOutputSettings } from "./types";
 
 export const STORYBOARD_SCHEMA_NAME = "video_storyboard";
@@ -7,6 +8,8 @@ export const STORYBOARD_SCHEMA_VERSION = "v1";
 /** Design-system safe-area limits for on-screen text at the smallest supported resolution. */
 export const MAX_SCENE_TITLE_CHARS = 40;
 export const MAX_SCENE_COPY_CHARS = 90;
+
+export const STORYBOARD_TRANSITIONS = ["cut", "fade", "slide", "zoom"] as const;
 
 export const storyboardSceneSchema = z.object({
   order: z.number().int().positive(),
@@ -19,7 +22,7 @@ export const storyboardSceneSchema = z.object({
   caption: z.string().trim().min(1).nullable(),
   assetIds: z.array(z.string().uuid()),
   audioCue: z.string().trim().min(1).nullable(),
-  transition: z.enum(["cut", "fade", "slide", "zoom"]),
+  transition: z.enum(STORYBOARD_TRANSITIONS),
 }).strict();
 
 export const storyboardSchema = z.object({ scenes: z.array(storyboardSceneSchema).min(1) }).strict();
@@ -71,4 +74,71 @@ export function findStoryboardProblems(scenes: readonly StoryboardScene[], setti
   if (storyboardTotalDurationSeconds(ordered) !== settings.durationSeconds) problems.add("total_duration_mismatch");
 
   return [...problems];
+}
+
+/** A scene shorter than this is not readable on screen, so normalization never produces one. */
+const MIN_SCENE_SECONDS = 0.5;
+
+/**
+ * Turns model output into a storyboard the renderer can actually consume. The model is asked for
+ * contiguous timing, but it is not reliable about it, so this renumbers the scenes, rescales the
+ * timeline to start at zero, abut, and sum to exactly the configured duration, points every scene
+ * at a real asset, and mirrors the on-screen copy into the voice-over and caption tracks when
+ * voice-over is on. It refuses to return a storyboard that still has a problem rather than handing
+ * a broken timeline to a render.
+ */
+export function normalizeStoryboard(
+  scenes: readonly StoryboardScene[],
+  settings: VideoOutputSettings,
+  assetIds: readonly string[],
+): readonly StoryboardScene[] {
+  if (scenes.length === 0) throw invalidStoryboard();
+
+  const ordered = [...scenes].sort((left, right) => left.order - right.order);
+  const durations = sceneDurations(ordered, settings.durationSeconds);
+  let cursor = 0;
+
+  const normalized = ordered.map((scene, index) => {
+    const isLast = index === ordered.length - 1;
+    const startSeconds = cursor;
+    const endSeconds = isLast ? settings.durationSeconds : round(cursor + (durations[index] ?? 0));
+    cursor = endSeconds;
+
+    return {
+      ...scene,
+      order: index + 1,
+      startSeconds,
+      endSeconds,
+      assetIds: scene.assetIds.length > 0 ? scene.assetIds : assetForScene(assetIds, index),
+      voiceOver: settings.voiceOverEnabled ? (scene.voiceOver ?? scene.onScreenCopy) : null,
+      caption: settings.voiceOverEnabled ? (scene.caption ?? scene.onScreenCopy) : null,
+    };
+  });
+
+  if (findStoryboardProblems(normalized, settings).length > 0) throw invalidStoryboard();
+  return normalized;
+}
+
+/**
+ * Hands every scene the minimum readable share first, then splits what is left in proportion to the
+ * model's own timings. A zero-length or absurdly short scene from the model comes back readable
+ * instead of being dropped, and the shares always add up to the configured duration.
+ */
+function sceneDurations(scenes: readonly StoryboardScene[], durationSeconds: number): readonly number[] {
+  const count = scenes.length;
+  const minimum = count * MIN_SCENE_SECONDS <= durationSeconds ? MIN_SCENE_SECONDS : 0;
+  const remaining = durationSeconds - minimum * count;
+  const raw = scenes.map((scene) => scene.endSeconds - scene.startSeconds);
+  const total = raw.reduce((sum, value) => sum + value, 0);
+  const weights = total > 0 ? raw.map((value) => value / total) : raw.map(() => 1 / count);
+  return weights.map((weight) => minimum + weight * remaining);
+}
+
+function assetForScene(assetIds: readonly string[], index: number): string[] {
+  const assetId = assetIds[index % assetIds.length];
+  return assetId === undefined ? [] : [assetId];
+}
+
+function invalidStoryboard(): VideoError {
+  return new VideoError("video_input_invalid", "The storyboard does not fit the project settings.");
 }

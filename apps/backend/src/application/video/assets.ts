@@ -88,12 +88,13 @@ export type ProjectAssetResponse = {
   width: number;
   height: number;
   moderationStatus: ProjectAsset["moderationStatus"];
-  previewUrl: string;
+  /** Null when the stored object is gone, so the row stays visible instead of failing the list. */
+  previewUrl: string | null;
 };
 
 export async function listProjectAssets(
   command: { userId: string; projectId: string },
-  dependencies: AssetDependencies & { signedUrl: (objectKey: string) => Promise<string> },
+  dependencies: AssetDependencies & { signedUrl: (objectKey: string) => Promise<string | null> },
 ): Promise<ProjectAssetResponse[]> {
   const project = await dependencies.projects.getOwned(command.projectId, command.userId);
   if (!project) throw projectNotFound();

@@ -14,7 +14,7 @@ import {
   PricingPlanUnavailableError,
   UnsupportedBillingGatewayError,
 } from "@/domain/billing/errors";
-import { errorPlugin } from "./errors";
+import { classifyStorageError, errorPlugin } from "./errors";
 
 function buildApp() {
   return new Elysia()
@@ -209,6 +209,62 @@ describe("error plugin", () => {
       } finally {
         consoleError.mockRestore();
       }
+    });
+  });
+
+  describe("storage errors", () => {
+    /** The shape `storage-js` raises, without importing the SDK. */
+    function storageError(name: string, message: string, status?: number) {
+      return Object.assign(new Error(message), { name, ...(status === undefined ? {} : { status, statusCode: String(status) }) });
+    }
+
+    it.each([
+      ["storage_bucket_missing", storageError("StorageApiError", "Bucket not found", 404), "Asset storage is not configured correctly."],
+      ["storage_unavailable", storageError("StorageApiError", "The resource already exists", 409), "Asset storage is unavailable."],
+      ["storage_unavailable", storageError("StorageUnknownError", "fetch failed"), "Asset storage is unavailable."],
+    ] as const)("maps a storage failure to a safe 503 with code %s", async (code, error, message) => {
+      const consoleError = vi.spyOn(console, "error").mockImplementation(() => undefined);
+      try {
+        const app = new Elysia()
+          .use(errorPlugin)
+          .get("/boom", () => {
+            throw error;
+          });
+
+        const response = await app.handle(new Request("http://localhost/boom"));
+
+        expect(response.status).toBe(503);
+        await expect(response.json()).resolves.toEqual({ error: message, code });
+        // The code is logged; the provider text never is.
+        expect(consoleError).toHaveBeenCalledWith("Asset storage request failed", { code });
+      } finally {
+        consoleError.mockRestore();
+      }
+    });
+
+    it("leaves an ordinary error that merely mentions a bucket as a 500", async () => {
+      const consoleError = vi.spyOn(console, "error").mockImplementation(() => undefined);
+      try {
+        const app = new Elysia()
+          .use(errorPlugin)
+          .get("/boom", () => {
+            throw new Error("Bucket not found");
+          });
+
+        const response = await app.handle(new Request("http://localhost/boom"));
+
+        expect(response.status).toBe(500);
+        await expect(response.json()).resolves.toEqual({ error: "Internal server error." });
+      } finally {
+        consoleError.mockRestore();
+      }
+    });
+
+    it("only classifies an object that identifies itself as a storage error", () => {
+      expect(classifyStorageError(storageError("StorageApiError", "Bucket not found", 404))).toBe("storage_bucket_missing");
+      expect(classifyStorageError(storageError("StorageApiError", "Object not found", 404))).toBe("storage_unavailable");
+      expect(classifyStorageError(null)).toBeNull();
+      expect(classifyStorageError("Bucket not found")).toBeNull();
     });
   });
 });

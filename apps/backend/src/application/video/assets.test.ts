@@ -182,6 +182,18 @@ describe("listProjectAssets", () => {
     await expect(listProjectAssets({ userId: "user-b", projectId: PROJECT_ID }, { ...deps, signedUrl })).rejects.toMatchObject({ code: "video_project_not_found" });
     expect(signedUrl).not.toHaveBeenCalled();
   });
+
+  it("keeps the list when one row's object is gone, answering a null preview for it", async () => {
+    const deps = dependencies();
+    const orphan = { ...storedAsset(), id: "55555555-5555-4555-8555-555555555555", objectKey: `video-projects/${PROJECT_ID}/gone.png` };
+    deps.assets.listOwned.mockResolvedValue([storedAsset(), orphan]);
+    const signedUrl = vi.fn(async (key: string) => (key.endsWith("gone.png") ? null : `https://signed.example/${key}`));
+
+    const assets = await listProjectAssets({ userId: USER_ID, projectId: PROJECT_ID }, { ...deps, signedUrl });
+
+    expect(assets.map((asset) => asset.previewUrl)).toEqual([`https://signed.example/video-projects/${PROJECT_ID}/${ASSET_ID}.png`, null]);
+    expect(assets).toHaveLength(2);
+  });
 });
 
 describe("ProjectAssetResolver", () => {

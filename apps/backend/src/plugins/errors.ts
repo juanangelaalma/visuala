@@ -88,6 +88,24 @@ function mapDomainError(error: unknown): MappedError | null {
   return null;
 }
 
+export type StorageErrorCode = "storage_bucket_missing" | "storage_unavailable";
+
+/**
+ * `storage-js` raises `StorageApiError`/`StorageUnknownError` when Storage itself fails. Those must
+ * not reach a client as an unhandled 500 with a stack trace: a missing bucket is a deployment
+ * mistake an operator has to see named, and the configured bucket is not always the one the code
+ * defaults to. The classifier reads the thrown shape instead of importing the SDK, so this plugin
+ * keeps no dependency on it. Only the code is logged, never the provider text.
+ */
+export function classifyStorageError(error: unknown): StorageErrorCode | null {
+  if (typeof error !== "object" || error === null) return null;
+
+  const { name, message } = error as { name?: unknown; message?: unknown };
+  if (name !== "StorageApiError" && name !== "StorageUnknownError") return null;
+
+  return typeof message === "string" && /bucket not found/i.test(message) ? "storage_bucket_missing" : "storage_unavailable";
+}
+
 export const errorPlugin = new Elysia({ name: "errors" }).onError({ as: "global" }, ({ code, error, set }) => {
   if (code === "VALIDATION" || code === "PARSE") {
     set.status = 422;
@@ -103,6 +121,15 @@ export const errorPlugin = new Elysia({ name: "errors" }).onError({ as: "global"
   if (mapped) {
     set.status = mapped.status;
     return mapped.body;
+  }
+
+  const storageCode = classifyStorageError(error);
+  if (storageCode) {
+    console.error("Asset storage request failed", { code: storageCode });
+    set.status = 503;
+    return storageCode === "storage_bucket_missing"
+      ? { error: "Asset storage is not configured correctly.", code: storageCode }
+      : { error: "Asset storage is unavailable.", code: storageCode };
   }
 
   console.error("Unhandled backend error", error);

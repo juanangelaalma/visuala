@@ -7,12 +7,13 @@ export const BRIEF_SCHEMA_VERSION = "v1";
 
 const CONFIRMING_SOURCES = ["user_message", "user_confirmation"] as const;
 
-export const videoBriefSchema = z.object({
-  productName: z.string().trim().min(1),
+/** The tracked draft: every field the interviewer cannot answer yet is still null. */
+export const videoBriefDraftSchema = z.object({
+  productName: z.string().trim().min(1).nullable(),
   productCategory: z.string().trim().min(1).nullable(),
-  audience: z.string().trim().min(1),
-  objective: z.string().trim().min(1),
-  keyMessage: z.string().trim().min(1),
+  audience: z.string().trim().min(1).nullable(),
+  objective: z.string().trim().min(1).nullable(),
+  keyMessage: z.string().trim().min(1).nullable(),
   offer: z.object({ label: z.string().trim().min(1), detail: z.string().trim().min(1) }).strict().nullable(),
   callToAction: z.string().trim().min(1).nullable(),
   orderDestination: z.string().trim().min(1).nullable(),
@@ -23,7 +24,21 @@ export const videoBriefSchema = z.object({
   facts: z.array(z.object({ field: z.string().trim().min(1), value: z.string().trim().min(1), source: z.enum(["user_message", "user_confirmation", "asset_analysis"]) }).strict()),
 }).strict();
 
+/**
+ * The approvable shape, derived from the draft so the two can never drift: it narrows the four
+ * fields a brief cannot be written without. Anything else stays nullable.
+ */
+export const videoBriefSchema = videoBriefDraftSchema.extend({
+  productName: z.string().trim().min(1),
+  audience: z.string().trim().min(1),
+  objective: z.string().trim().min(1),
+  keyMessage: z.string().trim().min(1),
+});
+
+export type VideoBriefDraft = z.infer<typeof videoBriefDraftSchema>;
 export type VideoBrief = z.infer<typeof videoBriefSchema>;
+
+export const DRAFT_BRIEF_SCHEMA_VERSION = "video-brief-draft@v1";
 
 export type BriefField = "productName" | "audience" | "objective" | "keyMessage" | "offer" | "callToAction" | "menuItems";
 
@@ -71,4 +86,18 @@ export function commercialFactValues(brief: VideoBrief): readonly { field: strin
     if (item.price) values.push({ field: `menuItems[${index}].price`, value: item.price });
   });
   return values;
+}
+
+/**
+ * The server's own verdict on whether the interview is finished. The model reports `briefComplete`
+ * on every turn, and that flag is advisory only: this recomputes it from the persisted draft so a
+ * model cannot talk the project past the approval gate.
+ */
+export function isBriefDraftComplete(draft: VideoBriefDraft, videoType: VideoType): boolean {
+  const parsed = videoBriefSchema.safeParse(draft);
+  if (!parsed.success) return false;
+  return (
+    findMissingBriefFields(parsed.data, videoType).length === 0 &&
+    findUnsupportedCommercialFacts(parsed.data).length === 0
+  );
 }

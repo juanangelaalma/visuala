@@ -2,10 +2,12 @@ import { Elysia, t } from "elysia";
 import { z } from "zod";
 import { approveVideoProject } from "@/application/video/approval";
 import { deleteProjectAsset, listProjectAssets, registerProjectAsset } from "@/application/video/assets";
-import { appendVideoMessage, listVideoMessages, toMessageResponse } from "@/application/video/messages";
+import { runVideoInterviewTurn } from "@/application/video/conversation";
+import { listVideoMessages, toMessageResponse } from "@/application/video/messages";
 import { createVideoProject, deleteVideoProject, getVideoProject, listVideoProjects, toProjectResponse } from "@/application/video/projects";
+import { getLatestBriefRevision, getLatestStoryboardRevision } from "@/application/video/revisions";
 import { cancelRenderJob, createRenderJob, getRenderJob, toRenderJobResponse } from "@/application/video/render-jobs";
-import { createVideoApprovalServices, createVideoProjectServices } from "@/application/video/services";
+import { createVideoApprovalServices, createVideoConversationServices, createVideoProjectServices } from "@/application/video/services";
 import { createVersionDownloadUrl, listVideoVersions } from "@/application/video/versions";
 import { MAX_ASSET_BYTES } from "@/domain/ai-service/assets";
 import { VideoError } from "@/domain/video/errors";
@@ -73,13 +75,15 @@ export const videoProjectRoutes = new Elysia({ name: "video-project-routes" })
       const parsed = appendMessageBodySchema.safeParse(body);
       if (!parsed.success) return status(422, invalidRequest);
 
-      const { message, project } = await appendVideoMessage(
+      // One turn: the user's message, the interviewer's next question, and, when the brief is
+      // finished, the brief and storyboard revisions that open the project for approval.
+      const { message, reply, project } = await runVideoInterviewTurn(
         { userId: user.id, projectId: params.projectId, ...parsed.data },
-        createVideoProjectServices(),
+        createVideoConversationServices(),
       );
 
       set.status = 201;
-      return { message: toMessageResponse(message), project: toProjectResponse(project) };
+      return { message: toMessageResponse(message), reply: toMessageResponse(reply), project: toProjectResponse(project) };
     },
     { auth: true, ...jsonBody, detail: { tags: ["video"] } },
   )
@@ -87,6 +91,20 @@ export const videoProjectRoutes = new Elysia({ name: "video-project-routes" })
     "/video-projects/:projectId/messages",
     async ({ params, user }) => ({
       messages: await listVideoMessages({ userId: user.id, projectId: params.projectId }, createVideoProjectServices()),
+    }),
+    { auth: true, detail: { tags: ["video"] } },
+  )
+  .get(
+    "/video-projects/:projectId/brief",
+    async ({ params, user }) => ({
+      brief: await getLatestBriefRevision({ userId: user.id, projectId: params.projectId }, createVideoProjectServices()),
+    }),
+    { auth: true, detail: { tags: ["video"] } },
+  )
+  .get(
+    "/video-projects/:projectId/storyboard",
+    async ({ params, user }) => ({
+      storyboard: await getLatestStoryboardRevision({ userId: user.id, projectId: params.projectId }, createVideoProjectServices()),
     }),
     { auth: true, detail: { tags: ["video"] } },
   )

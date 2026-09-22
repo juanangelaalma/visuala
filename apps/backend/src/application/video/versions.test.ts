@@ -16,7 +16,7 @@ function version(overrides: Partial<VideoVersion> = {}): VideoVersion {
 
 function dependencies() {
   return {
-    signedUrl: vi.fn(async (key: string) => `https://signed.example/${key}`),
+    signedUrl: vi.fn(async (key: string): Promise<string | null> => `https://signed.example/${key}`),
     projects: { getOwned: vi.fn(async (): Promise<VideoProject | null> => project()) },
     versions: {
       listOwned: vi.fn(async (): Promise<VideoVersion[]> => [version()]),
@@ -56,5 +56,23 @@ describe("versions", () => {
 
     await expect(listVideoVersions({ userId: "user-b", projectId: PROJECT_ID }, deps)).rejects.toMatchObject({ code: "video_project_not_found" });
     expect(deps.versions.listOwned).not.toHaveBeenCalled();
+  });
+
+  it("keeps a version whose object is gone and reports a null playback url", async () => {
+    const deps = dependencies();
+    deps.signedUrl.mockResolvedValue(null);
+
+    const versions = await listVideoVersions({ userId: USER_ID, projectId: PROJECT_ID }, deps);
+
+    expect(versions).toHaveLength(1);
+    expect(versions[0]?.playbackUrl).toBeNull();
+  });
+
+  it("answers a download whose object is gone as a missing version, not a server fault", async () => {
+    const deps = dependencies();
+    deps.signedUrl.mockResolvedValue(null);
+
+    await expect(createVersionDownloadUrl({ userId: USER_ID, projectId: PROJECT_ID, versionId: VERSION_ID }, deps))
+      .rejects.toMatchObject({ code: "video_version_not_found" });
   });
 });

@@ -12,7 +12,10 @@ const mocks = vi.hoisted(() => ({
   deleteProjectAsset: vi.fn(),
   listProjectAssets: vi.fn(),
   appendVideoMessage: vi.fn(),
+  runVideoInterviewTurn: vi.fn(),
   listVideoMessages: vi.fn(),
+  getLatestBriefRevision: vi.fn(),
+  getLatestStoryboardRevision: vi.fn(),
   approveVideoProject: vi.fn(),
   createRenderJob: vi.fn(),
   getRenderJob: vi.fn(),
@@ -20,11 +23,20 @@ const mocks = vi.hoisted(() => ({
   listVideoVersions: vi.fn(),
   createVersionDownloadUrl: vi.fn(),
   services: vi.fn(),
+  conversationServices: vi.fn(),
   approvalServices: vi.fn(),
 }));
 
 vi.mock("@/infrastructure/supabase/clients", () => ({ createSupabasePublicClient: mocks.publicClient, createSupabaseUserClient: mocks.userClient, createSupabaseServiceRoleClient: vi.fn(() => ({})) }));
-vi.mock("@/application/video/services", () => ({ createVideoProjectServices: mocks.services, createVideoApprovalServices: mocks.approvalServices }));
+vi.mock("@/application/video/services", () => ({ createVideoProjectServices: mocks.services, createVideoConversationServices: mocks.conversationServices, createVideoApprovalServices: mocks.approvalServices }));
+vi.mock("@/application/video/conversation", async () => {
+  const actual = await vi.importActual<typeof import("@/application/video/conversation")>("@/application/video/conversation");
+  return { ...actual, runVideoInterviewTurn: mocks.runVideoInterviewTurn };
+});
+vi.mock("@/application/video/revisions", async () => {
+  const actual = await vi.importActual<typeof import("@/application/video/revisions")>("@/application/video/revisions");
+  return { ...actual, getLatestBriefRevision: mocks.getLatestBriefRevision, getLatestStoryboardRevision: mocks.getLatestStoryboardRevision };
+});
 vi.mock("@/application/video/projects", async () => {
   const actual = await vi.importActual<typeof import("@/application/video/projects")>("@/application/video/projects");
   return { ...actual, createVideoProject: mocks.createVideoProject, listVideoProjects: mocks.listVideoProjects, getVideoProject: mocks.getVideoProject, deleteVideoProject: mocks.deleteVideoProject };
@@ -52,6 +64,7 @@ vi.mock("@/application/video/versions", async () => {
 
 import { buildApprovalSnapshot } from "@/application/video/approval";
 import { toRenderJobResponse } from "@/application/video/render-jobs";
+import { AIError } from "@/domain/ai-service/errors";
 import { VideoError } from "@/domain/video/errors";
 import type { VideoOutputSettings, VideoRenderJob } from "@/domain/video/types";
 import { createApp } from "@/app";
@@ -63,6 +76,10 @@ const assetPreview = { id: asset.id, mimeType: "image/png", byteSize: asset.byte
 const pngBytes = Uint8Array.from(Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAIAAAADCAIAAAD91JpzAAAAFElEQVR4nGP4z8DAwMDAxAADCBYAG10BBdmDt4sAAAAASUVORK5CYII=", "base64"));
 const message = { id: "message-1", projectId: project.id, userId: user.id, role: "user", content: "buat video jualan", controls: null, assetIds: [] as string[], createdAt: "c" };
 const messageResponse = { id: message.id, role: "user", content: message.content, assetIds: message.assetIds, controls: null, createdAt: message.createdAt };
+const reply = { ...message, id: "message-2", role: "assistant" as const, content: "Siapa target pembelinya?" };
+const replyResponse = { id: reply.id, role: "assistant", content: reply.content, assetIds: reply.assetIds, controls: null, createdAt: reply.createdAt };
+const briefRevisionResponse = { id: "44444444-4444-4444-8444-444444444444", version: 1, schemaVersion: "video-brief-draft@v1", isComplete: false, brief: { productName: null }, createdAt: "c" };
+const storyboardRevisionResponse = { id: "55555555-5555-4555-8555-555555555555", version: 1, schemaVersion: "v1", briefRevisionId: briefRevisionResponse.id, scenes: [], totalDurationSeconds: 10, createdAt: "c" };
 const interviewingProject = { ...project, status: "interviewing" };
 const approvalSettings: VideoOutputSettings = { durationSeconds: 10, aspectRatio: "9:16", resolution: "1080p", language: "id", voiceOverEnabled: true, musicEnabled: true };
 const approvedProject = { ...project, status: "approved", settings: approvalSettings };
@@ -201,15 +218,15 @@ describe("video message routes", () => {
     mocks.getUser.mockResolvedValue({ data: { user }, error: null });
     mocks.publicClient.mockReturnValue({ auth: { getUser: mocks.getUser } });
     mocks.userClient.mockReturnValue({ scoped: true });
-    mocks.services.mockReturnValue({});
-    mocks.appendVideoMessage.mockResolvedValue({ message, project: interviewingProject });
+    mocks.conversationServices.mockReturnValue({});
+    mocks.runVideoInterviewTurn.mockResolvedValue({ message, reply, project: interviewingProject });
     mocks.listVideoMessages.mockResolvedValue([messageResponse]);
   });
 
   it("requires authentication on both message routes", async () => {
     expect((await send("POST", `/video-projects/${project.id}/messages`, { body: { content: "halo" } })).status).toBe(401);
     expect((await send("GET", `/video-projects/${project.id}/messages`)).status).toBe(401);
-    expect(mocks.appendVideoMessage).not.toHaveBeenCalled();
+    expect(mocks.runVideoInterviewTurn).not.toHaveBeenCalled();
     expect(mocks.listVideoMessages).not.toHaveBeenCalled();
   });
 
@@ -220,24 +237,33 @@ describe("video message routes", () => {
       expect(response.status).toBe(422);
       await expect(response.json()).resolves.toEqual({ error: "Invalid request." });
     }
-    expect(mocks.appendVideoMessage).not.toHaveBeenCalled();
+    expect(mocks.runVideoInterviewTurn).not.toHaveBeenCalled();
   });
 
-  it("persists the first message scoped to the authenticated user and answers 201 with the interviewing project", async () => {
+  it("runs one interview turn and answers 201 with the user message, the reply, and the project", async () => {
     const response = await send("POST", `/video-projects/${project.id}/messages`, { token: "token", body: { content: "buat video jualan" } });
 
     expect(response.status).toBe(201);
-    await expect(response.json()).resolves.toEqual({ message: messageResponse, project: interviewingProject });
-    expect(mocks.appendVideoMessage).toHaveBeenCalledWith({ userId: "user-1", projectId: project.id, content: "buat video jualan" }, expect.anything());
+    await expect(response.json()).resolves.toEqual({ message: messageResponse, reply: replyResponse, project: interviewingProject });
+    expect(mocks.runVideoInterviewTurn).toHaveBeenCalledWith({ userId: "user-1", projectId: project.id, content: "buat video jualan" }, expect.anything());
   });
 
   it("hides a message on another user's project behind a 404", async () => {
-    mocks.appendVideoMessage.mockRejectedValue(new VideoError("video_project_not_found", "The video project was not found."));
+    mocks.runVideoInterviewTurn.mockRejectedValue(new VideoError("video_project_not_found", "The video project was not found."));
 
     const response = await send("POST", `/video-projects/${project.id}/messages`, { token: "token", body: { content: "halo" } });
 
     expect(response.status).toBe(404);
     await expect(response.json()).resolves.toEqual({ error: "The video project was not found.", code: "video_project_not_found" });
+  });
+
+  it("maps an unusable provider answer to a normalized error", async () => {
+    mocks.runVideoInterviewTurn.mockRejectedValue(new AIError({ code: "AI_UNAVAILABLE", safeMessage: "AI service is unavailable.", requestId: "request-1", retryable: true }));
+
+    const response = await send("POST", `/video-projects/${project.id}/messages`, { token: "token", body: { content: "halo" } });
+
+    expect(response.status).toBe(503);
+    await expect(response.json()).resolves.toMatchObject({ error: "AI service is unavailable.", code: "AI_UNAVAILABLE", retryable: true });
   });
 
   it("lists the persisted conversation for the project owner", async () => {
@@ -252,6 +278,53 @@ describe("video message routes", () => {
     mocks.listVideoMessages.mockRejectedValue(new VideoError("video_project_not_found", "The video project was not found."));
 
     const response = await send("GET", `/video-projects/${project.id}/messages`, { token: "token" });
+
+    expect(response.status).toBe(404);
+    await expect(response.json()).resolves.toEqual({ error: "The video project was not found.", code: "video_project_not_found" });
+  });
+});
+
+describe("video revision read routes", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mocks.getUser.mockResolvedValue({ data: { user }, error: null });
+    mocks.publicClient.mockReturnValue({ auth: { getUser: mocks.getUser } });
+    mocks.userClient.mockReturnValue({ scoped: true });
+    mocks.services.mockReturnValue({});
+    mocks.getLatestBriefRevision.mockResolvedValue(briefRevisionResponse);
+    mocks.getLatestStoryboardRevision.mockResolvedValue(storyboardRevisionResponse);
+  });
+
+  it("requires authentication on both read routes", async () => {
+    expect((await send("GET", `/video-projects/${project.id}/brief`)).status).toBe(401);
+    expect((await send("GET", `/video-projects/${project.id}/storyboard`)).status).toBe(401);
+    expect(mocks.getLatestBriefRevision).not.toHaveBeenCalled();
+    expect(mocks.getLatestStoryboardRevision).not.toHaveBeenCalled();
+  });
+
+  it("returns the latest brief and storyboard for the owner", async () => {
+    const briefResponse = await send("GET", `/video-projects/${project.id}/brief`, { token: "token" });
+    const storyboardResponse = await send("GET", `/video-projects/${project.id}/storyboard`, { token: "token" });
+
+    expect(briefResponse.status).toBe(200);
+    await expect(briefResponse.json()).resolves.toEqual({ brief: briefRevisionResponse });
+    await expect(storyboardResponse.json()).resolves.toEqual({ storyboard: storyboardRevisionResponse });
+    expect(mocks.getLatestBriefRevision).toHaveBeenCalledWith({ userId: "user-1", projectId: project.id }, expect.anything());
+    expect(mocks.getLatestStoryboardRevision).toHaveBeenCalledWith({ userId: "user-1", projectId: project.id }, expect.anything());
+  });
+
+  it("answers null rather than 404 before the interview produces a revision", async () => {
+    mocks.getLatestBriefRevision.mockResolvedValue(null);
+    mocks.getLatestStoryboardRevision.mockResolvedValue(null);
+
+    await expect((await send("GET", `/video-projects/${project.id}/brief`, { token: "token" })).json()).resolves.toEqual({ brief: null });
+    await expect((await send("GET", `/video-projects/${project.id}/storyboard`, { token: "token" })).json()).resolves.toEqual({ storyboard: null });
+  });
+
+  it("hides another user's project behind a 404", async () => {
+    mocks.getLatestBriefRevision.mockRejectedValue(new VideoError("video_project_not_found", "The video project was not found."));
+
+    const response = await send("GET", `/video-projects/${project.id}/brief`, { token: "token" });
 
     expect(response.status).toBe(404);
     await expect(response.json()).resolves.toEqual({ error: "The video project was not found.", code: "video_project_not_found" });

@@ -1,9 +1,14 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { VIDEO_STYLE_PRESETS, durationLabel, languageLabel, videoTypeLabel } from "@/domain/video/settings";
-import type { ProjectAsset, VideoMessage, VideoProject } from "@/domain/video/types";
+import type { ProjectAsset, VideoBriefRevision, VideoMessage, VideoProject, VideoStoryboardRevision } from "@/domain/video/types";
 import { ProjectAssetGallery } from "@/features/video/components/ProjectAssetGallery";
 import { ProjectStatusBadge } from "@/features/video/components/ProjectStatusBadge";
+import { RenderStatusPanel } from "@/features/video/components/RenderStatusPanel";
+import { VideoApprovalPanel } from "@/features/video/components/VideoApprovalPanel";
+import { VideoBriefPanel } from "@/features/video/components/VideoBriefPanel";
+import { VideoChat } from "@/features/video/components/VideoChat";
+import { VideoStoryboardPanel } from "@/features/video/components/VideoStoryboardPanel";
 import { ApiError, apiFetch } from "@/lib/api/client";
 import { requireUser } from "@/lib/auth/session";
 
@@ -23,16 +28,22 @@ export default async function VideoWorkspacePage({ params }: VideoWorkspacePageP
   let project: VideoProject;
   let assets: ProjectAsset[];
   let messages: VideoMessage[];
+  let brief: VideoBriefRevision | null;
+  let storyboard: VideoStoryboardRevision | null;
 
   try {
-    const [projectResult, assetResult, messageResult] = await Promise.all([
+    const [projectResult, assetResult, messageResult, briefResult, storyboardResult] = await Promise.all([
       apiFetch<{ project: VideoProject }>(path),
       apiFetch<{ assets: ProjectAsset[] }>(`${path}/assets`),
       apiFetch<{ messages: VideoMessage[] }>(`${path}/messages`),
+      apiFetch<{ brief: VideoBriefRevision | null }>(`${path}/brief`),
+      apiFetch<{ storyboard: VideoStoryboardRevision | null }>(`${path}/storyboard`),
     ]);
     project = projectResult.project;
     assets = assetResult.assets;
     messages = messageResult.messages;
+    brief = briefResult.brief;
+    storyboard = storyboardResult.storyboard;
   } catch (error) {
     if (error instanceof ApiError && error.status === 404) notFound();
     console.error("Failed to load video project", error);
@@ -53,6 +64,7 @@ export default async function VideoWorkspacePage({ params }: VideoWorkspacePageP
     ["Voice-over", project.settings.voiceOverEnabled ? "Aktif" : "Nonaktif"],
     ["Musik latar", project.settings.musicEnabled ? "Aktif" : "Nonaktif"],
   ];
+  const approved = project.status === "approved" || Boolean(storyboard?.approvedAt);
 
   return (
     <div>
@@ -72,39 +84,20 @@ export default async function VideoWorkspacePage({ params }: VideoWorkspacePageP
       </header>
 
       <div className="mt-6 grid gap-6 xl:grid-cols-[minmax(0,1fr)_360px] xl:items-start">
-        <section className="rounded-3xl border border-white/10 bg-surface p-5 shadow-card-inner sm:p-7">
-          <h2 className="text-lg font-semibold text-white">Percakapan dan brief</h2>
-
-          {messages.length > 0 ? (
-            <ul className="mt-4 space-y-3">
-              {messages.map((message) => (
-                <li
-                  key={message.id}
-                  className={
-                    message.role === "user"
-                      ? "ml-auto max-w-lg rounded-2xl bg-primary px-4 py-3 text-sm leading-6 text-black"
-                      : "max-w-lg rounded-2xl border border-white/10 bg-pricing-bg px-4 py-3 text-sm leading-6 text-neutral-300"
-                  }
-                >
-                  {message.content}
-                </li>
-              ))}
-            </ul>
-          ) : (
-            <p className="mt-3 text-sm leading-6 text-neutral-450">Belum ada pesan pada proyek ini.</p>
-          )}
-
-          <div className="mt-5 rounded-2xl border border-dashed border-white/15 bg-black p-5">
-            <p className="font-mono text-[10px] font-semibold uppercase tracking-wide text-primary">Menunggu backend</p>
-            <p className="mt-2 text-sm leading-6 text-neutral-450">
-              Balasan AI, brief, dan storyboard belum tersedia: API belum punya endpoint baca untuk brief atau storyboard,
-              dan sebuah pesan hanya menyimpan sisi pengguna. Panel ini menampilkan keadaan sebenarnya.
-            </p>
-            <p className="mt-2 font-mono text-xs text-neutral-500">apps/app/docs/notes/video-backend-backlog.md</p>
-          </div>
-        </section>
+        <div className="space-y-6">
+          <VideoChat projectId={project.id} messages={messages} />
+          <VideoStoryboardPanel revision={storyboard} />
+        </div>
 
         <aside className="space-y-6">
+          <VideoApprovalPanel
+            projectId={project.id}
+            briefComplete={Boolean(brief?.isComplete)}
+            hasStoryboard={storyboard !== null}
+            approved={approved}
+          />
+          <VideoBriefPanel revision={brief} />
+
           <section className="rounded-3xl border border-white/10 bg-surface p-5 shadow-card-inner">
             <h2 className="text-base font-semibold text-white">Output</h2>
             <dl className="mt-4 space-y-3 text-sm">
@@ -123,9 +116,11 @@ export default async function VideoWorkspacePage({ params }: VideoWorkspacePageP
               Foto produk <span className="float-right font-mono text-xs text-neutral-500">{assets.length} foto</span>
             </h2>
             <div className="mt-4">
-              <ProjectAssetGallery assets={assets} />
+              <ProjectAssetGallery projectId={project.id} assets={assets} />
             </div>
           </section>
+
+          <RenderStatusPanel />
         </aside>
       </div>
     </div>

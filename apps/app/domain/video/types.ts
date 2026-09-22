@@ -50,17 +50,108 @@ export type ProjectAsset = {
   width: number;
   height: number;
   moderationStatus: VideoModerationStatus;
-  previewUrl: string;
+  /** Null when the stored object is gone; the row is still reported so it can be removed. */
+  previewUrl: string | null;
 };
 
 export type VideoMessageRole = "user" | "assistant";
+
+export type InterviewControl = "single_select" | "multi_select" | "free_text";
+
+export type InterviewOption = {
+  id: string;
+  label: string;
+  detail: string | null;
+};
+
+/** The question an assistant turn carries in `controls`, so the workspace can render choices. */
+export type InterviewTurn = {
+  question: string;
+  control: InterviewControl;
+  options: InterviewOption[];
+  recommendedOptionId: string | null;
+  recommendationReason: string | null;
+  targetFields: string[];
+  briefComplete: boolean;
+};
 
 export type VideoMessage = {
   id: string;
   role: VideoMessageRole;
   content: string;
   assetIds: string[];
-  controls: unknown;
+  controls: InterviewTurn | null;
+  createdAt: string;
+};
+
+export type VideoOffer = {
+  label: string;
+  detail: string;
+};
+
+export type VideoMenuItem = {
+  name: string;
+  price: string | null;
+};
+
+export type VideoFactSource = "user_message" | "user_confirmation" | "asset_analysis";
+
+export type VideoFact = {
+  field: string;
+  value: string;
+  source: VideoFactSource;
+};
+
+/** The tracked brief. A field is null while the interview has not settled it yet. */
+export type VideoBrief = {
+  productName: string | null;
+  productCategory: string | null;
+  audience: string | null;
+  objective: string | null;
+  keyMessage: string | null;
+  offer: VideoOffer | null;
+  callToAction: string | null;
+  orderDestination: string | null;
+  brandName: string | null;
+  styleId: VideoStyleId;
+  outputSettings: VideoOutputSettings;
+  menuItems: VideoMenuItem[] | null;
+  facts: VideoFact[];
+};
+
+export type StoryboardTransition = "cut" | "fade" | "slide" | "zoom";
+
+export type StoryboardScene = {
+  order: number;
+  startSeconds: number;
+  endSeconds: number;
+  visual: string;
+  onScreenTitle: string;
+  onScreenCopy: string;
+  voiceOver: string | null;
+  caption: string | null;
+  assetIds: string[];
+  audioCue: string | null;
+  transition: StoryboardTransition;
+};
+
+export type VideoBriefRevision = {
+  id: string;
+  version: number;
+  schemaVersion: string;
+  isComplete: boolean;
+  brief: VideoBrief;
+  createdAt: string;
+};
+
+export type VideoStoryboardRevision = {
+  id: string;
+  version: number;
+  schemaVersion: string;
+  briefRevisionId: string;
+  scenes: StoryboardScene[];
+  totalDurationSeconds: VideoDurationSeconds;
+  approvedAt?: string;
   createdAt: string;
 };
 

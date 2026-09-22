@@ -1,3 +1,4 @@
+import { createAIService } from "../ai-service/services";
 import { createSupabaseServiceRoleClient } from "../../infrastructure/supabase/clients";
 import { SupabaseAssetObjectStore, readAssetBucket } from "../../infrastructure/ai-service/supabase-asset-object-store";
 import { SupabaseVideoProjectRepository } from "../../infrastructure/video/supabase-video-project-repository";
@@ -9,6 +10,8 @@ import { SupabaseRenderJobRepository } from "../../infrastructure/video/supabase
 import { createSupabaseSignedUrlFactory } from "../../infrastructure/video/supabase-signed-urls";
 import { readAssetLimits } from "../../domain/video/limits";
 import type { ProjectAssetRepository, VideoBriefRevisionRepository, VideoMessageRepository, VideoRenderJobRepository, VideoStoryboardRevisionRepository, VideoVersionRepository } from "../../domain/video/contracts";
+import { VIDEO_AI_SCHEMAS } from "./ai-schemas";
+import type { VideoConversationDependencies } from "./conversation";
 import type { ProjectDependencies } from "./projects";
 
 /** This module is the single place the video application layer is allowed to construct infrastructure. */
@@ -30,13 +33,33 @@ export function createVideoApprovalServices(
   };
 }
 
+/**
+ * The chat turn's dependencies: the video repositories plus the AI service, with the video
+ * orchestrator's structured-output schemas registered so the adapter can hand them to the provider.
+ */
+export function createVideoConversationServices(
+  environment: Readonly<Record<string, string | undefined>> = process.env,
+): VideoConversationDependencies {
+  const supabase = createSupabaseServiceRoleClient(environment);
+
+  return {
+    projects: new SupabaseVideoProjectRepository(supabase),
+    assets: new SupabaseProjectAssetRepository(supabase),
+    messages: new SupabaseVideoMessageRepository(supabase),
+    briefRevisions: new SupabaseVideoBriefRevisionRepository(supabase),
+    storyboardRevisions: new SupabaseVideoStoryboardRevisionRepository(supabase),
+    ai: createAIService({ environment, schemas: VIDEO_AI_SCHEMAS }),
+    createId: () => crypto.randomUUID(),
+  };
+}
+
 /** The project, asset, message, revision, render job, and version repositories the video routes share. */
 export function createVideoProjectServices(
   environment: Readonly<Record<string, string | undefined>> = process.env,
 ): ProjectDependencies & {
   assets: ProjectAssetRepository;
   limits: ReturnType<typeof readAssetLimits>;
-  signedUrl: (objectKey: string) => Promise<string>;
+  signedUrl: (objectKey: string) => Promise<string | null>;
   messages: VideoMessageRepository;
   briefRevisions: VideoBriefRevisionRepository;
   storyboardRevisions: VideoStoryboardRevisionRepository;
