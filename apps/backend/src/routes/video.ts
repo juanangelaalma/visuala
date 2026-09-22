@@ -6,7 +6,7 @@ import { runVideoInterviewTurn } from "@/application/video/conversation";
 import { listVideoMessages, toMessageResponse } from "@/application/video/messages";
 import { createVideoProject, deleteVideoProject, getVideoProject, listVideoProjects, toProjectResponse } from "@/application/video/projects";
 import { getLatestBriefRevision, getLatestStoryboardRevision } from "@/application/video/revisions";
-import { cancelRenderJob, createRenderJob, getRenderJob, toRenderJobResponse } from "@/application/video/render-jobs";
+import { cancelRenderJob, createRenderJob, getRenderJob, listVideoRenderJobs, toRenderJobResponse } from "@/application/video/render-jobs";
 import { createVideoApprovalServices, createVideoConversationServices, createVideoProjectServices } from "@/application/video/services";
 import { createVersionDownloadUrl, listVideoVersions } from "@/application/video/versions";
 import { MAX_ASSET_BYTES } from "@/domain/ai-service/assets";
@@ -170,6 +170,13 @@ export const videoProjectRoutes = new Elysia({ name: "video-project-routes" })
       return { job: toRenderJobResponse(job) };
     },
     { auth: true, ...jsonBody, detail: { tags: ["video"] } },
+  )
+  .get(
+    "/video-projects/:projectId/render-jobs",
+    async ({ params, user }) => ({
+      jobs: await listVideoRenderJobs({ userId: user.id, projectId: params.projectId }, createVideoProjectServices()),
+    }),
+    { auth: true, detail: { tags: ["video"] } },
   )
   .get(
     "/video-projects/:projectId/render-jobs/:jobId",

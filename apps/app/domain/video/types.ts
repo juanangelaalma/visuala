@@ -170,9 +170,15 @@ export type VideoRenderJob = {
 export type VideoVersion = {
   id: string;
   versionNumber: number;
-  durationSeconds: number;
+  /**
+   * The probed duration of the rendered file, rounded to whole seconds. The engine refuses any render
+   * whose probed duration differs from the frozen settings, and the API only accepts 6, 10, or 15,
+   * so a published version is always one of those.
+   */
+  durationSeconds: VideoDurationSeconds;
   aspectRatio: string;
   resolution: string;
   createdAt: string;
-  playbackUrl: string;
+  /** Null when the stored object is gone; the row is still reported so it can be listed. */
+  playbackUrl: string | null;
 };

@@ -9,8 +9,10 @@ export type RenderCombination = {
 
 /**
  * Combinations the HyperFrames spike rendered successfully.
- * Source: docs/decisions/2026-09-21-hyperframes-render-engine.md.
- * Remove any row the record lists under "combinations the MVP must not offer", together with its test row.
+ * Source: docs/decisions/2026-09-21-hyperframes-render-engine.md, verified 2026-09-22.
+ * All eighteen rows were produced with matching FFprobe dimensions and an exact duration, so the
+ * record lists no unsupported combination. A row may only be added or removed by a new spike entry,
+ * together with its test row in `render-compatibility.test.ts`.
  */
 export const RENDER_SUPPORTED_COMBINATIONS: readonly RenderCombination[] = [
   { aspectRatio: "9:16", resolution: "720p", durationSeconds: 6 },

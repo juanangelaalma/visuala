@@ -8,6 +8,10 @@ const snapshot = {
   styleId: "bold_pop",
   settings: { durationSeconds: 6, aspectRatio: "9:16", resolution: "720p", language: "id", voiceOverEnabled: true, musicEnabled: true },
   variantSeed: "77777777-7777-4777-8777-777777777777",
+  templateId: "product-spotlight",
+  templateVersion: "1.0.0",
+  stylePackVersion: "1.0.0",
+  fps: 30,
 };
 
 describe("render job input snapshot", () => {
@@ -15,9 +19,19 @@ describe("render job input snapshot", () => {
     expect(renderJobInputSnapshotSchema.safeParse(snapshot).success).toBe(true);
   });
 
-  it("rejects a snapshot missing the variant seed or carrying an unknown key", () => {
+  it("rejects a snapshot missing a frozen render field", () => {
     const { variantSeed, ...withoutSeed } = snapshot;
     expect(renderJobInputSnapshotSchema.safeParse(withoutSeed).success).toBe(false);
-    expect(renderJobInputSnapshotSchema.safeParse({ ...snapshot, templateId: "t-1" }).success).toBe(false);
+
+    // Each of the four fields the render plan added is required, so a v1-era snapshot cannot be
+    // read as a v2 one.
+    for (const field of ["templateId", "templateVersion", "stylePackVersion", "fps"] as const) {
+      const { [field]: _omitted, ...withoutField } = snapshot;
+      expect(renderJobInputSnapshotSchema.safeParse(withoutField).success, `${field} is required`).toBe(false);
+    }
+  });
+
+  it("rejects a snapshot carrying an unknown key", () => {
+    expect(renderJobInputSnapshotSchema.safeParse({ ...snapshot, unexpectedKey: "x" }).success).toBe(false);
   });
 });

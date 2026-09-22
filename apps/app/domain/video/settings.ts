@@ -81,9 +81,10 @@ export function languageLabel(language: string): string {
 }
 
 /**
- * The 18 duration x ratio x resolution combinations the backend currently accepts. The HyperFrames
- * spike that would prove them never ran, so this mirrors what the API takes rather than a verified
- * render matrix. See apps/app/docs/notes/video-backend-backlog.md before trimming it.
+ * The 18 duration x ratio x resolution combinations the renderer has actually produced. The
+ * HyperFrames spike verified every one of them (docs/decisions/2026-09-21-hyperframes-render-engine.md),
+ * so this offers exactly what the backend's `RENDER_SUPPORTED_COMBINATIONS` accepts and nothing more.
+ * Trim it only against a new spike entry.
  */
 export function isRenderCombinationSupported(settings: {
   durationSeconds: VideoDurationSeconds;

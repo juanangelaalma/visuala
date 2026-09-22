@@ -20,6 +20,7 @@ const mocks = vi.hoisted(() => ({
   createRenderJob: vi.fn(),
   getRenderJob: vi.fn(),
   cancelRenderJob: vi.fn(),
+  listVideoRenderJobs: vi.fn(),
   listVideoVersions: vi.fn(),
   createVersionDownloadUrl: vi.fn(),
   services: vi.fn(),
@@ -55,7 +56,7 @@ vi.mock("@/application/video/approval", async () => {
 });
 vi.mock("@/application/video/render-jobs", async () => {
   const actual = await vi.importActual<typeof import("@/application/video/render-jobs")>("@/application/video/render-jobs");
-  return { ...actual, createRenderJob: mocks.createRenderJob, getRenderJob: mocks.getRenderJob, cancelRenderJob: mocks.cancelRenderJob };
+  return { ...actual, createRenderJob: mocks.createRenderJob, getRenderJob: mocks.getRenderJob, cancelRenderJob: mocks.cancelRenderJob, listVideoRenderJobs: mocks.listVideoRenderJobs };
 });
 vi.mock("@/application/video/versions", async () => {
   const actual = await vi.importActual<typeof import("@/application/video/versions")>("@/application/video/versions");
@@ -378,6 +379,7 @@ describe("video render job routes", () => {
     mocks.createRenderJob.mockResolvedValue({ job: renderJob, created: true });
     mocks.getRenderJob.mockResolvedValue(renderJob);
     mocks.cancelRenderJob.mockResolvedValue({ ...renderJob, status: "cancelled" });
+    mocks.listVideoRenderJobs.mockResolvedValue([toRenderJobResponse(renderJob)]);
     mocks.listVideoVersions.mockResolvedValue([versionResponse]);
     mocks.createVersionDownloadUrl.mockResolvedValue({ url: versionResponse.playbackUrl });
   });
@@ -385,6 +387,7 @@ describe("video render job routes", () => {
   it("requires authentication on the render job and version routes", async () => {
     for (const [method, path] of [
       ["POST", `/video-projects/${project.id}/render-jobs`],
+      ["GET", `/video-projects/${project.id}/render-jobs`],
       ["GET", `/video-projects/${project.id}/render-jobs/${renderJob.id}`],
       ["POST", `/video-projects/${project.id}/render-jobs/${renderJob.id}/cancel`],
       ["GET", `/video-projects/${project.id}/versions`],
@@ -393,7 +396,19 @@ describe("video render job routes", () => {
       expect((await send(method, path)).status).toBe(401);
     }
     expect(mocks.createRenderJob).not.toHaveBeenCalled();
+    expect(mocks.listVideoRenderJobs).not.toHaveBeenCalled();
     expect(mocks.listVideoVersions).not.toHaveBeenCalled();
+  });
+
+  it("lists the newest render job for the project, and an empty list when there is none", async () => {
+    const response = await send("GET", `/video-projects/${project.id}/render-jobs`, { token: "token" });
+
+    expect(response.status).toBe(200);
+    await expect(response.json()).resolves.toEqual({ jobs: [toRenderJobResponse(renderJob)] });
+    expect(mocks.listVideoRenderJobs).toHaveBeenCalledWith({ userId: "user-1", projectId: project.id }, expect.anything());
+
+    mocks.listVideoRenderJobs.mockResolvedValue([]);
+    await expect((await send("GET", `/video-projects/${project.id}/render-jobs`, { token: "token" })).json()).resolves.toEqual({ jobs: [] });
   });
 
   it("rejects a render body that carries a client-owned field", async () => {

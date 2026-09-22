@@ -53,6 +53,7 @@ describe("SupabaseVideoVersionRepository", () => {
     const repository = new SupabaseVideoVersionRepository(client as never);
 
     const created = await repository.create({
+      id: ROW.id,
       projectId: ROW.project_id,
       userId: ROW.user_id,
       versionNumber: ROW.version_number,
@@ -69,6 +70,7 @@ describe("SupabaseVideoVersionRepository", () => {
       table: "video_versions",
       operation: "insert",
       value: {
+        id: ROW.id,
         project_id: ROW.project_id,
         user_id: ROW.user_id,
         version_number: ROW.version_number,

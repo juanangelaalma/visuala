@@ -41,3 +41,18 @@ function pick(environment: Readonly<Record<string, string | undefined>>) {
     VIDEO_MAX_IMAGE_DIMENSION: environment.VIDEO_MAX_IMAGE_DIMENSION,
   };
 }
+
+/** Ceiling for one rendered MP4, matching the bucket's `file_size_limit`. */
+export const MAX_RENDER_OUTPUT_BYTES = 524288000;
+
+const renderLimitsSchema = z.object({
+  VIDEO_MAX_RENDER_OUTPUT_BYTES: z.coerce.number().int().positive().default(MAX_RENDER_OUTPUT_BYTES),
+}).strict();
+
+export type RenderLimits = { maxOutputBytes: number };
+
+export function readRenderLimits(environment: Readonly<Record<string, string | undefined>> = process.env): RenderLimits {
+  const parsed = renderLimitsSchema.safeParse({ VIDEO_MAX_RENDER_OUTPUT_BYTES: environment.VIDEO_MAX_RENDER_OUTPUT_BYTES });
+  if (!parsed.success) throw new VideoError("video_input_invalid", "The render limits are not configured correctly.");
+  return { maxOutputBytes: parsed.data.VIDEO_MAX_RENDER_OUTPUT_BYTES };
+}

@@ -33,6 +33,19 @@ export function isSupportedLanguage(language: string): boolean {
   return (VIDEO_LANGUAGES as readonly string[]).includes(language);
 }
 
+/** The rendered frame size: the named resolution is the short side, and both sides stay even for H.264. */
+export function frameDimensions(settings: Pick<VideoOutputSettings, "aspectRatio" | "resolution">): { width: number; height: number } {
+  const shortSide = settings.resolution === "1080p" ? 1080 : 720;
+  switch (settings.aspectRatio) {
+    case "9:16":
+      return { width: shortSide, height: (shortSide * 16) / 9 };
+    case "1:1":
+      return { width: shortSide, height: shortSide };
+    case "16:9":
+      return { width: (shortSide * 16) / 9, height: shortSide };
+  }
+}
+
 export function validateOutputSettings(input: unknown): VideoOutputSettings {
   const parsed = outputSettingsSchema.safeParse(input);
   if (!parsed.success) throw invalidSettings();

@@ -1,8 +1,8 @@
 import { z } from "zod";
 import { VIDEO_STYLE_IDS, outputSettingsSchema } from "./settings";
 
-/** Bump this whenever a field is added or removed: a job snapshot is an immutable contract. */
-export const RENDER_INPUT_SCHEMA_VERSION = "render-input@v1";
+/** Bumped from `render-input@v1` when the render plan landed: v1 did not name a template or an fps. */
+export const RENDER_INPUT_SCHEMA_VERSION = "render-input@v2";
 
 /**
  * The frozen input of a render. It is written once, before any render starts, and the worker reads
@@ -18,6 +18,11 @@ export const renderJobInputSnapshotSchema = z.object({
   styleId: z.enum(VIDEO_STYLE_IDS),
   settings: outputSettingsSchema,
   variantSeed: z.string().uuid(),
+  /** Frozen so a registry or style-pack edit cannot silently change what a queued job renders. */
+  templateId: z.string().trim().min(1),
+  templateVersion: z.string().trim().min(1),
+  stylePackVersion: z.string().trim().min(1),
+  fps: z.number().int().min(1).max(240),
 }).strict();
 
 export type RenderJobInputSnapshot = z.infer<typeof renderJobInputSnapshotSchema>;

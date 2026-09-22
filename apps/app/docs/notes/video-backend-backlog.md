@@ -16,8 +16,20 @@ PRD: `docs/prd/chat-based-ai-video-generator-mvp.md`.
 - `GET /video-projects/:projectId/brief` and `GET /video-projects/:projectId/storyboard`
 - `POST /video-projects/:projectId/approve`
 - `POST/GET/cancel /video-projects/:projectId/render-jobs`, `GET …/versions`, `…/versions/:id/download`
+- `GET /video-projects/:projectId/render-jobs`: the newest job for the project as a one-item list, or
+  `{ "jobs": [] }` when it has never been rendered. The workspace uses it to restore the render panel
+  after a reload, because the page holds no job id.
+- The render pipeline itself: a separate worker process claims a `queued` row, renders it with
+  HyperFrames, verifies the encoded file with FFprobe, uploads the MP4 to the shared private bucket,
+  and records the `video_versions` row. So a queued job really finishes, `GET …/versions` really has
+  rows, and the download really works.
 
 All of it goes through `lib/api/client.ts` (`apiFetch`, `apiUpload`) with the Supabase bearer token.
+
+The workspace renders the job's status, polls it while it is in flight, plays the newest version, and
+downloads any version whose URL is still mintable. Neither the job status nor the version URL is
+faked: a project with no render shows the empty state, and a version whose object is gone shows a
+labelled placeholder instead of a broken player.
 
 ## Closed in the orchestration pass
 
@@ -41,13 +53,15 @@ Two details worth knowing about how it behaves:
 
 | # | Missing | What the app does today |
 |---|---|---|
-| 1 | Render worker and MP4. `POST …/render-jobs` queues a row that nothing claims, because HyperFrames is not installed. | The render control is disabled with the reason. No job is ever queued, so a project cannot be stranded in `rendering`. |
-| 2 | No `video_versions` row exists, so `GET …/versions` is always empty and download answers 404. | No version list or player is rendered. |
-| 3 | Moderation provider. `moderation_status` stays `pending`. | Asset tiles read "Menunggu moderasi". The interview is not gated on it. |
+| 3 | Moderation provider. `moderation_status` stays `pending`. | Asset tiles read "Menunggu moderasi". The interview is not gated on it. A render ignores it too: the worker renders `pending` and `allowed` assets and refuses only `blocked`. |
 | 4 | Vision and multi-image analysis. `createAIService` resolves `ai_assets`, not `video_project_assets`, so the interviewer never sees the images. | The image count is passed to the prompt; the product facts come from the user. |
-| 5 | `revision_planner`, so PRD Story 6 (revise after a render) has no path. | A project in `rendering`, `ready`, `approved`, or a blocked state refuses new interview turns with `video_state_conflict`. |
-| 6 | No project thumbnail. | Library tiles derive their background from the style preset swatch. |
-| 7 | `RENDER_SUPPORTED_COMBINATIONS` is an unverified placeholder; the HyperFrames spike never ran. | The setup screen offers the 18 combinations the API accepts. |
+| 5 | `revision_planner`, so PRD Story 6 (revise after a render) has no path. | A project in `rendering`, `ready`, `approved`, or a blocked state refuses new interview turns with `video_state_conflict`. The render panel therefore offers a render only from `approved`, which is exactly the backend's intake condition. |
+| 6 | No project thumbnail. | Library tiles derive their background from the style preset swatch. The rendered MP4 is not used as a preview image. |
 
-When the render plan lands, replace `RenderStatusPanel` with the real job status, version list,
-player, and download; nothing else in the workspace needs to change.
+Two consequences of the render plan that are worth knowing here:
+
+- **The MP4 is silent.** No TTS or music provider is wired, so there is no audio to play or mute, and
+  `voiceOverEnabled` shows up as burned-in caption text rather than sound.
+- **A failed revision render still spends a rerender.** The backend consumes one of the three the
+  moment the worker claims the job, and there is no refund. The panel shows the failure and the
+  project is renderable again, but the quota does not come back.

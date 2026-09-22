@@ -1,6 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { CreateRenderJobInput, VideoRenderJobRepository } from "../../domain/video/contracts";
-import type { VideoRenderJob } from "../../domain/video/types";
+import type { VideoRenderJob, VideoRenderJobStatus } from "../../domain/video/types";
 import type { Database } from "@visuala/db";
 
 type RenderJobRow = Database["public"]["Tables"]["video_render_jobs"]["Row"];
@@ -12,9 +12,10 @@ type RenderJobRow = Database["public"]["Tables"]["video_render_jobs"]["Row"];
 const ACTIVE_RENDER_JOB_STATUSES = ["queued", "preparing", "rendering", "uploading"] as const;
 
 /**
- * `getById`, `begin`, and `fail` deliberately take no owner: the render worker is server-side and
- * has no session. Every other read here filters on `user_id` in the query itself, so a route can
- * never widen its scope by forgetting a check.
+ * `getById`, `begin`, `fail`, `listQueued`, and `listStale` deliberately take no owner: the render
+ * worker is server-side and has no session, and the queue and the reclaimer are server-wide by
+ * definition. Every other read here filters on `user_id` in the query itself, so a route can never
+ * widen its scope by forgetting a check.
  */
 export class SupabaseRenderJobRepository implements VideoRenderJobRepository {
   constructor(private readonly supabase: SupabaseClient<Database>) {}
@@ -100,6 +101,63 @@ export class SupabaseRenderJobRepository implements VideoRenderJobRepository {
     const { data, error } = await this.supabase.from("video_render_jobs")
       .update({ status: "cancelled", finished_at: new Date().toISOString() })
       .eq("id", jobId).eq("user_id", userId).eq("status", "queued")
+      .select("*").maybeSingle();
+    if (error) throw error;
+    return data ? mapRenderJob(data) : null;
+  }
+
+  async latestOwned(projectId: string, userId: string): Promise<VideoRenderJob | null> {
+    const { data, error } = await this.supabase.from("video_render_jobs").select("*")
+      .eq("project_id", projectId).eq("user_id", userId)
+      .order("created_at", { ascending: false }).limit(1).maybeSingle();
+    if (error) throw error;
+    return data ? mapRenderJob(data) : null;
+  }
+
+  async listQueued(limit: number): Promise<VideoRenderJob[]> {
+    const { data, error } = await this.supabase.from("video_render_jobs").select("*")
+      .eq("status", "queued").order("queued_at", { ascending: true }).limit(limit);
+    if (error) throw error;
+    return (data ?? []).map(mapRenderJob);
+  }
+
+  /** The `not started_at is null` filter is what keeps a `queued` job out of the reclaimer's reach. */
+  async listStale(startedBefore: string, limit: number): Promise<VideoRenderJob[]> {
+    const { data, error } = await this.supabase.from("video_render_jobs").select("*")
+      .in("status", [...ACTIVE_RENDER_JOB_STATUSES])
+      .not("started_at", "is", null)
+      .lt("started_at", startedBefore)
+      .order("started_at", { ascending: true }).limit(limit);
+    if (error) throw error;
+    return (data ?? []).map(mapRenderJob);
+  }
+
+  markRendering(jobId: string): Promise<VideoRenderJob | null> {
+    return this.advance(jobId, "preparing", "rendering");
+  }
+
+  markUploading(jobId: string): Promise<VideoRenderJob | null> {
+    return this.advance(jobId, "rendering", "uploading");
+  }
+
+  succeed(jobId: string): Promise<VideoRenderJob | null> {
+    return this.advance(jobId, "uploading", "succeeded", { finished_at: new Date().toISOString() });
+  }
+
+  /**
+   * The expected prior status is part of the update, not a pre-read. That is what makes a status
+   * advance a claim the worker can lose: a job failed by the reclaimer, or cancelled, cannot be
+   * resurrected by a worker that is still holding a stale row.
+   */
+  private async advance(
+    jobId: string,
+    from: VideoRenderJobStatus,
+    to: VideoRenderJobStatus,
+    patch: Record<string, unknown> = {},
+  ): Promise<VideoRenderJob | null> {
+    const { data, error } = await this.supabase.from("video_render_jobs")
+      .update({ status: to, ...patch })
+      .eq("id", jobId).eq("status", from)
       .select("*").maybeSingle();
     if (error) throw error;
     return data ? mapRenderJob(data) : null;

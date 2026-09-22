@@ -2,6 +2,8 @@ import { VideoError } from "../../domain/video/errors";
 import { MAX_RERENDERS_PER_PROJECT } from "../../domain/video/limits";
 import { RENDER_INPUT_SCHEMA_VERSION, renderJobInputSnapshotSchema } from "../../domain/video/render-input";
 import { isRenderJobActive } from "../../domain/video/state-machine";
+import { stylePackFor } from "../../domain/video/style-packs";
+import { selectTemplate } from "../../domain/video/templates/registry";
 import { approvalSnapshotSchema } from "./approval";
 import type {
   VideoProjectRepository, VideoRenderJobRepository, VideoStoryboardRevisionRepository, VideoVersionRepository,
@@ -14,6 +16,8 @@ const MAX_IDEMPOTENCY_KEY_LENGTH = 200;
 
 export type RenderJobDependencies = {
   createId: () => string;
+  /** The frame rate the worker renders at, frozen into the snapshot so the two can never disagree. */
+  fps: number;
   projects: Pick<VideoProjectRepository, "getOwned" | "transition" | "consumeRerender">;
   storyboardRevisions: Pick<VideoStoryboardRevisionRepository, "latestOwned">;
   versions: Pick<VideoVersionRepository, "latestOwned">;
@@ -77,6 +81,10 @@ export async function createRenderJob(
     throw new VideoError("video_revision_quota_exhausted", "This project has used all three rerenders.");
   }
 
+  // The template and the style-pack version are chosen once, here, and frozen: a later registry or
+  // pack edit must not change what a job that is already queued renders.
+  const template = selectTemplate({ videoType: project.videoType, aspectRatio: project.settings.aspectRatio });
+
   // The seed is fixed before any render starts: that is what makes a rerender reproducible. The
   // schema refuses unknown fields, so a field may only be added by raising the schema version.
   const inputSnapshot = renderJobInputSnapshotSchema.parse({
@@ -86,6 +94,10 @@ export async function createRenderJob(
     styleId: project.styleId,
     settings: project.settings,
     variantSeed: dependencies.createId(),
+    templateId: template.id,
+    templateVersion: template.version,
+    stylePackVersion: stylePackFor(project.styleId).version,
+    fps: dependencies.fps,
   });
 
   const transitioned = await dependencies.projects.transition(project.id, command.userId, "approved", "rendering");
@@ -122,10 +134,19 @@ export async function createRenderJob(
 }
 
 /**
+ * The claim path's dependencies. Narrower than `RenderJobDependencies` on purpose: the worker that
+ * consumes them has neither the idempotency lookup nor the project reads that the intake needs.
+ */
+export type BeginRenderJobDependencies = {
+  projects: Pick<VideoProjectRepository, "consumeRerender">;
+  jobs: Pick<VideoRenderJobRepository, "getById" | "begin" | "fail">;
+};
+
+/**
  * The worker's entry point. It has no session and no route: the render plan's worker calls it for a
  * job it already resolved through an owner-scoped path.
  */
-export async function beginRenderJob(command: BeginRenderJobCommand, dependencies: RenderJobDependencies): Promise<VideoRenderJob> {
+export async function beginRenderJob(command: BeginRenderJobCommand, dependencies: BeginRenderJobDependencies): Promise<VideoRenderJob> {
   // The pre-read exists for the quota decision below: `isRevision` is immutable after insert, so the
   // pre-read stays correct for it. It is *not* safe for the status, which the claim below may change.
   const job = await dependencies.jobs.getById(command.jobId);
@@ -178,6 +199,20 @@ export async function getRenderJob(command: GetRenderJobCommand, dependencies: R
   const job = await dependencies.jobs.getOwned(command.jobId, command.userId);
   if (!job || !belongsToProject(job, command.projectId)) throw renderJobNotFound();
   return job;
+}
+
+/**
+ * The workspace reads this after a reload: it holds no job id, so it asks for the newest one. The
+ * response is a one-item list rather than a nullable object so it stays uniform with the versions
+ * read, and so history can arrive later without a breaking change.
+ */
+export async function listVideoRenderJobs(
+  command: { userId: string; projectId: string },
+  dependencies: RenderJobDependencies,
+): Promise<RenderJobResponse[]> {
+  await requireOwnedProject(command.projectId, command.userId, dependencies);
+  const job = await dependencies.jobs.latestOwned(command.projectId, command.userId);
+  return job ? [toRenderJobResponse(job)] : [];
 }
 
 export type RenderJobResponse = {

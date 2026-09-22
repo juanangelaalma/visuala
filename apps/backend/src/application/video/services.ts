@@ -9,6 +9,11 @@ import { SupabaseVideoVersionRepository } from "../../infrastructure/video/supab
 import { SupabaseRenderJobRepository } from "../../infrastructure/video/supabase-render-job-repository";
 import { createSupabaseSignedUrlFactory } from "../../infrastructure/video/supabase-signed-urls";
 import { readAssetLimits } from "../../domain/video/limits";
+import { readRenderWorkerConfig } from "../../domain/video/render-config";
+import { HyperFramesRenderEngine } from "../../infrastructure/video/hyperframes/hyperframes-render-engine";
+import { gsapScriptPath } from "../../infrastructure/video/hyperframes/gsap-script";
+import { createRenderWorkspace } from "../../infrastructure/video/hyperframes/workspace";
+import type { RenderWorkerDependencies } from "./render-worker";
 import type { ProjectAssetRepository, VideoBriefRevisionRepository, VideoMessageRepository, VideoRenderJobRepository, VideoStoryboardRevisionRepository, VideoVersionRepository } from "../../domain/video/contracts";
 import { VIDEO_AI_SCHEMAS } from "./ai-schemas";
 import type { VideoConversationDependencies } from "./conversation";
@@ -66,6 +71,8 @@ export function createVideoProjectServices(
   versions: VideoVersionRepository;
   /** The render job repository, named `jobs` because that is the key the render use cases depend on. */
   jobs: VideoRenderJobRepository;
+  /** The frame rate the render worker uses, so the intake freezes the same one it will render at. */
+  fps: number;
 } {
   const supabase = createSupabaseServiceRoleClient(environment);
   const bucket = readAssetBucket(environment);
@@ -82,5 +89,38 @@ export function createVideoProjectServices(
     limits: readAssetLimits(environment),
     createId: () => crypto.randomUUID(),
     signedUrl: createSupabaseSignedUrlFactory(supabase, bucket),
+    // The intake freezes the same frame rate the worker will render at, so a config change cannot
+    // make a queued job claim one fps and render another.
+    fps: readRenderWorkerConfig(environment).fps,
+  };
+}
+
+/** The render worker: the same repositories as the API, plus the engine and the worker's own config. */
+export function createRenderWorkerServices(
+  environment: Readonly<Record<string, string | undefined>> = process.env,
+  /** The process's stop signal, so an in-flight render is aborted rather than killed on shutdown. */
+  shutdownSignal?: AbortSignal,
+): RenderWorkerDependencies {
+  const supabase = createSupabaseServiceRoleClient(environment);
+  const bucket = readAssetBucket(environment);
+  const config = readRenderWorkerConfig(environment);
+  const objectStore = new SupabaseAssetObjectStore(supabase, bucket);
+
+  return {
+    createId: () => crypto.randomUUID(),
+    now: () => new Date().toISOString(),
+    fps: config.fps,
+    config,
+    shutdownSignal,
+    // The one place the workspace's filesystem implementation meets the worker's port.
+    createWorkspace: (jobId) => createRenderWorkspace(config.workRoot, jobId),
+    projects: new SupabaseVideoProjectRepository(supabase),
+    assets: new SupabaseProjectAssetRepository(supabase),
+    briefRevisions: new SupabaseVideoBriefRevisionRepository(supabase),
+    storyboardRevisions: new SupabaseVideoStoryboardRevisionRepository(supabase),
+    versions: new SupabaseVideoVersionRepository(supabase),
+    jobs: new SupabaseRenderJobRepository(supabase),
+    objectStore,
+    engine: new HyperFramesRenderEngine({ config, objectStore, gsapScriptPath: gsapScriptPath() }),
   };
 }

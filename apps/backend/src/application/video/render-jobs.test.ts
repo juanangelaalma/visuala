@@ -52,6 +52,7 @@ function storyboardRevision(approvedAt: string | null): VideoStoryboardRevision 
 function dependencies(overrides: { status?: VideoProject["status"]; revisionRenderCount?: number; existingJob?: VideoRenderJob | null; activeJob?: VideoRenderJob | null; latestVersion?: Partial<VideoVersion> | null; approvedAt?: string | null } = {}) {
   return {
     createId: () => "99999999-9999-4999-8999-999999999999",
+    fps: 30,
     projects: {
       getOwned: vi.fn(async (): Promise<VideoProject | null> => project(overrides.status ?? "approved", overrides.revisionRenderCount ?? 0)),
       transition: vi.fn(async (): Promise<VideoProject | null> => project("rendering")),
@@ -75,12 +76,18 @@ function dependencies(overrides: { status?: VideoProject["status"]; revisionRend
       begin: vi.fn(async (): Promise<VideoRenderJob | null> => job({ status: "preparing" })),
       fail: vi.fn(async (): Promise<VideoRenderJob | null> => job({ status: "failed" })),
       cancel: vi.fn(async (): Promise<VideoRenderJob | null> => job({ status: "cancelled" })),
+      latestOwned: vi.fn(async (): Promise<VideoRenderJob | null> => job()),
+      listQueued: vi.fn(async (): Promise<VideoRenderJob[]> => []),
+      listStale: vi.fn(async (): Promise<VideoRenderJob[]> => []),
+      markRendering: vi.fn(async (): Promise<VideoRenderJob | null> => job({ status: "rendering" })),
+      markUploading: vi.fn(async (): Promise<VideoRenderJob | null> => job({ status: "uploading" })),
+      succeed: vi.fn(async (): Promise<VideoRenderJob | null> => job({ status: "succeeded" })),
     },
   };
 }
 
 describe("createRenderJob", () => {
-  it("queues a job with an immutable snapshot and a stable variant seed", async () => {
+  it("queues a job whose snapshot freezes the template, the style pack, and the fps", async () => {
     const deps = dependencies();
 
     const { job: created, created: isNew } = await createRenderJob({ userId: USER_ID, projectId: PROJECT_ID, idempotencyKey: "render-0001" }, deps);
@@ -93,7 +100,14 @@ describe("createRenderJob", () => {
       briefRevisionId: BRIEF_ID,
       storyboardRevisionId: STORYBOARD_ID,
       isRevision: false,
-      inputSnapshot: { schemaVersion: "render-input@v1", variantSeed: "99999999-9999-4999-8999-999999999999" },
+      inputSnapshot: {
+        schemaVersion: "render-input@v2",
+        variantSeed: "99999999-9999-4999-8999-999999999999",
+        templateId: "product-spotlight",
+        templateVersion: "1.0.0",
+        stylePackVersion: "1.0.0",
+        fps: 30,
+      },
     });
     expect(deps.projects.transition).toHaveBeenCalledWith(PROJECT_ID, USER_ID, "approved", "rendering");
   });

@@ -118,9 +118,26 @@ export interface VideoRenderJobRepository {
   begin(jobId: string): Promise<VideoRenderJob | null>;
   fail(jobId: string, errorCode: string): Promise<VideoRenderJob | null>;
   cancel(jobId: string, userId: string): Promise<VideoRenderJob | null>;
+  /** The newest job for a project, so the workspace can render its state after a reload. */
+  latestOwned(projectId: string, userId: string): Promise<VideoRenderJob | null>;
+  /** Work discovery for the claim loop, oldest first. No owner scope: the queue is server-side. */
+  listQueued(limit: number): Promise<VideoRenderJob[]>;
+  /** Jobs that were started and then abandoned. No owner scope, for the same reason as `begin`. */
+  listStale(startedBefore: string, limit: number): Promise<VideoRenderJob[]>;
+  /** Conditional `preparing -> rendering`. Null means the worker no longer owns the job. */
+  markRendering(jobId: string): Promise<VideoRenderJob | null>;
+  /** Conditional `rendering -> uploading`. Null means the worker no longer owns the job. */
+  markUploading(jobId: string): Promise<VideoRenderJob | null>;
+  /** Conditional `uploading -> succeeded`, stamping `finished_at`. */
+  succeed(jobId: string): Promise<VideoRenderJob | null>;
 }
 
 export type CreateVideoVersionInput = {
+  /**
+   * Minted by the worker before the upload, not by the database: the object key names the version id,
+   * so the id has to exist before the row that points at it. Mirrors `CreateRenderJobInput`.
+   */
+  id: string;
   projectId: string;
   userId: string;
   versionNumber: number;

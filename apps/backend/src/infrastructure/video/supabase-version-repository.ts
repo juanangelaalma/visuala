@@ -15,6 +15,7 @@ export class SupabaseVideoVersionRepository implements VideoVersionRepository {
 
   async create(input: CreateVideoVersionInput): Promise<VideoVersion> {
     const { data, error } = await this.supabase.from("video_versions").insert({
+      id: input.id,
       project_id: input.projectId,
       user_id: input.userId,
       version_number: input.versionNumber,

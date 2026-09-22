@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { VIDEO_STYLE_PRESETS, durationLabel, languageLabel, videoTypeLabel } from "@/domain/video/settings";
-import type { ProjectAsset, VideoBriefRevision, VideoMessage, VideoProject, VideoStoryboardRevision } from "@/domain/video/types";
+import type { ProjectAsset, VideoBriefRevision, VideoMessage, VideoProject, VideoRenderJob, VideoStoryboardRevision, VideoVersion } from "@/domain/video/types";
 import { ProjectAssetGallery } from "@/features/video/components/ProjectAssetGallery";
 import { ProjectStatusBadge } from "@/features/video/components/ProjectStatusBadge";
 import { RenderStatusPanel } from "@/features/video/components/RenderStatusPanel";
@@ -9,6 +9,7 @@ import { VideoApprovalPanel } from "@/features/video/components/VideoApprovalPan
 import { VideoBriefPanel } from "@/features/video/components/VideoBriefPanel";
 import { VideoChat } from "@/features/video/components/VideoChat";
 import { VideoStoryboardPanel } from "@/features/video/components/VideoStoryboardPanel";
+import { VideoVersionList } from "@/features/video/components/VideoVersionList";
 import { ApiError, apiFetch } from "@/lib/api/client";
 import { requireUser } from "@/lib/auth/session";
 
@@ -30,20 +31,26 @@ export default async function VideoWorkspacePage({ params }: VideoWorkspacePageP
   let messages: VideoMessage[];
   let brief: VideoBriefRevision | null;
   let storyboard: VideoStoryboardRevision | null;
+  let jobs: VideoRenderJob[];
+  let versions: VideoVersion[];
 
   try {
-    const [projectResult, assetResult, messageResult, briefResult, storyboardResult] = await Promise.all([
+    const [projectResult, assetResult, messageResult, briefResult, storyboardResult, jobResult, versionResult] = await Promise.all([
       apiFetch<{ project: VideoProject }>(path),
       apiFetch<{ assets: ProjectAsset[] }>(`${path}/assets`),
       apiFetch<{ messages: VideoMessage[] }>(`${path}/messages`),
       apiFetch<{ brief: VideoBriefRevision | null }>(`${path}/brief`),
       apiFetch<{ storyboard: VideoStoryboardRevision | null }>(`${path}/storyboard`),
+      apiFetch<{ jobs: VideoRenderJob[] }>(`${path}/render-jobs`),
+      apiFetch<{ versions: VideoVersion[] }>(`${path}/versions`),
     ]);
     project = projectResult.project;
     assets = assetResult.assets;
     messages = messageResult.messages;
     brief = briefResult.brief;
     storyboard = storyboardResult.storyboard;
+    jobs = jobResult.jobs;
+    versions = versionResult.versions;
   } catch (error) {
     if (error instanceof ApiError && error.status === 404) notFound();
     console.error("Failed to load video project", error);
@@ -120,7 +127,15 @@ export default async function VideoWorkspacePage({ params }: VideoWorkspacePageP
             </div>
           </section>
 
-          <RenderStatusPanel />
+          {/* Keyed by the job's identity so a new render remounts the panel and its poll target. */}
+          <RenderStatusPanel
+            key={jobs[0]?.id ?? "no-render"}
+            projectId={project.id}
+            initialJob={jobs[0] ?? null}
+            canRender={project.status === "approved"}
+            quotaExhausted={project.revisionRenderCount >= 3}
+          />
+          <VideoVersionList projectId={project.id} versions={versions} />
         </aside>
       </div>
     </div>

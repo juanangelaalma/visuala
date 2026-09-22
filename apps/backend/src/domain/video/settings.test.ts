@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { VIDEO_STYLE_PRESETS, isSupportedLanguage, validateOutputSettings } from "./settings";
+import { VIDEO_ASPECT_RATIOS, VIDEO_RESOLUTIONS, VIDEO_STYLE_PRESETS, frameDimensions, isSupportedLanguage, validateOutputSettings } from "./settings";
 import type { VideoOutputSettings } from "./types";
 
 function settings(overrides: Partial<VideoOutputSettings> = {}): VideoOutputSettings {
@@ -28,5 +28,19 @@ describe("video output settings", () => {
     expect(isSupportedLanguage("id")).toBe(true);
     expect(isSupportedLanguage("en")).toBe(true);
     expect(isSupportedLanguage("fr")).toBe(false);
+  });
+
+  it("maps every aspect and resolution to an even-pixel frame", () => {
+    expect(frameDimensions({ aspectRatio: "9:16", resolution: "1080p" })).toEqual({ width: 1080, height: 1920 });
+    expect(frameDimensions({ aspectRatio: "9:16", resolution: "720p" })).toEqual({ width: 720, height: 1280 });
+    expect(frameDimensions({ aspectRatio: "16:9", resolution: "1080p" })).toEqual({ width: 1920, height: 1080 });
+    expect(frameDimensions({ aspectRatio: "1:1", resolution: "1080p" })).toEqual({ width: 1080, height: 1080 });
+    for (const aspectRatio of VIDEO_ASPECT_RATIOS) {
+      for (const resolution of VIDEO_RESOLUTIONS) {
+        const { width, height } = frameDimensions({ aspectRatio, resolution });
+        expect(width % 2).toBe(0);
+        expect(height % 2).toBe(0);
+      }
+    }
   });
 });

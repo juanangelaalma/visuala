@@ -6,6 +6,7 @@ const sql = (name: string) => readFileSync(resolve(process.cwd(), `supabase/migr
 const projects = sql("20260921000100_create_video_projects.sql");
 const revisions = sql("20260921000200_create_video_revisions.sql");
 const jobs = sql("20260921000300_create_video_render_jobs.sql");
+const bucket = sql("20260922000000_allow_video_version_objects.sql");
 
 describe("video schema", () => {
   it("creates every table named in the PRD data model", () => {
@@ -45,5 +46,12 @@ describe("video schema", () => {
 
   it("caps the rerender counter at three", () => {
     expect(projects).toMatch(/revision_render_count integer not null default 0 check \(revision_render_count >= 0 and revision_render_count <= 3\)/i);
+  });
+
+  it("lets the shared bucket hold a rendered MP4", () => {
+    expect(bucket).toMatch(/allowed_mime_types\s*=/i);
+    expect(bucket).toMatch(/'video\/mp4'/);
+    expect(bucket).toMatch(/file_size_limit\s*=\s*524288000/i);
+    expect(bucket).toMatch(/where\s+id\s*=\s*'assets'/i);
   });
 });

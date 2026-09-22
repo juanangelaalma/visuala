@@ -12,6 +12,8 @@
     "test:coverage": "vitest run --coverage",
     "test:unit": "vitest run",
     "test:unit:watch": "vitest",
+    "worker": "bun src/worker/index.ts",
+    "render:smoke": "bun src/scripts/render-smoke.ts",
     "ai:check-config": "bun src/scripts/ai-service.ts check-config",
     "ai:smoke:text": "bun src/scripts/ai-service.ts smoke:text",
     "ai:smoke:structured": "bun src/scripts/ai-service.ts smoke:structured",
@@ -19,9 +21,11 @@
   },
   "dependencies": {
     "@elysiajs/cors": "^1.4.2",
+    "@hyperframes/producer": "0.8.59",
     "@supabase/supabase-js": "^2.108.2",
     "@visuala/db": "workspace:*",
     "elysia": "^1.4.30",
+    "gsap": "3.14.2",
     "zod": "^4.4.3"
   },
   "devDependencies": {
