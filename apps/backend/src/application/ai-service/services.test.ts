@@ -41,7 +41,7 @@ describe("AI service server factory", () => {
 
     expect(result).toEqual({
       status: "valid",
-      profiles: [{ id: "primary", provider: "google", model: "gemini-test" }],
+      profiles: [{ id: "primary", provider: "9router", model: "cx/gpt-5.6-luna" }],
       tasks: [
         { task: "connection_test", profileId: "primary" },
         { task: "interviewer", profileId: "primary" },
@@ -54,7 +54,7 @@ describe("AI service server factory", () => {
 
   it("fails when an active profile credential is missing without exposing credentials", () => {
     const environment = configuredEnvironment();
-    delete environment.AI_GOOGLE_API_KEY;
+    delete environment.AI_OPENAI_API_KEY;
 
     expect(() => checkConfiguredAIService({ environment })).toThrowError(
       expect.objectContaining({ code: "AI_CONFIG_ERROR", message: "AI service configuration is invalid." }),
@@ -67,16 +67,16 @@ describe("AI service server factory", () => {
     });
 
     expect(checkConfiguredAIService({ environment }).profiles).toEqual([
-      { id: "primary", provider: "google", model: "gemini-test" },
-      { id: "secondary", provider: "google", model: null },
+      { id: "primary", provider: "9router", model: "cx/gpt-5.6-luna" },
+      { id: "secondary", provider: "9router", model: null },
     ]);
   });
 
   it("allows connection-test override only for registered profile IDs", () => {
     const environment = configuredEnvironment({
       AI_PROFILES_JSON: JSON.stringify([primaryProfile(), secondaryProfile()]),
-      AI_GOOGLE_SECONDARY_KEY: "secondary-key-value",
-      AI_GOOGLE_SECONDARY_MODEL: "gemini-secondary",
+      AI_OPENAI_SECONDARY_KEY: "secondary-key-value",
+      AI_OPENAI_SECONDARY_MODEL: "cx/gpt-5.6-secondary",
     });
 
     expect(checkConfiguredAIService({ environment, profileOverride: "secondary" }).tasks[0]).toEqual({
@@ -93,8 +93,8 @@ describe("AI service server factory", () => {
     const secondary = createAIService({
       environment: configuredEnvironment({
         AI_PROFILES_JSON: JSON.stringify([primaryProfile(), secondaryProfile()]),
-        AI_GOOGLE_SECONDARY_KEY: "secondary-key-value",
-        AI_GOOGLE_SECONDARY_MODEL: "gemini-secondary",
+        AI_OPENAI_SECONDARY_KEY: "secondary-key-value",
+        AI_OPENAI_SECONDARY_MODEL: "cx/gpt-5.6-secondary",
       }),
       profileOverride: "secondary",
     });
@@ -256,6 +256,18 @@ describe("AI service server factory", () => {
     );
   });
 
+  it("rejects the removed Google API format before networking", () => {
+    const fetchSpy = vi.spyOn(globalThis, "fetch");
+    const environment = configuredEnvironment({
+      AI_PROFILES_JSON: JSON.stringify([{ ...primaryProfile(), apiFormat: "google-generate-content" }]),
+    });
+
+    expect(() => checkConfiguredAIService({ environment })).toThrowError(
+      expect.objectContaining({ code: "AI_CONFIG_ERROR" }),
+    );
+    expect(fetchSpy).not.toHaveBeenCalled();
+  });
+
   it("does not depend on unrelated feature modules", () => {
     const source = readFileSync(resolve(HERE, "services.ts"), "utf8");
 
@@ -273,8 +285,8 @@ function configuredEnvironment(overrides: Record<string, string> = {}): Record<s
       { task: "product_analysis", profileId: "primary" },
     ]),
     AI_MAX_CONCURRENCY: "3",
-    AI_GOOGLE_API_KEY: ACTIVE_KEY,
-    AI_GOOGLE_MODEL: "gemini-test",
+    AI_OPENAI_API_KEY: ACTIVE_KEY,
+    AI_OPENAI_MODEL: "cx/gpt-5.6-luna",
     SUPABASE_URL: "https://example.supabase.co",
     SUPABASE_SERVICE_ROLE_KEY: "service-role-example",
     ...overrides,
@@ -293,11 +305,11 @@ function taskConfiguration(maxConcurrency: number): string {
 function primaryProfile() {
   return {
     id: "primary",
-    apiFormat: "google-generate-content",
-    baseUrl: "https://generativelanguage.googleapis.com/v1beta",
-    apiKeyEnv: "AI_GOOGLE_API_KEY",
-    modelIdEnv: "AI_GOOGLE_MODEL",
-    provider: "google",
+    apiFormat: "openai-responses",
+    baseUrl: "https://gateway.example/v1",
+    apiKeyEnv: "AI_OPENAI_API_KEY",
+    modelIdEnv: "AI_OPENAI_MODEL",
+    provider: "9router",
     capabilities: { text: true, vision: true, nativeStructuredOutput: true },
     limits: {
       maxInputCharacters: 20_000,
@@ -318,8 +330,8 @@ function secondaryProfile() {
   return {
     ...primaryProfile(),
     id: "secondary",
-    apiKeyEnv: "AI_GOOGLE_SECONDARY_KEY",
-    modelIdEnv: "AI_GOOGLE_SECONDARY_MODEL",
+    apiKeyEnv: "AI_OPENAI_SECONDARY_KEY",
+    modelIdEnv: "AI_OPENAI_SECONDARY_MODEL",
   };
 }
 
@@ -336,8 +348,16 @@ function textRequest(requestId: string) {
 
 function successfulProviderResponse(): Response {
   return Response.json({
-    responseId: "provider-request",
-    candidates: [{ content: { parts: [{ text: "ok" }] }, finishReason: "STOP" }],
-    usageMetadata: { promptTokenCount: 1, candidatesTokenCount: 1, totalTokenCount: 2 },
+    id: "provider-request",
+    object: "response",
+    status: "completed",
+    model: "cx/gpt-5.6-luna",
+    output: [{
+      type: "message",
+      status: "completed",
+      role: "assistant",
+      content: [{ type: "output_text", text: "ok" }],
+    }],
+    usage: { input_tokens: 1, output_tokens: 1, total_tokens: 2 },
   });
 }

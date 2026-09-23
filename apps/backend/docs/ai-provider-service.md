@@ -12,7 +12,7 @@ Get the AI service variables into the deployment environment by running `make -C
 `AI_PROFILES_JSON` is an array of connection profiles. Each profile contains:
 
 - `id`: stable profile name referenced by task mappings.
-- `apiFormat`: registered provider protocol. The current value is `google-generate-content`.
+- `apiFormat`: registered provider protocol. The current value is `openai-responses`.
 - `baseUrl`: compatible API endpoint.
 - `apiKeyEnv`: name of the environment variable that stores the API key.
 - `modelIdEnv`: name of the environment variable that stores the model ID.
@@ -23,9 +23,43 @@ Get the AI service variables into the deployment environment by running `make -C
 
 `AI_TASKS_JSON` maps every task to a profile ID. Define all four tasks: `connection_test`, `interviewer`, `planner`, and `product_analysis`. A task can override selected profile limits.
 
+Use this 9Router profile contract:
+
+```json
+{
+  "id": "local-primary",
+  "apiFormat": "openai-responses",
+  "baseUrl": "http://127.0.0.1:20128/v1",
+  "apiKeyEnv": "AI_OPENAI_API_KEY",
+  "modelIdEnv": "AI_OPENAI_MODEL",
+  "provider": "9router",
+  "capabilities": {
+    "text": true,
+    "vision": true,
+    "nativeStructuredOutput": true
+  },
+  "limits": {
+    "maxInputCharacters": 32000,
+    "maxOutputTokens": 4096,
+    "maxImages": 1,
+    "maxImageBytes": 10485760,
+    "maxImageWidth": 8192,
+    "maxImageHeight": 8192,
+    "maxConcurrency": 4,
+    "attemptTimeoutMs": 30000,
+    "totalDeadlineMs": 65000,
+    "maxAttempts": 2
+  }
+}
+```
+
 `AI_MAX_CONCURRENCY` sets the initial process-wide request cap. Each profile also has `limits.maxConcurrency`, and a task can lower it. When an operation resolves a lower task/profile cap, the shared process limiter tightens to that value and never loosens until the process restarts or test state is reset.
 
-The example profile reads its credentials and model from `AI_GOOGLE_API_KEY` and `AI_GOOGLE_MODEL`. The service also needs these server-side variables for persistence and private image reads:
+The example profile reads its credentials and model from `AI_OPENAI_API_KEY` and `AI_OPENAI_MODEL`. Its operation URL is `http://127.0.0.1:20128/v1/responses`, and it authenticates with `Authorization: Bearer <AI_OPENAI_API_KEY>`. Set `AI_ALLOW_INSECURE_LOOPBACK=true` for this local HTTP URL.
+
+Set all three capability flags to `true` only when the gateway and model support Responses text, image data URLs, and strict `text.format` JSON schema. Calls are non-streaming; streaming is outside this service contract.
+
+The service also needs these server-side variables for persistence and private image reads:
 
 - `NEXT_PUBLIC_SUPABASE_URL`
 - `SUPABASE_SERVICE_ROLE_KEY`
@@ -38,7 +72,7 @@ Restart the app after local environment changes. Redeploy each process after cha
 
 ## Change an endpoint, key, or model
 
-Callers select a task, not a provider. To switch to another endpoint that implements the same registered API format:
+Callers select a task, not a provider. Configuration switching changes the endpoint, key, and model without caller edits only when the new endpoint implements the same strict `openai-responses` format. To switch endpoints:
 
 1. Update the profile `baseUrl`.
 2. Point `apiKeyEnv` and `modelIdEnv` to the new environment variable names, or replace the values stored under the existing names.
@@ -117,7 +151,7 @@ The service checks asset ownership before reading bytes. Do not pass object-stor
 Run the offline configuration check after changing profiles or task mappings:
 
 ```bash
-pnpm --filter app ai:check-config
+pnpm --filter backend ai:check-config
 ```
 
 This command parses and resolves configuration without creating the provider client or the Supabase client. It sends no provider request.
@@ -125,9 +159,9 @@ This command parses and resolves configuration without creating the provider cli
 The following commands send paid provider requests:
 
 ```bash
-pnpm --filter app ai:smoke:text
-pnpm --filter app ai:smoke:structured
-pnpm --filter app ai:smoke:vision
+pnpm --filter backend ai:smoke:text
+pnpm --filter backend ai:smoke:structured
+pnpm --filter backend ai:smoke:vision
 ```
 
 Add `-- --profile <profile-id>` to a smoke command to test a configured profile directly. Run paid smoke commands only with explicit authorization, valid credentials, and an owned test asset for vision.

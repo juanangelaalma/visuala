@@ -1,17 +1,14 @@
 "use client";
 
-import { useActionState, useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
-import type { VideoRenderJob } from "@/domain/video/types";
-import { cancelVideoRenderAction, type CancelVideoRenderResult } from "../actions/cancel-video-render-action";
-import { getVideoRenderStatusAction } from "../actions/get-video-render-status-action";
-import { startVideoRenderAction, type StartVideoRenderResult } from "../actions/start-video-render-action";
+import { useEffect, useRef, useState } from "react";
+import type { VideoRenderJob, VideoVersion } from "@/domain/video/types";
+import { BrowserApiError, browserApiErrorMessage } from "@/lib/api/browser-client";
+import { videoApi } from "../api/video-api";
+import { videoRenderJobListSchema, videoVersionListSchema } from "../schemas/render-schema";
 import { isJobActive, renderStatusPresentation } from "./render-status-presentation";
 
 const POLL_MS = 3000;
 const focusRing = "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary";
-const startState: StartVideoRenderResult = {};
-const cancelState: CancelVideoRenderResult = {};
 
 type RenderStatusPanelProps = {
   projectId: string;
@@ -19,42 +16,113 @@ type RenderStatusPanelProps = {
   /** The backend's own intake condition: it refuses a render unless the project is `approved`. */
   canRender: boolean;
   quotaExhausted: boolean;
+  /** Lets the workspace keep its version list in sync without polling the endpoints itself. */
+  onVersionsChange?: (versions: VideoVersion[]) => void;
 };
 
+/** An auth or ownership failure will not clear on its own, so polling for it is wasted requests. */
+function isFatalPollError(error: unknown): boolean {
+  return error instanceof BrowserApiError && (error.status === 401 || error.status === 403 || error.status === 404);
+}
+
 /**
- * The render control and the current job's status. The page remounts this component whenever the
- * server's job identity changes (via `key`), so the local job state it polls into is only ever the
- * server's job, never a stale one from an earlier render.
+ * The render control and the current job's status. It polls the backend directly from the browser;
+ * the workspace remounts it when the render job identity changes, so its local job state is only
+ * ever the current render's.
  */
-export function RenderStatusPanel({ projectId, initialJob, canRender, quotaExhausted }: RenderStatusPanelProps) {
-  const router = useRouter();
+export function RenderStatusPanel({ projectId, initialJob, canRender, quotaExhausted, onVersionsChange }: RenderStatusPanelProps) {
   const [job, setJob] = useState(initialJob);
   const [pollError, setPollError] = useState("");
-  const [startResult, start] = useActionState(startVideoRenderAction, startState);
-  const [cancelResult, cancel] = useActionState(cancelVideoRenderAction, cancelState);
+  const [mutationError, setMutationError] = useState("");
+  const [pending, setPending] = useState(false);
+  const [stopped, setStopped] = useState(false);
+  const previousProjectId = useRef(projectId);
+
+  // A different project means a different job; drop the old job and resume polling for the new one.
+  useEffect(() => {
+    if (previousProjectId.current === projectId) return;
+    previousProjectId.current = projectId;
+    setJob(initialJob);
+    setStopped(false);
+    setPollError("");
+    setMutationError("");
+  }, [projectId, initialJob]);
 
   // Poll only while a job is in flight: a terminal job never changes again, and polling for the
   // lifetime of the page would be a request every three seconds for nothing.
   useEffect(() => {
-    if (!job || !isJobActive(job)) return undefined;
+    if (stopped || !job || !isJobActive(job)) return undefined;
+
+    const controller = new AbortController();
+    let inFlight = false;
+
     const timer = setInterval(() => {
-      void getVideoRenderStatusAction({ projectId }).then((result) => {
-        if (result.error) {
-          setPollError(result.error);
-          return;
-        }
-        const next = result.status?.jobs[0] ?? null;
-        setJob(next);
-        // A terminal job has moved the project itself, so refresh the server-rendered page once.
-        if (!next || !isJobActive(next)) router.refresh();
-      });
+      if (inFlight) return;
+      inFlight = true;
+
+      void videoApi
+        .getRenderStatus(projectId, controller.signal)
+        .then(({ jobs, versions }) => {
+          if (controller.signal.aborted) return;
+          // A shape the panel cannot render is a failure, not blanks; both values land together.
+          const nextJob = videoRenderJobListSchema.parse({ jobs }).jobs[0] ?? null;
+          const nextVersions = videoVersionListSchema.parse({ versions }).versions;
+          setPollError("");
+          setJob(nextJob);
+          onVersionsChange?.(nextVersions);
+        })
+        .catch((error: unknown) => {
+          if (controller.signal.aborted) return;
+          setPollError(browserApiErrorMessage(error, "Tidak dapat memuat status render."));
+          if (isFatalPollError(error)) setStopped(true);
+        })
+        .finally(() => {
+          inFlight = false;
+        });
     }, POLL_MS);
-    return () => clearInterval(timer);
-  }, [job, projectId, router]);
+
+    return () => {
+      controller.abort();
+      clearInterval(timer);
+    };
+  }, [stopped, job, projectId, onVersionsChange]);
+
+  async function startRender() {
+    setMutationError("");
+    setPending(true);
+
+    try {
+      // Minted per deliberate click, so two clicks carry two different keys; the backend's
+      // conditional transition plus active-job check is what makes a double submit safe.
+      const { job: nextJob } = await videoApi.startRender(projectId, crypto.randomUUID());
+      setStopped(false);
+      setPollError("");
+      setJob(nextJob);
+    } catch (error) {
+      setMutationError(browserApiErrorMessage(error, "Tidak dapat memulai render. Coba lagi."));
+    } finally {
+      setPending(false);
+    }
+  }
+
+  async function cancelRender() {
+    if (!job) return;
+    setMutationError("");
+    setPending(true);
+
+    try {
+      const { job: nextJob } = await videoApi.cancelRender(projectId, job.id);
+      setJob(nextJob);
+    } catch (error) {
+      setMutationError(browserApiErrorMessage(error, "Tidak dapat membatalkan render. Coba lagi."));
+    } finally {
+      setPending(false);
+    }
+  }
 
   const presentation = job ? renderStatusPresentation(job) : null;
-  const error = startResult.error ?? cancelResult.error ?? pollError;
-  const renderable = canRender && !quotaExhausted;
+  const error = mutationError || pollError;
+  const renderable = canRender && !quotaExhausted && !pending;
   const blockedReason = quotaExhausted
     ? "Kuota revisi 3/3 sudah terpakai."
     : !canRender
@@ -97,31 +165,26 @@ export function RenderStatusPanel({ projectId, initialJob, canRender, quotaExhau
       ) : null}
 
       {job && isJobActive(job) ? (
-        <form action={cancel} className="mt-4">
-          <input type="hidden" name="projectId" value={projectId} />
-          <input type="hidden" name="jobId" value={job.id} />
-          <button
-            type="submit"
-            // Only a `queued` job can be cancelled; the worker's claim is not reversible.
-            disabled={job.status !== "queued"}
-            aria-disabled={job.status !== "queued"}
-            className={`h-11 w-full rounded-full bg-white/10 px-5 text-sm font-semibold text-neutral-200 hover:bg-white/15 disabled:cursor-not-allowed disabled:opacity-50 ${focusRing}`}
-          >
-            {job.status === "queued" ? "Batalkan render" : "Render sedang berjalan"}
-          </button>
-        </form>
+        <button
+          type="button"
+          onClick={() => void cancelRender()}
+          // Only a `queued` job can be cancelled; the worker's claim is not reversible.
+          disabled={job.status !== "queued" || pending}
+          aria-disabled={job.status !== "queued" || pending}
+          className={`mt-4 h-11 w-full rounded-full bg-white/10 px-5 text-sm font-semibold text-neutral-200 hover:bg-white/15 disabled:cursor-not-allowed disabled:opacity-50 ${focusRing}`}
+        >
+          {job.status === "queued" ? "Batalkan render" : "Render sedang berjalan"}
+        </button>
       ) : (
-        <form action={start} className="mt-4">
-          <input type="hidden" name="projectId" value={projectId} />
-          <button
-            type="submit"
-            disabled={!renderable}
-            aria-disabled={!renderable}
-            className={`h-11 w-full rounded-full bg-primary px-5 text-sm font-semibold text-black disabled:cursor-not-allowed disabled:bg-white/10 disabled:text-neutral-400 ${focusRing}`}
-          >
-            {job?.status === "succeeded" ? "Render ulang" : "Render video"}
-          </button>
-        </form>
+        <button
+          type="button"
+          onClick={() => void startRender()}
+          disabled={!renderable}
+          aria-disabled={!renderable}
+          className={`mt-4 h-11 w-full rounded-full bg-primary px-5 text-sm font-semibold text-black disabled:cursor-not-allowed disabled:bg-white/10 disabled:text-neutral-400 ${focusRing}`}
+        >
+          {pending ? "Memulai…" : job?.status === "succeeded" ? "Render ulang" : "Render video"}
+        </button>
       )}
 
       {blockedReason ? <p className="mt-3 text-xs text-neutral-500">{blockedReason}</p> : null}

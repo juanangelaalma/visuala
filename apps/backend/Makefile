@@ -7,6 +7,9 @@ start:
 build:
 	pnpm build
 
+worker:
+	pnpm worker
+
 lint:
 	pnpm lint
 

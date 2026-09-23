@@ -7,6 +7,7 @@ import type {
 export type CreateVideoProjectInput = {
   id: string;
   userId: string;
+  idempotencyKey: string;
   title: string;
   videoType: VideoType;
   styleId: VideoStyleId;
@@ -15,6 +16,7 @@ export type CreateVideoProjectInput = {
 
 export interface VideoProjectRepository {
   create(input: CreateVideoProjectInput): Promise<VideoProject>;
+  findByIdempotencyKey(userId: string, idempotencyKey: string): Promise<VideoProject | null>;
   /** Excludes soft-deleted rows, so a deleted project reads as not found. */
   getOwned(projectId: string, userId: string): Promise<VideoProject | null>;
   /** Includes soft-deleted rows. Used only by deletion, so a second delete can be idempotent. */

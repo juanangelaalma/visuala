@@ -18,6 +18,6 @@ export function isAllowedOrigin(origin: string | null): boolean {
 export const corsPlugin = cors({
   origin: (request) => isAllowedOrigin(request.headers.get("origin")),
   credentials: true,
-  allowedHeaders: ["Content-Type", "Authorization", "X-Callback-Token"],
+  allowedHeaders: ["Content-Type", "Authorization", "X-Asset-Rights-Confirmed", "X-Callback-Token"],
   methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
 });

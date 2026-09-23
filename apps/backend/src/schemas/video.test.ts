@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { createVideoProjectBodySchema } from "./video";
 
 const body = {
+  idempotencyKey: "44444444-4444-4444-8444-444444444444",
   title: "Promo Kopi",
   videoType: "product_promo",
   styleId: "bold_pop",
@@ -26,5 +27,9 @@ describe("createVideoProjectBodySchema", () => {
   it("rejects a settings payload that omits a required toggle", () => {
     const { musicEnabled, ...incomplete } = body.settings;
     expect(createVideoProjectBodySchema.safeParse({ ...body, settings: incomplete }).success).toBe(false);
+  });
+
+  it.each(["", "not-a-uuid"])("rejects idempotency key %j", (idempotencyKey) => {
+    expect(createVideoProjectBodySchema.safeParse({ ...body, idempotencyKey }).success).toBe(false);
   });
 });

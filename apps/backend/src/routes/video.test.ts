@@ -40,8 +40,9 @@ vi.mock("@/application/video/revisions", async () => {
 });
 vi.mock("@/application/video/projects", async () => {
   const actual = await vi.importActual<typeof import("@/application/video/projects")>("@/application/video/projects");
-  return { ...actual, createVideoProject: mocks.createVideoProject, listVideoProjects: mocks.listVideoProjects, getVideoProject: mocks.getVideoProject, deleteVideoProject: mocks.deleteVideoProject };
+  return { ...actual, listVideoProjects: mocks.listVideoProjects, getVideoProject: mocks.getVideoProject, deleteVideoProject: mocks.deleteVideoProject };
 });
+vi.mock("@/application/video/create-video-project", () => ({ createVideoProject: mocks.createVideoProject }));
 vi.mock("@/application/video/assets", async () => {
   const actual = await vi.importActual<typeof import("@/application/video/assets")>("@/application/video/assets");
   return { ...actual, registerProjectAsset: mocks.registerProjectAsset, deleteProjectAsset: mocks.deleteProjectAsset, listProjectAssets: mocks.listProjectAssets };
@@ -112,7 +113,7 @@ describe("video project routes", () => {
     mocks.publicClient.mockReturnValue({ auth: { getUser: mocks.getUser } });
     mocks.userClient.mockReturnValue({ scoped: true });
     mocks.services.mockReturnValue({});
-    mocks.createVideoProject.mockResolvedValue(project);
+    mocks.createVideoProject.mockResolvedValue({ project, created: true });
     mocks.listVideoProjects.mockResolvedValue([project]);
     mocks.getVideoProject.mockResolvedValue(project);
     mocks.deleteVideoProject.mockResolvedValue({ pendingObjectDeletions: 0 });
@@ -130,10 +131,21 @@ describe("video project routes", () => {
   });
 
   it("creates a project scoped to the authenticated user and answers 201", async () => {
-    const response = await send("POST", "/video-projects", { token: "token", body: { title: "Promo", videoType: "product_promo", styleId: "bold_pop", settings: { durationSeconds: 6, aspectRatio: "9:16", resolution: "720p", language: "id", voiceOverEnabled: true, musicEnabled: true } } });
+    const response = await send("POST", "/video-projects", { token: "token", body: { idempotencyKey: "44444444-4444-4444-8444-444444444444", title: "Promo", videoType: "product_promo", styleId: "bold_pop", settings: { durationSeconds: 6, aspectRatio: "9:16", resolution: "720p", language: "id", voiceOverEnabled: true, musicEnabled: true } } });
 
     expect(response.status).toBe(201);
     expect(mocks.createVideoProject).toHaveBeenCalledWith(expect.objectContaining({ userId: "user-1" }), expect.anything());
+    const responseBody = await response.json();
+    expect(responseBody).toEqual({ project });
+    expect(JSON.stringify(responseBody)).not.toMatch(/idempotencyKey|idempotency_key/);
+  });
+
+  it("answers 200 with the existing project for a repeated idempotency key", async () => {
+    mocks.createVideoProject.mockResolvedValue({ project, created: false });
+
+    const response = await send("POST", "/video-projects", { token: "token", body: { idempotencyKey: "44444444-4444-4444-8444-444444444444", title: "Promo", videoType: "product_promo", styleId: "bold_pop", settings: { durationSeconds: 6, aspectRatio: "9:16", resolution: "720p", language: "id", voiceOverEnabled: true, musicEnabled: true } } });
+
+    expect(response.status).toBe(200);
     await expect(response.json()).resolves.toEqual({ project });
   });
 
@@ -170,6 +182,18 @@ describe("video project routes", () => {
 
   it("rejects an upload that declares more than ten megabytes before reading the body", async () => {
     const response = await send("POST", `/video-projects/${project.id}/assets`, { token: "token", headers: { "content-type": "image/png", "content-length": String(10 * 1024 * 1024 + 1) }, assetBytes: pngBytes });
+
+    expect(response.status).toBe(422);
+    await expect(response.json()).resolves.toEqual({ error: "Upload a valid JPEG, PNG, or WebP image up to 10 MB.", code: "video_asset_invalid" });
+    expect(mocks.registerProjectAsset).not.toHaveBeenCalled();
+  });
+
+  it("rejects an upload with an incomplete request body", async () => {
+    const response = await send("POST", `/video-projects/${project.id}/assets`, {
+      token: "token",
+      headers: { "content-type": "image/png", "content-length": String(pngBytes.length + 1), "x-asset-rights-confirmed": "true" },
+      assetBytes: pngBytes,
+    });
 
     expect(response.status).toBe(422);
     await expect(response.json()).resolves.toEqual({ error: "Upload a valid JPEG, PNG, or WebP image up to 10 MB.", code: "video_asset_invalid" });
@@ -247,6 +271,17 @@ describe("video message routes", () => {
     expect(response.status).toBe(201);
     await expect(response.json()).resolves.toEqual({ message: messageResponse, reply: replyResponse, project: interviewingProject });
     expect(mocks.runVideoInterviewTurn).toHaveBeenCalledWith({ userId: "user-1", projectId: project.id, content: "buat video jualan" }, expect.anything());
+  });
+
+  it("does not log message content", async () => {
+    const log = vi.spyOn(console, "log").mockImplementation(() => undefined);
+    try {
+      await send("POST", `/video-projects/${project.id}/messages`, { token: "token", body: { content: "private campaign details" } });
+
+      expect(log).not.toHaveBeenCalled();
+    } finally {
+      log.mockRestore();
+    }
   });
 
   it("hides a message on another user's project behind a 404", async () => {
@@ -494,5 +529,14 @@ describe("video render job routes", () => {
     expect(response.status).toBe(200);
     await expect(response.json()).resolves.toEqual({ url: versionResponse.playbackUrl });
     expect(mocks.createVersionDownloadUrl).toHaveBeenCalledWith({ userId: "user-1", projectId: project.id, versionId }, expect.anything());
+  });
+
+  it("hides another user's version download behind a safe 404", async () => {
+    mocks.createVersionDownloadUrl.mockRejectedValue(new VideoError("video_version_not_found", "The video version was not found."));
+
+    const response = await send("GET", `/video-projects/${project.id}/versions/${versionId}/download`, { token: "token" });
+
+    expect(response.status).toBe(404);
+    await expect(response.json()).resolves.toEqual({ error: "The video version was not found.", code: "video_version_not_found" });
   });
 });

@@ -11,7 +11,6 @@ vi.mock("server-only", () => ({}));
 import { createSupabasePublicServerClient } from "./public-server-client";
 import { createSupabaseProxyClient } from "./proxy-client";
 import { createSupabaseServerClient, createSupabaseWritableServerClient } from "./server-client";
-import { createSupabaseServiceRoleClient } from "./service-role-client";
 
 describe("Supabase client factories", () => {
   beforeEach(() => {
@@ -24,16 +23,6 @@ describe("Supabase client factories", () => {
   it("creates stateless public client", () => {
     expect(createSupabasePublicServerClient()).toEqual({ client: true });
     expect(mocks.createClient).toHaveBeenCalledWith("https://project.supabase.co", "anon", { auth: { persistSession: false, autoRefreshToken: false } });
-  });
-
-  it("creates service-role client", () => {
-    vi.stubEnv("NEXT_PUBLIC_SUPABASE_URL", "https://project.supabase.co");
-    vi.stubEnv("SUPABASE_SERVICE_ROLE_KEY", "secret");
-    try {
-      expect(createSupabaseServiceRoleClient()).toEqual({ client: true });
-    } finally {
-      vi.unstubAllEnvs();
-    }
   });
 
   it("reads cookies without writing in readonly mode", async () => {

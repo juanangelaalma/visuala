@@ -40,10 +40,10 @@ export const createVideoProjectSchema = z
   })
   .strict();
 
-/** A `true`/`false` checkbox value; `z.coerce.boolean()` would read the string "false" as `true`. */
+/** Browser state supplies booleans while native form data supplies strings; `z.coerce.boolean()` would read the string "false" as `true`. */
 const booleanField = z
-  .union([z.literal("true"), z.literal("false")])
-  .transform((value) => value === "true");
+  .union([z.literal(true), z.literal(false), z.literal("true"), z.literal("false")])
+  .transform((value) => value === true || value === "true");
 
 /** The flat shape the setup form submits. Coerces the number and boolean fields the browser sends as strings. */
 export const videoProjectFormSchema = z

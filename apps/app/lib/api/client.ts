@@ -22,13 +22,6 @@ type ApiRequestOptions = {
   accessToken?: string;
 };
 
-type ApiUploadOptions = {
-  body: BodyInit;
-  contentType: string;
-  headers?: Record<string, string>;
-  accessToken?: string;
-};
-
 async function resolveAccessToken(explicitToken?: string): Promise<string | null> {
   if (explicitToken) return explicitToken;
 
@@ -48,27 +41,6 @@ export async function apiFetch<T>(path: string, options: ApiRequestOptions = {})
     },
     body: options.body === undefined ? undefined : JSON.stringify(options.body),
     cache: options.cache ?? "no-store",
-  });
-
-  return readResponse<T>(response);
-}
-
-/**
- * Uploads raw bytes instead of a JSON body. The backend validates an asset from its bytes and its
- * declared content type, so the caller's `contentType` is forwarded unchanged and nothing is
- * serialized.
- */
-export async function apiUpload<T>(path: string, options: ApiUploadOptions): Promise<T> {
-  const accessToken = await resolveAccessToken(options.accessToken);
-  const response = await fetch(new URL(path, getAppEnv().NEXT_PUBLIC_API_URL), {
-    method: "POST",
-    headers: {
-      "content-type": options.contentType,
-      ...options.headers,
-      ...(accessToken ? { authorization: `Bearer ${accessToken}` } : {}),
-    },
-    body: options.body,
-    cache: "no-store",
   });
 
   return readResponse<T>(response);

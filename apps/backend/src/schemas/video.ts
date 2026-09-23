@@ -15,6 +15,7 @@ export const outputSettingsBodySchema = z.object({
 }).strict();
 
 export const createVideoProjectBodySchema = z.object({
+  idempotencyKey: z.string().uuid(),
   title: z.string().trim().min(1).max(120),
   videoType: z.enum(VIDEO_TYPES),
   styleId: z.enum(VIDEO_STYLE_IDS),

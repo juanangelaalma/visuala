@@ -15,18 +15,21 @@ import {
   durationLabel,
 } from "@/domain/video/settings";
 import type { VideoAspectRatio, VideoDurationSeconds, VideoResolution, VideoStyleId, VideoType } from "@/domain/video/types";
-import { createVideoProjectAction } from "../actions/create-video-project-action";
-import { uploadProjectAssetAction } from "../actions/upload-project-asset-action";
+import { BrowserApiError, browserApiErrorMessage } from "@/lib/api/browser-client";
+import { videoApi } from "../api/video-api";
 import {
+  type CreateVideoProjectInput,
   MAX_ASSET_BYTES,
   MAX_ASSETS_PER_PROJECT,
   MAX_PROJECT_ASSET_BYTES,
   VIDEO_ASSET_MIME_TYPES,
   isSupportedAssetMimeType,
+  videoProjectFormSchema,
 } from "../schemas/video-project-schema";
 
 type Draft = { id: string; file: File; previewUrl: string };
 type UploadEntry = { id: string; name: string; state: "pending" | "uploading" | "done" | "failed"; error?: string };
+type VideoApiClient = Pick<typeof videoApi, "createProject" | "uploadAsset">;
 
 const focusRing = "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary";
 const inputClassName = `h-12 w-full rounded-2xl border border-white/10 bg-black px-4 text-sm text-white outline-none placeholder:text-neutral-500 focus:border-primary ${focusRing}`;
@@ -84,7 +87,7 @@ function Panel({ title, description, children }: { title: string; description: s
   );
 }
 
-export function VideoSetupForm() {
+export function VideoSetupForm({ api = videoApi }: { api?: VideoApiClient }) {
   const router = useRouter();
   const [title, setTitle] = useState("");
   const [videoType, setVideoType] = useState<VideoType>(VIDEO_TYPES[0]);
@@ -102,14 +105,18 @@ export function VideoSetupForm() {
   const [error, setError] = useState("");
   const [dragOver, setDragOver] = useState(false);
   const [projectId, setProjectId] = useState<string | null>(null);
+  const [needsLogin, setNeedsLogin] = useState(false);
 
   const draftsRef = useRef<Draft[]>([]);
+  const submissionControllerRef = useRef<AbortController | null>(null);
+  const idempotencyKeyRef = useRef<string | null>(null);
 
   useEffect(() => {
     draftsRef.current = drafts;
   }, [drafts]);
 
   useEffect(() => () => {
+    submissionControllerRef.current?.abort();
     for (const draft of draftsRef.current) URL.revokeObjectURL(draft.previewUrl);
   }, []);
 
@@ -171,24 +178,56 @@ export function VideoSetupForm() {
     addFiles(event.dataTransfer.files);
   }
 
-  async function uploadDrafts(targetProjectId: string, entries: Draft[]): Promise<boolean> {
+  function createProjectInput(): CreateVideoProjectInput | null {
+    const parsed = videoProjectFormSchema.safeParse({ title, videoType, styleId, durationSeconds, aspectRatio, resolution, language, voiceOverEnabled, musicEnabled });
+    if (!parsed.success) {
+      setError(parsed.error.issues[0]?.message ?? "Periksa kembali pengaturan video.");
+      return null;
+    }
+
+    return {
+      title: parsed.data.title,
+      videoType: parsed.data.videoType,
+      styleId: parsed.data.styleId,
+      settings: {
+        durationSeconds: parsed.data.durationSeconds,
+        aspectRatio: parsed.data.aspectRatio,
+        resolution: parsed.data.resolution,
+        language: parsed.data.language,
+        voiceOverEnabled: parsed.data.voiceOverEnabled,
+        musicEnabled: parsed.data.musicEnabled,
+      },
+    };
+  }
+
+  function handleRequestError(requestError: unknown, fallback: string) {
+    setError(browserApiErrorMessage(requestError, fallback));
+    setNeedsLogin(requestError instanceof BrowserApiError && requestError.status === 401);
+  }
+
+  async function uploadDrafts(targetProjectId: string, entries: Draft[], signal: AbortSignal): Promise<boolean> {
     let allSucceeded = true;
 
     for (const entry of entries) {
+      if (signal.aborted) return false;
+
       setUploads((current) => current.map((upload) => (upload.id === entry.id ? { ...upload, state: "uploading", error: undefined } : upload)));
 
-      const formData = new FormData();
-      formData.set("projectId", targetProjectId);
-      formData.set("file", entry.file);
-      formData.set("rightsConfirmed", "true");
+      try {
+        await api.uploadAsset(targetProjectId, entry.file, entry.file.type, signal);
+      } catch (requestError) {
+        if (signal.aborted) return false;
 
-      const result = await uploadProjectAssetAction(formData);
-      if ("error" in result) {
         allSucceeded = false;
-        setUploads((current) => current.map((upload) => (upload.id === entry.id ? { ...upload, state: "failed", error: result.error } : upload)));
-      } else {
-        setUploads((current) => current.map((upload) => (upload.id === entry.id ? { ...upload, state: "done", error: undefined } : upload)));
+        const uploadError = browserApiErrorMessage(requestError, "Tidak dapat mengunggah gambar.");
+        setUploads((current) => current.map((upload) => (upload.id === entry.id ? { ...upload, state: "failed", error: uploadError } : upload)));
+        if (requestError instanceof BrowserApiError && requestError.status === 401) setNeedsLogin(true);
+        continue;
       }
+
+      if (signal.aborted) return false;
+
+      setUploads((current) => current.map((upload) => (upload.id === entry.id ? { ...upload, state: "done", error: undefined } : upload)));
     }
 
     return allSucceeded;
@@ -197,49 +236,56 @@ export function VideoSetupForm() {
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setError("");
+    setNeedsLogin(false);
 
     if (!rightsConfirmed) {
       setError("Konfirmasikan hak penggunaan aset untuk melanjutkan.");
       return;
     }
 
+    const input = createProjectInput();
+    if (!input) return;
+
     setUploads(drafts.map((draft) => ({ id: draft.id, name: draft.file.name, state: "pending" })));
     setBusy("creating");
 
-    const formData = new FormData();
-    formData.set("title", title);
-    formData.set("videoType", videoType);
-    formData.set("styleId", styleId);
-    formData.set("durationSeconds", String(durationSeconds));
-    formData.set("aspectRatio", aspectRatio);
-    formData.set("resolution", resolution);
-    formData.set("language", language);
-    formData.set("voiceOverEnabled", voiceOverEnabled ? "true" : "false");
-    formData.set("musicEnabled", musicEnabled ? "true" : "false");
+    const controller = new AbortController();
+    submissionControllerRef.current?.abort();
+    submissionControllerRef.current = controller;
+    const idempotencyKey = idempotencyKeyRef.current ?? crypto.randomUUID();
+    idempotencyKeyRef.current = idempotencyKey;
 
-    const created = await createVideoProjectAction(formData);
-    if ("error" in created) {
+    let createdProjectId: string;
+    try {
+      const created = await api.createProject(input, idempotencyKey, controller.signal);
+      if (controller.signal.aborted) return;
+      createdProjectId = created.project.id;
+      idempotencyKeyRef.current = null;
+    } catch (requestError) {
+      if (controller.signal.aborted) return;
       setBusy(null);
-      setError(created.error);
+      handleRequestError(requestError, "Tidak dapat membuat proyek video.");
+      if (requestError instanceof BrowserApiError && requestError.status >= 400 && requestError.status < 500) idempotencyKeyRef.current = null;
       return;
     }
 
-    setProjectId(created.projectId);
+    setProjectId(createdProjectId);
 
     let allSucceeded = true;
     if (drafts.length > 0) {
       setBusy("uploading");
-      allSucceeded = await uploadDrafts(created.projectId, drafts);
+      allSucceeded = await uploadDrafts(createdProjectId, drafts, controller.signal);
     }
 
+    if (controller.signal.aborted) return;
     setBusy(null);
 
     if (allSucceeded) {
-      router.push(`/dashboard/videos/${encodeURIComponent(created.projectId)}`);
+      router.push(`/dashboard/videos/${encodeURIComponent(createdProjectId)}`);
       return;
     }
 
-    setError("Sebagian gambar gagal diunggah. Coba lagi.");
+    setError("Sebagian gambar gagal diunggah. Periksa file yang gagal atau buka ruang kerja proyek.");
   }
 
   async function handleRetryUploads() {
@@ -248,8 +294,13 @@ export function VideoSetupForm() {
     if (retryable.length === 0) return;
 
     setError("");
+    setNeedsLogin(false);
     setBusy("uploading");
-    const allSucceeded = await uploadDrafts(projectId, retryable);
+    const controller = new AbortController();
+    submissionControllerRef.current?.abort();
+    submissionControllerRef.current = controller;
+    const allSucceeded = await uploadDrafts(projectId, retryable, controller.signal);
+    if (controller.signal.aborted) return;
     setBusy(null);
 
     if (allSucceeded) {
@@ -257,7 +308,7 @@ export function VideoSetupForm() {
       return;
     }
 
-    setError("Sebagian gambar gagal diunggah. Coba lagi.");
+    setError("Sebagian gambar gagal diunggah. Periksa file yang gagal atau buka ruang kerja proyek.");
   }
 
   return (
@@ -437,6 +488,18 @@ export function VideoSetupForm() {
           <p role="alert" className="mt-3 rounded-2xl border border-danger/40 bg-danger/10 px-4 py-3 text-sm text-white">
             {error}
           </p>
+        ) : null}
+
+        {needsLogin ? (
+          <a href="/login" className={`mt-3 inline-block text-sm font-semibold text-primary underline underline-offset-4 ${focusRing}`}>
+            Masuk
+          </a>
+        ) : null}
+
+        {failedUploads.length > 0 && projectId ? (
+          <a href={`/dashboard/videos/${encodeURIComponent(projectId)}`} className={`mt-3 inline-block text-sm font-semibold text-primary underline underline-offset-4 ${focusRing}`}>
+            Buka ruang kerja proyek
+          </a>
         ) : null}
 
         {failedUploads.length > 0 ? (

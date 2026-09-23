@@ -1,5 +1,5 @@
 import { Elysia } from "elysia";
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { corsPlugin, isAllowedOrigin } from "./cors";
 
 const originalOrigin = process.env.CORS_ORIGIN;
@@ -43,5 +43,69 @@ describe("cors plugin", () => {
     );
 
     expect(response.headers.get("access-control-allow-origin")).toBe("https://app.example.com");
+  });
+
+  it("allows the browser upload preflight headers", async () => {
+    delete process.env.CORS_ORIGIN;
+    const app = new Elysia().use(corsPlugin).post("/video-projects/:id/assets", () => "uploaded");
+
+    const response = await app.handle(
+      new Request("http://localhost/video-projects/project-1/assets", {
+        method: "OPTIONS",
+        headers: {
+          origin: "http://localhost:3000",
+          "access-control-request-method": "POST",
+          "access-control-request-headers": "authorization,content-type,x-asset-rights-confirmed",
+        },
+      }),
+    );
+
+    expect(response.status).toBe(204);
+    expect(response.headers.get("access-control-allow-origin")).toBe("http://localhost:3000");
+    expect(response.headers.get("access-control-allow-headers")?.toLowerCase().split(",").map((header) => header.trim())).toEqual(
+      expect.arrayContaining(["authorization", "content-type", "x-asset-rights-confirmed"]),
+    );
+  });
+
+  it("does not allow a browser upload preflight from a rejected origin", async () => {
+    delete process.env.CORS_ORIGIN;
+    const handler = vi.fn(() => "uploaded");
+    const app = new Elysia().use(corsPlugin).post("/video-projects/:id/assets", handler);
+
+    const response = await app.handle(
+      new Request("http://localhost/video-projects/project-1/assets", {
+        method: "OPTIONS",
+        headers: {
+          origin: "https://evil.example.com",
+          "access-control-request-method": "POST",
+          "access-control-request-headers": "authorization,content-type,x-asset-rights-confirmed",
+        },
+      }),
+    );
+
+    expect(response.status).toBe(204);
+    expect(response.headers.get("access-control-allow-origin")).toBeNull();
+    expect(handler).not.toHaveBeenCalled();
+  });
+
+  it("does not allow an unsupported browser upload header", async () => {
+    delete process.env.CORS_ORIGIN;
+    const handler = vi.fn(() => "uploaded");
+    const app = new Elysia().use(corsPlugin).post("/video-projects/:id/assets", handler);
+
+    const response = await app.handle(
+      new Request("http://localhost/video-projects/project-1/assets", {
+        method: "OPTIONS",
+        headers: {
+          origin: "http://localhost:3000",
+          "access-control-request-method": "POST",
+          "access-control-request-headers": "authorization,x-unsupported-header",
+        },
+      }),
+    );
+
+    expect(response.status).toBe(204);
+    expect(response.headers.get("access-control-allow-headers")?.toLowerCase()).not.toContain("x-unsupported-header");
+    expect(handler).not.toHaveBeenCalled();
   });
 });

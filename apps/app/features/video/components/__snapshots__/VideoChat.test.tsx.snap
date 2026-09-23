@@ -1,0 +1,64 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`VideoChat > uses the callback, preserves its existing shell, and shows a recoverable failure 1`] = `
+<DocumentFragment>
+  <section
+    class="flex min-h-[32rem] flex-col rounded-3xl border border-white/10 bg-surface p-5 shadow-card-inner sm:p-7"
+  >
+    <h2
+      class="text-lg font-semibold text-white"
+    >
+      Percakapan
+    </h2>
+    <div
+      class="mt-4 flex-1 space-y-3 overflow-y-auto"
+    >
+      <p
+        class="text-sm leading-6 text-neutral-450"
+      >
+        Kirim pesan pertama. AI akan menanyakan satu hal pada satu waktu.
+      </p>
+      <div />
+    </div>
+    <p
+      class="mt-4 rounded-2xl border border-danger/40 bg-danger/10 px-4 py-3 text-sm text-white"
+      role="alert"
+    >
+      Pesan tidak dapat dikirim. Coba lagi.
+    </p>
+    <div
+      class="mt-4"
+    >
+      <label
+        class="sr-only"
+        for="video-chat-input"
+      >
+        Pesan Anda
+      </label>
+      <textarea
+        class="w-full resize-none rounded-2xl border border-white/10 bg-black px-4 py-3 text-sm text-white outline-none placeholder:text-neutral-500 focus:border-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+        id="video-chat-input"
+        placeholder="Tulis jawaban atau permintaan Anda…"
+        rows="2"
+      >
+        Halo
+      </textarea>
+      <div
+        class="mt-2 flex items-center justify-between gap-3"
+      >
+        <p
+          class="text-[10px] text-neutral-500"
+        >
+          AI hanya memakai fakta yang Anda konfirmasi.
+        </p>
+        <button
+          class="min-h-10 rounded-full bg-primary px-5 text-sm font-semibold text-black disabled:cursor-not-allowed disabled:opacity-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+          type="button"
+        >
+          Kirim
+        </button>
+      </div>
+    </div>
+  </section>
+</DocumentFragment>
+`;

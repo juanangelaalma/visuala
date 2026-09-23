@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import type { ProjectAsset, VideoModerationStatus } from "@/domain/video/types";
-import { deleteProjectAssetAction } from "../actions/delete-project-asset-action";
+import { browserApiErrorMessage } from "@/lib/api/browser-client";
 
 const focusRing = "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary";
 
@@ -23,7 +23,7 @@ const moderationToneClassNames: Record<VideoModerationStatus, string> = {
  * was consolidated under its final name). A missing preview renders as a labelled placeholder rather
  * than a broken image, and every tile is deletable, which is the way out of a stale row.
  */
-export function ProjectAssetGallery({ projectId, assets }: { projectId: string; assets: ProjectAsset[] }) {
+export function ProjectAssetGallery({ assets, onDeleteAsset }: { assets: ProjectAsset[]; onDeleteAsset: (assetId: string) => Promise<void> }) {
   const [busyId, setBusyId] = useState<string | null>(null);
   const [error, setError] = useState("");
 
@@ -31,14 +31,13 @@ export function ProjectAssetGallery({ projectId, assets }: { projectId: string; 
     setError("");
     setBusyId(assetId);
 
-    const formData = new FormData();
-    formData.set("projectId", projectId);
-    formData.set("assetId", assetId);
-
-    const result = await deleteProjectAssetAction(formData);
-    setBusyId(null);
-
-    if (result.error) setError(result.error);
+    try {
+      await onDeleteAsset(assetId);
+    } catch (requestError) {
+      setError(browserApiErrorMessage(requestError, "Aset tidak dapat dihapus. Coba lagi."));
+    } finally {
+      setBusyId(null);
+    }
   }
 
   if (assets.length === 0) {

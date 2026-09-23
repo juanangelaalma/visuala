@@ -1,0 +1,29 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`ProjectAssetGallery > uses the delete callback and preserves the gallery markup 1`] = `
+<DocumentFragment>
+  <div>
+    <ul
+      class="grid grid-cols-3 gap-2"
+    >
+      <li
+        class="relative"
+      >
+        <span
+          class="grid aspect-square w-full place-items-center rounded-xl border border-dashed border-white/15 bg-black p-2 text-center font-mono text-[9px] uppercase leading-4 text-neutral-500"
+          title="image/png, 10x10"
+        >
+          Pratinjau tidak tersedia
+        </span>
+        <button
+          aria-label="Hapus aset"
+          class="absolute right-1 top-1 grid size-6 place-items-center rounded-full bg-black/80 text-sm text-white hover:bg-danger disabled:cursor-not-allowed disabled:opacity-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+          type="button"
+        >
+          ×
+        </button>
+      </li>
+    </ul>
+  </div>
+</DocumentFragment>
+`;

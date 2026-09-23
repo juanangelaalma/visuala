@@ -1,6 +1,9 @@
+"use client";
+
+import { useState } from "react";
 import { durationLabel } from "@/domain/video/settings";
 import type { VideoVersion } from "@/domain/video/types";
-import { downloadVideoVersionAction } from "../actions/download-video-version-action";
+import { browserApiErrorMessage } from "@/lib/api/browser-client";
 import { videoAspectClass } from "./render-status-presentation";
 
 const focusRing = "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary";
@@ -8,13 +11,29 @@ const focusRing = "focus-visible:outline-2 focus-visible:outline-offset-2 focus-
 type VideoVersionListProps = {
   projectId: string;
   versions: VideoVersion[];
+  onDownloadVersion: (versionId: string) => Promise<void>;
 };
 
 /**
  * The newest version plays; the rest are a history list. The backend already orders versions newest
  * first, so the first entry is the one to watch and there is nothing to sort here.
  */
-export function VideoVersionList({ projectId, versions }: VideoVersionListProps) {
+export function VideoVersionList({ projectId: _projectId, versions, onDownloadVersion }: VideoVersionListProps) {
+  const [downloadingId, setDownloadingId] = useState<string | null>(null);
+  const [error, setError] = useState("");
+
+  async function download(versionId: string) {
+    setError("");
+    setDownloadingId(versionId);
+    try {
+      await onDownloadVersion(versionId);
+    } catch (requestError) {
+      setError(browserApiErrorMessage(requestError, "Video tidak dapat diunduh. Coba lagi."));
+    } finally {
+      setDownloadingId(null);
+    }
+  }
+
   if (versions.length === 0) {
     return (
       <section className="rounded-3xl border border-white/10 bg-surface p-5 shadow-card-inner">
@@ -58,12 +77,11 @@ export function VideoVersionList({ projectId, versions }: VideoVersionListProps)
               v{version.versionNumber} · {durationLabel(version.durationSeconds)} · {version.resolution}
             </span>
             {version.playbackUrl ? (
-              <form action={downloadVideoVersionAction}>
-                <input type="hidden" name="projectId" value={projectId} />
+              <form onSubmit={(event) => { event.preventDefault(); void download(version.id); }}>
+                <input type="hidden" name="projectId" value={_projectId} />
                 <input type="hidden" name="versionId" value={version.id} />
-                {/* `min-h-11` keeps the tap target at 44px without changing the small label style. */}
-                <button type="submit" className={`inline-flex min-h-11 items-center rounded-full px-3 text-xs font-semibold text-primary hover:underline ${focusRing}`}>
-                  Unduh
+                <button type="submit" disabled={downloadingId !== null} className={`inline-flex min-h-11 items-center rounded-full px-3 text-xs font-semibold text-primary hover:underline disabled:cursor-not-allowed disabled:opacity-50 ${focusRing}`}>
+                  {downloadingId === version.id ? "Mengunduh…" : "Unduh"}
                 </button>
               </form>
             ) : (
@@ -73,6 +91,7 @@ export function VideoVersionList({ projectId, versions }: VideoVersionListProps)
           </li>
         ))}
       </ul>
+      {error ? <p role="alert" className="mt-3 rounded-2xl border border-danger/40 bg-danger/10 px-4 py-3 text-sm text-white">{error}</p> : null}
     </section>
   );
 }

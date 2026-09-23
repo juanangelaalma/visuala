@@ -1,12 +1,9 @@
 import { VideoError } from "../../domain/video/errors";
-import { validateOutputSettings } from "../../domain/video/settings";
 import type {
   ProjectAssetRepository, VideoProjectRepository, VideoVersionRepository,
 } from "../../domain/video/contracts";
 import type { AssetObjectStore } from "../../domain/ai-service/assets";
 import type { VideoOutputSettings, VideoProject, VideoStyleId, VideoType } from "../../domain/video/types";
-
-const MAX_TITLE_LENGTH = 120;
 
 export type ProjectDependencies = {
   projects: VideoProjectRepository;
@@ -15,29 +12,6 @@ export type ProjectDependencies = {
   objectStore: AssetObjectStore;
   createId: () => string;
 };
-
-export type CreateVideoProjectCommand = {
-  userId: string;
-  title: string;
-  videoType: VideoType;
-  styleId: VideoStyleId;
-  settings: VideoOutputSettings;
-};
-
-export async function createVideoProject(command: CreateVideoProjectCommand, dependencies: ProjectDependencies): Promise<VideoProject> {
-  const title = command.title.trim();
-  if (title.length === 0 || title.length > MAX_TITLE_LENGTH) throw invalidInput("The project title is required.");
-  const settings = validateOutputSettings(command.settings);
-
-  return dependencies.projects.create({
-    id: dependencies.createId(),
-    userId: command.userId,
-    title,
-    videoType: command.videoType,
-    styleId: command.styleId,
-    settings,
-  });
-}
 
 export async function listVideoProjects(userId: string, dependencies: ProjectDependencies): Promise<VideoProject[]> {
   return dependencies.projects.listOwned(userId);
@@ -101,10 +75,6 @@ export function toProjectResponse(project: VideoProject): ProjectResponse {
     createdAt: project.createdAt,
     updatedAt: project.updatedAt,
   };
-}
-
-function invalidInput(message: string): VideoError {
-  return new VideoError("video_input_invalid", message);
 }
 
 function projectNotFound(): VideoError {

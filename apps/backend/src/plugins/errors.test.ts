@@ -40,6 +40,31 @@ describe("error plugin", () => {
     }
   });
 
+  it("does not log or return secrets carried by an unexpected error", async () => {
+    const bearerToken = "secret-bearer-token";
+    const signedUrl = "https://signed.example/video.mp4?token=secret-signature";
+    const consoleError = vi.spyOn(console, "error").mockImplementation(() => undefined);
+    try {
+      const app = new Elysia()
+        .use(errorPlugin)
+        .get("/boom", () => {
+          throw Object.assign(new Error(`request failed for ${bearerToken}`), { bearerToken, signedUrl });
+        });
+
+      const response = await app.handle(new Request("http://localhost/boom", { headers: { authorization: `Bearer ${bearerToken}` } }));
+      const responseText = await response.text();
+      const logged = JSON.stringify(consoleError.mock.calls);
+
+      expect(response.status).toBe(500);
+      expect(responseText).not.toContain(bearerToken);
+      expect(responseText).not.toContain(signedUrl);
+      expect(logged).not.toContain(bearerToken);
+      expect(logged).not.toContain(signedUrl);
+    } finally {
+      consoleError.mockRestore();
+    }
+  });
+
   it("preserves explicit status responses instead of masking them as 500", async () => {
     const consoleError = vi.spyOn(console, "error").mockImplementation(() => undefined);
     try {

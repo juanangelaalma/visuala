@@ -63,15 +63,15 @@ The render plan's Task 1 ran the HyperFrames render-engine spike on 2026-09-22 a
 combination render times for all eighteen combinations, and the determinism measurements. The other
 two spikes did not run, so the following is still true:
 
-- **No `openai-chat-completions` adapter exists.** The AI service registers only one provider
-  adapter, `apps/backend/src/infrastructure/ai-service/google-generate-content-adapter.ts`.
-- The AI service still registers a single API format,
-  `google-generate-content` (`apps/backend/src/infrastructure/ai-service/config.ts`,
-  `registeredApiFormats`). Any profile whose `apiFormat` is anything else fails configuration
-  validation (`AI_CONFIG_ERROR`).
-- **There are no `AI_9ROUTER_*` variables to set.** They are not read anywhere in the code, so this
-  document does not list them. The `/responses` API format has no adapter, and adding a provider
-  URL and key to `AI_PROFILES_JSON` without an adapter does not work.
+- The AI service registers the `openai-responses` adapter at
+  `apps/backend/src/infrastructure/ai-service/openai-responses-adapter.ts`.
+- The registered API format is `openai-responses`
+  (`apps/backend/src/infrastructure/ai-service/config.ts`, `registeredApiFormats`). Profiles using
+  another `apiFormat` fail configuration validation (`AI_CONFIG_ERROR`).
+- **There are no `AI_9ROUTER_*` variables to set.** The 9Router profile references
+  `AI_OPENAI_API_KEY` and `AI_OPENAI_MODEL` by name. The current adapter is non-streaming, and
+  model-specific text, vision, and native structured-output support remains controlled by profile
+  capability flags.
 - `docs/decisions/2026-09-21-9router-api-format.md` and
   `docs/decisions/2026-09-21-media-providers.md` still do not exist. They are pending their spikes.
 
@@ -112,8 +112,8 @@ The target also copies no `VIDEO_*`, `RENDER_*`, `HYPERFRAMES_*`, or `PRODUCER_*
 grep pattern does not match those prefixes. That is deliberate: their code defaults are what runs,
 and each one is documented in the tables below.
 
-There is no `.env.example` in this repository, and none is created by this plan: `apps/backend/.env`
-is gitignored (`apps/backend/.gitignore`). Never commit keys or production values.
+`apps/backend/.env.example` documents non-secret backend configuration. `apps/backend/.env` is
+gitignored (`apps/backend/.gitignore`). Never commit keys or production values.
 
 ### Variables this foundation reads
 
@@ -147,9 +147,9 @@ its absence is a configuration error.
 | `AI_PROFILES_JSON` | no default | JSON array of connection profiles (text, vision, structured output, limits, optional pricing). Read by `readAIServiceConfiguration`. |
 | `AI_TASKS_JSON` | no default | JSON array mapping each of `connection_test`, `interviewer`, `planner`, and `product_analysis` to a profile ID. |
 | `AI_MAX_CONCURRENCY` | no default | Positive integer: the initial process-wide AI request cap. A lower task/profile cap tightens the shared limiter and it never loosens until restart. |
-| `AI_GOOGLE_API_KEY` | no default | Read indirectly: a profile's `apiKeyEnv` typically names it. The example profile's default credential variable. |
-| `AI_GOOGLE_MODEL` | no default | Read indirectly via a profile's `modelIdEnv`. |
-| `AI_ALLOW_INSECURE_LOOPBACK` | unset (`false`) | Set to `true` to let the AI service call plain-HTTP loopback endpoints. Intended for tests only. |
+| `AI_OPENAI_API_KEY` | no default | Read indirectly: a profile's `apiKeyEnv` typically names it. The 9Router profile's credential variable. |
+| `AI_OPENAI_MODEL` | no default | Read indirectly via a profile's `modelIdEnv`. The 9Router profile's model variable. |
+| `AI_ALLOW_INSECURE_LOOPBACK` | unset (`false`) | Set to `true` to let the AI service call a plain-HTTP loopback endpoint, including `http://127.0.0.1:20128/v1` for 9Router. |
 
 Notes:
 
@@ -529,9 +529,9 @@ native render.
   `allowed`** in the same change that adds the moderation provider call.
 - **Multi-image analysis is not implemented.** An asset is resolved one at a time by `assetId`; the
   provider contracts cap `maxImages`, but the video flow does not build a multi-image request.
-- **The `/responses` API format has no adapter.** See the first disclosure above: only
-  `google-generate-content` is registered, and no `openai-chat-completions` (or `/responses`)
-  adapter exists. This is pending the provider spikes.
+- **The current `openai-responses` adapter is non-streaming.** Streaming is outside the AI service
+  contract. Text, vision, and native structured-output support remains controlled by profile
+  capability flags for the configured gateway and model.
 - **The interviewer answer is generated, but not by this plan's work.** The interviewer and planner
   tasks run through the AI service inside `POST /video-projects/:projectId/messages`, and they need a
   working `AI_PROFILES_JSON` / `AI_TASKS_JSON` configuration. The moderation call is still absent.

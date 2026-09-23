@@ -4,6 +4,7 @@ import { SupabaseVideoProjectRepository } from "./supabase-video-project-reposit
 const ROW = {
   id: "33333333-3333-4333-8333-333333333333",
   user_id: "11111111-1111-4111-8111-111111111111",
+  idempotency_key: "44444444-4444-4444-8444-444444444444",
   title: "Promo Kopi",
   video_type: "product_promo",
   style_id: "bold_pop",
@@ -59,6 +60,35 @@ function chain(table: string, result: unknown, calls: RecordedCall[]) {
 }
 
 describe("SupabaseVideoProjectRepository", () => {
+  it("maps the idempotency key into the insert without leaking it into the project", async () => {
+    const { client, calls } = makeClient();
+    const repository = new SupabaseVideoProjectRepository(client as never);
+
+    const result = await repository.create({
+      id: ROW.id,
+      userId: ROW.user_id,
+      idempotencyKey: ROW.idempotency_key,
+      title: ROW.title,
+      videoType: "product_promo",
+      styleId: "bold_pop",
+      settings: { durationSeconds: 6, aspectRatio: "9:16", resolution: "720p", language: "id", voiceOverEnabled: true, musicEnabled: true },
+    });
+
+    expect(calls[0]).toMatchObject({ operation: "insert", value: expect.objectContaining({ user_id: ROW.user_id, idempotency_key: ROW.idempotency_key }) });
+    expect(JSON.stringify(result)).not.toMatch(/idempotency|user_id|idempotency_key/);
+  });
+
+  it("scopes an idempotency lookup to the owner and key", async () => {
+    const { client, calls } = makeClient();
+    const repository = new SupabaseVideoProjectRepository(client as never);
+
+    const result = await repository.findByIdempotencyKey(ROW.user_id, ROW.idempotency_key);
+
+    expect(calls[0]?.filters).toEqual(expect.arrayContaining([["user_id", ROW.user_id], ["idempotency_key", ROW.idempotency_key]]));
+    expect(result).toMatchObject({ id: ROW.id, userId: ROW.user_id });
+    expect(JSON.stringify(result)).not.toMatch(/user_id|idempotency_key/);
+  });
+
   it("qualifies every read by owner and hides soft-deleted rows", async () => {
     const { client, calls } = makeClient();
     const repository = new SupabaseVideoProjectRepository(client as never);

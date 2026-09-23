@@ -134,6 +134,15 @@ describe("registerProjectAsset", () => {
       .rejects.toThrowError("insert failed");
     expect(deps.objectStore.delete).toHaveBeenCalledWith(`video-projects/${PROJECT_ID}/${ASSET_ID}.png`);
   });
+
+  it("does not create a row when the object store write fails", async () => {
+    const deps = dependencies();
+    deps.objectStore.write.mockRejectedValue(new Error("write interrupted"));
+
+    await expect(registerProjectAsset({ userId: USER_ID, projectId: PROJECT_ID, bytes: PNG, declaredMimeType: "image/png", rightsConfirmed: true }, deps))
+      .rejects.toThrowError("write interrupted");
+    expect(deps.assets.create).not.toHaveBeenCalled();
+  });
 });
 
 describe("deleteProjectAsset", () => {

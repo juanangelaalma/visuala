@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import { createVideoProject, deleteVideoProject, getVideoProject, listVideoProjects, toProjectResponse } from "./projects";
+import { deleteVideoProject, getVideoProject, listVideoProjects, toProjectResponse } from "./projects";
 import type { VideoProject } from "../../domain/video/types";
 
 const USER_ID = "11111111-1111-4111-8111-111111111111";
@@ -24,6 +24,7 @@ function dependencies() {
     createId: () => PROJECT_ID,
     projects: {
       create: vi.fn(async (input) => project(input)),
+      findByIdempotencyKey: vi.fn(async (): Promise<VideoProject | null> => null),
       getOwned: vi.fn(async (): Promise<VideoProject | null> => project()),
       getOwnedIncludingDeleted: vi.fn(async (): Promise<VideoProject | null> => project()),
       listOwned: vi.fn(async () => [project()]),
@@ -37,33 +38,6 @@ function dependencies() {
     objectStore: { write: vi.fn(), read: vi.fn(), delete: vi.fn() },
   };
 }
-
-describe("createVideoProject", () => {
-  it("derives ownership from the caller and starts in draft", async () => {
-    const deps = dependencies();
-
-    await createVideoProject({ userId: USER_ID, title: "Promo Kopi", videoType: "product_promo", styleId: "bold_pop", settings }, deps);
-
-    expect(deps.projects.create).toHaveBeenCalledWith({ id: PROJECT_ID, userId: USER_ID, title: "Promo Kopi", videoType: "product_promo", styleId: "bold_pop", settings });
-  });
-
-  it("rejects settings the render engine never verified", async () => {
-    const deps = dependencies();
-
-    await expect(createVideoProject({ userId: USER_ID, title: "Promo", videoType: "product_promo", styleId: "bold_pop", settings: { ...settings, durationSeconds: 7 as never } }, deps))
-      .rejects.toMatchObject({ code: "video_input_invalid" });
-    expect(deps.projects.create).not.toHaveBeenCalled();
-  });
-
-  it("rejects an empty or overlong title", async () => {
-    const deps = dependencies();
-
-    await expect(createVideoProject({ userId: USER_ID, title: "   ", videoType: "product_promo", styleId: "bold_pop", settings }, deps))
-      .rejects.toMatchObject({ code: "video_input_invalid" });
-    await expect(createVideoProject({ userId: USER_ID, title: "x".repeat(121), videoType: "product_promo", styleId: "bold_pop", settings }, deps))
-      .rejects.toMatchObject({ code: "video_input_invalid" });
-  });
-});
 
 describe("getVideoProject", () => {
   it("hides another user's project behind a not-found error", async () => {

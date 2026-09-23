@@ -9,11 +9,11 @@ import type { AITask } from "@/domain/ai-service/types";
 import {
   configOptions,
   configurationError,
-  GOOGLE_GENERATE_CONTENT_FORMAT,
+  OPENAI_RESPONSES_FORMAT,
   readAIServiceConfiguration,
   type AIServiceEnvironment,
 } from "@/infrastructure/ai-service/config";
-import { GoogleGenerateContentAdapter } from "@/infrastructure/ai-service/google-generate-content-adapter";
+import { OpenAIResponsesAdapter } from "@/infrastructure/ai-service/openai-responses-adapter";
 import { SupabaseAssetObjectStore, readAssetBucket } from "../../infrastructure/ai-service/supabase-asset-object-store";
 import { SupabaseAssetRepository } from "@/infrastructure/ai-service/supabase-asset-repository";
 import { SupabaseUsageRecorder } from "@/infrastructure/ai-service/supabase-usage-recorder";
@@ -89,8 +89,8 @@ function createAIServiceInfrastructure(options: FactoryOptions) {
 }
 
 function adapterFor(config: ResolvedAIConfig, schemas?: Readonly<Record<string, ZodType>>): ProviderAdapter {
-  if (config.apiFormat !== GOOGLE_GENERATE_CONTENT_FORMAT) throw configurationError();
-  return new GoogleGenerateContentAdapter({
+  if (config.apiFormat !== OPENAI_RESPONSES_FORMAT) throw configurationError();
+  return new OpenAIResponsesAdapter({
     baseUrl: config.baseUrl,
     apiKey: config.apiKey,
     modelId: config.modelId,

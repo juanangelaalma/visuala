@@ -4,7 +4,8 @@ import { approveVideoProject } from "@/application/video/approval";
 import { deleteProjectAsset, listProjectAssets, registerProjectAsset } from "@/application/video/assets";
 import { runVideoInterviewTurn } from "@/application/video/conversation";
 import { listVideoMessages, toMessageResponse } from "@/application/video/messages";
-import { createVideoProject, deleteVideoProject, getVideoProject, listVideoProjects, toProjectResponse } from "@/application/video/projects";
+import { createVideoProject } from "@/application/video/create-video-project";
+import { deleteVideoProject, getVideoProject, listVideoProjects, toProjectResponse } from "@/application/video/projects";
 import { getLatestBriefRevision, getLatestStoryboardRevision } from "@/application/video/revisions";
 import { cancelRenderJob, createRenderJob, getRenderJob, listVideoRenderJobs, toRenderJobResponse } from "@/application/video/render-jobs";
 import { createVideoApprovalServices, createVideoConversationServices, createVideoProjectServices } from "@/application/video/services";
@@ -42,8 +43,8 @@ export const videoProjectRoutes = new Elysia({ name: "video-project-routes" })
       const parsed = createVideoProjectBodySchema.safeParse(body);
       if (!parsed.success) return status(422, invalidRequest);
 
-      const project = await createVideoProject({ userId: user.id, ...parsed.data }, createVideoProjectServices());
-      set.status = 201;
+      const { project, created } = await createVideoProject({ userId: user.id, ...parsed.data }, createVideoProjectServices());
+      set.status = created ? 201 : 200;
       return { project: toProjectResponse(project) };
     },
     { auth: true, ...jsonBody, detail: { tags: ["video"] } },
@@ -130,6 +131,7 @@ export const videoProjectRoutes = new Elysia({ name: "video-project-routes" })
 
       const rightsConfirmed = request.headers.get("x-asset-rights-confirmed") === "true";
       const bytes = new Uint8Array(await request.arrayBuffer());
+      if (Number.isFinite(declaredLength) && bytes.byteLength !== declaredLength) throw invalidAsset();
       const asset = await registerProjectAsset(
         { userId: user.id, projectId: params.projectId, bytes, declaredMimeType, rightsConfirmed },
         createVideoProjectServices(),

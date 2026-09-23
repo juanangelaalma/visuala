@@ -70,6 +70,12 @@ describe("videoProjectFormSchema", () => {
     expect(videoProjectFormSchema.parse(formValues({ voiceOverEnabled: "false" })).voiceOverEnabled).toBe(false);
   });
 
+  it("accepts browser checkbox booleans with the same parsed output", () => {
+    const parsed = videoProjectFormSchema.parse(formValues({ voiceOverEnabled: true, musicEnabled: false }));
+    expect(parsed.voiceOverEnabled).toBe(true);
+    expect(parsed.musicEnabled).toBe(false);
+  });
+
   it("rejects a checkbox value that is neither true nor false", () => {
     expect(videoProjectFormSchema.safeParse(formValues({ musicEnabled: "on" })).success).toBe(false);
   });

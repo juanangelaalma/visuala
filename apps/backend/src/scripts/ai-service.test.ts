@@ -65,8 +65,8 @@ function commandFixture(environment: Record<string, string> = { AI_SMOKE_USER_ID
   const result = {
     requestId: "provider-request",
     profileId: "primary",
-    provider: "google",
-    model: "gemini-test",
+    provider: "9router",
+    model: "cx/gpt-5.6-luna",
     providerRequestId: null,
     attemptCount: 1,
     finishReason: "stop" as const,
@@ -79,7 +79,7 @@ function commandFixture(environment: Record<string, string> = { AI_SMOKE_USER_ID
     createId: () => `request-${++id}`,
     checkConfiguredAIService: () => ({
       status: "valid",
-      profiles: [{ id: "primary", provider: "google", model: "gemini-test" }],
+      profiles: [{ id: "primary", provider: "9router", model: "cx/gpt-5.6-luna" }],
       tasks: [{ task: "connection_test", profileId: "primary" }],
     }),
     createAIService: () => ({

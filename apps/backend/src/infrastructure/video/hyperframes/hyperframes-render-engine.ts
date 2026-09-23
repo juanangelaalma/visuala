@@ -1,4 +1,4 @@
-import { createRenderJob as createProducerJob, executeRenderJob, RenderCancelledError } from "@hyperframes/producer";
+import type * as HyperFramesProducer from "@hyperframes/producer";
 import { renderManifestFingerprint } from "../../../domain/video/render-manifest";
 import { RenderError } from "../../../domain/video/errors";
 import { writeComposition } from "./composition-writer";
@@ -18,17 +18,15 @@ export type HyperFramesRenderEngineOptions = {
   objectStore: Pick<AssetObjectStore, "read">;
   gsapScriptPath: string;
   probe?: (path: string, ffmpegPath: string | null) => Promise<RenderProbe>;
-  executeRender?: typeof executeRenderJob;
+  executeRender?: typeof HyperFramesProducer.executeRenderJob;
   /** Injected only by unit tests, which must not write to the filesystem. */
   writeComposition?: typeof writeComposition;
 };
 
 export class HyperFramesRenderEngine implements RenderEngine {
-  private executeRender: typeof executeRenderJob;
+  private producer: typeof HyperFramesProducer | null = null;
 
-  constructor(private readonly options: HyperFramesRenderEngineOptions) {
-    this.executeRender = options.executeRender ?? executeRenderJob;
-  }
+  constructor(private readonly options: HyperFramesRenderEngineOptions) {}
 
   async render(request: RenderEngineRequest): Promise<RenderEngineResult> {
     const manifestHash = renderManifestFingerprint(request.manifest);
@@ -40,7 +38,8 @@ export class HyperFramesRenderEngine implements RenderEngine {
 
     this.applyProducerEnvironment();
 
-    const job = createProducerJob({
+    const producer = await this.loadProducer();
+    const job = producer.createRenderJob({
       fps: request.manifest.fps,
       quality: this.options.config.quality,
       format: "mp4",
@@ -51,7 +50,7 @@ export class HyperFramesRenderEngine implements RenderEngine {
     });
 
     try {
-      await this.executeRender(
+      await (this.options.executeRender ?? producer.executeRenderJob)(
         job,
         request.workDir,
         request.outputPath,
@@ -59,13 +58,18 @@ export class HyperFramesRenderEngine implements RenderEngine {
         request.signal,
       );
     } catch (error) {
-      throw engineFailure(error);
+      throw engineFailure(error, producer.RenderCancelledError);
     }
 
     const probe = await (this.options.probe ?? probeVideo)(request.outputPath, this.options.config.ffmpegPath);
     this.assertProbeMatches(request, probe);
 
     return { outputPath: request.outputPath, manifestHash, probe };
+  }
+
+  private async loadProducer(): Promise<typeof HyperFramesProducer> {
+    this.producer ??= await import("@hyperframes/producer");
+    return this.producer;
   }
 
   /** Set on this process before every render: the CLI's documented knobs, read only when no config object is passed. */
@@ -100,7 +104,7 @@ export class HyperFramesRenderEngine implements RenderEngine {
   }
 }
 
-function engineFailure(error: unknown): RenderError {
+function engineFailure(error: unknown, RenderCancelledError: typeof HyperFramesProducer.RenderCancelledError): RenderError {
   if (error instanceof RenderCancelledError) {
     // Cancellation is the worker's own abort (a timeout or a shutdown) and is retryable by construction.
     return new RenderError("render_engine_failed", "The render was interrupted.");

@@ -14,6 +14,7 @@ export class SupabaseVideoProjectRepository implements VideoProjectRepository {
     const { data, error } = await this.supabase.from("video_projects").insert({
       id: input.id,
       user_id: input.userId,
+      idempotency_key: input.idempotencyKey,
       title: input.title,
       video_type: input.videoType,
       style_id: input.styleId,
@@ -26,6 +27,13 @@ export class SupabaseVideoProjectRepository implements VideoProjectRepository {
     }).select("*").single();
     if (error) throw error;
     return mapProject(data);
+  }
+
+  async findByIdempotencyKey(userId: string, idempotencyKey: string): Promise<VideoProject | null> {
+    const { data, error } = await this.supabase.from("video_projects").select("*")
+      .eq("user_id", userId).eq("idempotency_key", idempotencyKey).maybeSingle();
+    if (error) throw error;
+    return data ? mapProject(data) : null;
   }
 
   async getOwned(projectId: string, userId: string): Promise<VideoProject | null> {

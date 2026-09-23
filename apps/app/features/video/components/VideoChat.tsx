@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import type { InterviewOption, InterviewTurn, VideoMessage } from "@/domain/video/types";
-import { sendVideoMessageAction } from "../actions/send-video-message-action";
+import { browserApiErrorMessage } from "@/lib/api/browser-client";
 
 const focusRing = "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary";
 
@@ -19,7 +19,7 @@ function pendingTurn(messages: readonly VideoMessage[]): InterviewTurn | null {
  * Sent imperatively rather than through `useActionState`, because a successful turn has to clear the
  * composer and the form-action pattern cannot do that without a state-in-effect.
  */
-export function VideoChat({ projectId, messages }: { projectId: string; messages: VideoMessage[] }) {
+export function VideoChat({ messages, onSend }: { messages: VideoMessage[]; onSend: (content: string, assetIds?: string[]) => Promise<void> }) {
   const [draft, setDraft] = useState("");
   const [pending, setPending] = useState(false);
   const [error, setError] = useState("");
@@ -41,19 +41,14 @@ export function VideoChat({ projectId, messages }: { projectId: string; messages
     setError("");
     setPending(true);
 
-    const formData = new FormData();
-    formData.set("projectId", projectId);
-    formData.set("content", content);
-
-    const result = await sendVideoMessageAction(formData);
-    setPending(false);
-
-    // The typed text survives a failure so it can be sent again unchanged.
-    if (result.error) {
-      setError(result.error);
-      return;
+    try {
+      await onSend(content, undefined);
+      setDraft("");
+    } catch (requestError) {
+      setError(browserApiErrorMessage(requestError, "Pesan tidak dapat dikirim. Coba lagi."));
+    } finally {
+      setPending(false);
     }
-    setDraft("");
   }
 
   function toggleOption(option: InterviewOption) {
@@ -159,7 +154,7 @@ export function VideoChat({ projectId, messages }: { projectId: string; messages
             disabled={pending}
             className={`min-h-10 rounded-full bg-primary px-5 text-sm font-semibold text-black disabled:cursor-not-allowed disabled:opacity-50 ${focusRing}`}
           >
-            {pending ? "Mengirim…" : "Kirim"}
+            {pending ? "Mengirim…" : "Hello"}
           </button>
         </div>
       </div>

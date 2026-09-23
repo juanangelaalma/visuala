@@ -132,7 +132,7 @@ export const errorPlugin = new Elysia({ name: "errors" }).onError({ as: "global"
       : { error: "Asset storage is unavailable.", code: storageCode };
   }
 
-  console.error("Unhandled backend error", error);
+  console.error("Unhandled backend error");
   set.status = 500;
   return { error: "Internal server error." };
 });

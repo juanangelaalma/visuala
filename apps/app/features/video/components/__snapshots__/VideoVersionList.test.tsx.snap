@@ -1,0 +1,61 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`VideoVersionList > uses the separately supplied download callback without adding a token to a URL 1`] = `
+<DocumentFragment>
+  <section
+    class="rounded-3xl border border-white/10 bg-surface p-5 shadow-card-inner"
+  >
+    <h2
+      class="text-base font-semibold text-white"
+    >
+      Hasil video 
+      <span
+        class="float-right font-mono text-xs text-neutral-500"
+      >
+        versi 1
+      </span>
+    </h2>
+    <video
+      class="mt-4 w-full rounded-2xl bg-black outline outline-1 outline-white/10 aspect-[9/16]"
+      controls=""
+      playsinline=""
+      preload="metadata"
+      src="https://example.test/video.mp4"
+    >
+      Pemutar video tidak didukung di peramban ini.
+    </video>
+    <ul
+      class="mt-4 space-y-2 text-sm"
+    >
+      <li
+        class="flex items-center justify-between gap-3"
+      >
+        <span
+          class="font-mono text-xs text-neutral-400"
+        >
+          v1 · 10 detik · 1080p
+        </span>
+        <form>
+          <input
+            name="projectId"
+            type="hidden"
+            value="project-1"
+          />
+          <input
+            name="versionId"
+            type="hidden"
+            value="version-1"
+          />
+          <button
+            class="inline-flex min-h-11 items-center rounded-full px-3 text-xs font-semibold text-primary hover:underline disabled:cursor-not-allowed disabled:opacity-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+            disabled=""
+            type="submit"
+          >
+            Mengunduh…
+          </button>
+        </form>
+      </li>
+    </ul>
+  </section>
+</DocumentFragment>
+`;

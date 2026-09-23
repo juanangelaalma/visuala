@@ -1,21 +1,33 @@
 "use client";
 
-import { useActionState } from "react";
-import { approveVideoProjectAction, type ApproveVideoProjectResult } from "../actions/approve-video-project-action";
+import { useState } from "react";
+import { browserApiErrorMessage } from "@/lib/api/browser-client";
 
 const focusRing = "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary";
-const initialState: ApproveVideoProjectResult = {};
-
 type VideoApprovalPanelProps = {
   projectId: string;
   briefComplete: boolean;
   hasStoryboard: boolean;
   approved: boolean;
+  onApprove: () => Promise<void>;
 };
 
-export function VideoApprovalPanel({ projectId, briefComplete, hasStoryboard, approved }: VideoApprovalPanelProps) {
-  const [state, formAction, pending] = useActionState(approveVideoProjectAction, initialState);
+export function VideoApprovalPanel({ projectId: _projectId, briefComplete, hasStoryboard, approved, onApprove }: VideoApprovalPanelProps) {
+  const [pending, setPending] = useState(false);
+  const [error, setError] = useState("");
   const canApprove = briefComplete && hasStoryboard && !approved;
+
+  async function approve() {
+    setError("");
+    setPending(true);
+    try {
+      await onApprove();
+    } catch (requestError) {
+      setError(browserApiErrorMessage(requestError, "Persetujuan tidak dapat disimpan. Coba lagi."));
+    } finally {
+      setPending(false);
+    }
+  }
 
   const blockedReason = !briefComplete
     ? "Brief belum lengkap."
@@ -39,20 +51,14 @@ export function VideoApprovalPanel({ projectId, briefComplete, hasStoryboard, ap
 
       {blockedReason && !approved ? <p className="mt-2 text-xs text-neutral-500">{blockedReason}</p> : null}
 
-      {state.error ? (
+      {error ? (
         <p role="alert" className="mt-3 rounded-2xl border border-danger/40 bg-danger/10 px-4 py-3 text-sm text-white">
-          {state.error}
+          {error}
         </p>
       ) : null}
 
-      {state.message ? (
-        <p role="status" className="mt-3 rounded-2xl border border-primary/40 bg-primary/10 px-4 py-3 text-sm text-white">
-          {state.message}
-        </p>
-      ) : null}
-
-      <form action={formAction} className="mt-4">
-        <input type="hidden" name="projectId" value={projectId} />
+      <form onSubmit={(event) => { event.preventDefault(); void approve(); }} className="mt-4">
+        <input type="hidden" name="projectId" value={_projectId} />
         <button
           type="submit"
           disabled={pending || !canApprove}

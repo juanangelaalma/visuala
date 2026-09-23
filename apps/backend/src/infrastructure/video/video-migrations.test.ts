@@ -7,6 +7,7 @@ const projects = sql("20260921000100_create_video_projects.sql");
 const revisions = sql("20260921000200_create_video_revisions.sql");
 const jobs = sql("20260921000300_create_video_render_jobs.sql");
 const bucket = sql("20260922000000_allow_video_version_objects.sql");
+const projectIdempotency = sql("20260922000100_add_video_project_idempotency.sql");
 
 describe("video schema", () => {
   it("creates every table named in the PRD data model", () => {
@@ -37,6 +38,11 @@ describe("video schema", () => {
   it("permits at most one active render job per project", () => {
     expect(jobs).toMatch(/create unique index video_render_jobs_active_project_idx on public\.video_render_jobs \(project_id\) where status in \('queued', 'preparing', 'rendering', 'uploading'\)/i);
     expect(jobs).toMatch(/unique \(project_id, idempotency_key\)/i);
+  });
+
+  it("scopes project creation idempotency to each user", () => {
+    expect(projectIdempotency).toMatch(/add column idempotency_key uuid/i);
+    expect(projectIdempotency).toMatch(/create unique index video_projects_user_id_idempotency_key_key\s+on public\.video_projects \(user_id, idempotency_key\)\s+where idempotency_key is not null/i);
   });
 
   it("keeps the revision duration equal to a supported project duration", () => {
