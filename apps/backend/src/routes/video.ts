@@ -4,6 +4,7 @@ import { approveVideoProject } from "@/application/video/approval";
 import { deleteProjectAsset, listProjectAssets, registerProjectAsset } from "@/application/video/assets";
 import { runVideoInterviewTurn } from "@/application/video/conversation";
 import { listVideoMessages, toMessageResponse } from "@/application/video/messages";
+import { openVideoInterview } from "@/application/video/open-interview";
 import { createVideoProject } from "@/application/video/create-video-project";
 import { deleteVideoProject, getVideoProject, listVideoProjects, toProjectResponse } from "@/application/video/projects";
 import { getLatestBriefRevision, getLatestStoryboardRevision } from "@/application/video/revisions";
@@ -68,6 +69,16 @@ export const videoProjectRoutes = new Elysia({ name: "video-project-routes" })
   .delete(
     "/video-projects/:projectId",
     async ({ params, user }) => deleteVideoProject(params.projectId, user.id, createVideoProjectServices()),
+    { auth: true, detail: { tags: ["video"] } },
+  )
+  .post(
+    "/video-projects/:projectId/messages/opening",
+    async ({ params, user }) => ({
+      messages: (await openVideoInterview(
+        { userId: user.id, projectId: params.projectId },
+        createVideoConversationServices(),
+      )).map(toMessageResponse),
+    }),
     { auth: true, detail: { tags: ["video"] } },
   )
   .post(

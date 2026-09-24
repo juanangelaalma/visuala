@@ -48,7 +48,6 @@ export async function runInterviewer(
   });
 
   const turn = result.data.turn;
-  console.log(turn)
   // The output parsed, but a select question with one option, or a recommendation of an option that
   // is not on the list, is not something the UI can present. The provider's answer is unusable.
   if (turn && findInterviewTurnProblems(turn).length > 0) {

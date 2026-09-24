@@ -12,7 +12,7 @@ const BRIEF_ID = "44444444-4444-4444-8444-444444444444";
 
 const settings: VideoOutputSettings = { durationSeconds: 10, aspectRatio: "9:16", resolution: "1080p", language: "id", voiceOverEnabled: true, musicEnabled: true };
 
-const generatedBy: GeneratedBy = { profileId: "primary", provider: "google", model: "gemini-2.0", promptVersion: "interviewer@v1", requestId: "ai-request-1" };
+const generatedBy: GeneratedBy = { profileId: "primary", provider: "google", model: "gemini-2.0", promptVersion: "interviewer@v2", requestId: "ai-request-1" };
 
 const partialDraft = {
   productName: "Kopi Susu", productCategory: null, audience: null, objective: null, keyMessage: null,
@@ -173,6 +173,104 @@ describe("runVideoInterviewTurn", () => {
     expect(deps.projects.transition).not.toHaveBeenCalled();
     expect(result.reply.content).toContain("Unggah");
     expect(result.project.status).toBe("interviewing");
+  });
+
+  it("finishes when the latest answer contains the exact WhatsApp destination but the model omits its fact", async () => {
+    const number = "083111064486";
+    const deps = dependencies({ responses: {
+      interviewer: { draft: { ...completeDraft, orderDestination: number }, turn: null },
+      planner: { ...plan, brief: { ...completeDraft, orderDestination: number } },
+    } });
+    deps.messages.listOwned.mockResolvedValue([...transcript(), { ...transcript()[0]!, id: "m-2", content: `nomor whatsapp "${number}"` }]);
+
+    const result = await runVideoInterviewTurn({ userId: USER_ID, projectId: PROJECT_ID, content: `nomor whatsapp "${number}"` }, deps);
+
+    expect(result.project.status).toBe("awaiting_approval");
+    expect(deps.briefRevisions.create.mock.calls[0]?.[0].brief).toMatchObject({
+      facts: [{ field: "orderDestination", value: number, source: "user_message" }],
+    });
+    expect(deps.briefRevisions.create.mock.calls[0]?.[0]).toMatchObject({ isComplete: true });
+  });
+
+  it("does not accept a destination that only appears as part of another number", async () => {
+    const deps = dependencies({ responses: { interviewer: { draft: { ...completeDraft, orderDestination: "083111064486" }, turn: null } } });
+    deps.messages.listOwned.mockResolvedValue([...transcript(), { ...transcript()[0]!, id: "m-2", content: "nomor saya 0831110644869" }]);
+
+    const result = await runVideoInterviewTurn({ userId: USER_ID, projectId: PROJECT_ID, content: "nomor saya 0831110644869" }, deps);
+
+    expect(result.project.status).toBe("interviewing");
+    expect(result.reply.content).toContain("083111064486");
+  });
+
+  it("asks for the missing field instead of requesting another paraphrase when the model gives no turn", async () => {
+    const deps = dependencies({ responses: { interviewer: { draft: { ...completeDraft, keyMessage: null }, turn: null } } });
+
+    const result = await runVideoInterviewTurn({ userId: USER_ID, projectId: PROJECT_ID, content: "sudah" }, deps);
+
+    expect(result.reply.content).toContain("pesan utama");
+    expect(result.reply.controls).toMatchObject({ control: "free_text", targetFields: ["keyMessage"] });
+  });
+
+  it("asks to confirm an unsupported promo instead of repeating an unrelated question", async () => {
+    const deps = dependencies({ responses: { interviewer: {
+      draft: { ...completeDraft, offer: { label: "Diskon pelajar", detail: "10% dari Rp10.000" } },
+      turn: { ...turn, question: "Apa pesan utama video?", targetFields: ["keyMessage"] },
+    } } });
+
+    const result = await runVideoInterviewTurn({ userId: USER_ID, projectId: PROJECT_ID, content: "sudah" }, deps);
+
+    expect(result.reply.content).toContain("Diskon pelajar");
+    expect(result.reply.controls).toMatchObject({ targetFields: ["offer.label"] });
+  });
+
+  it("replaces a generic model paraphrase request with the unresolved destination", async () => {
+    const deps = dependencies({ responses: { interviewer: {
+      draft: { ...completeDraft, orderDestination: "083111064486" },
+      turn: { ...turn, question: "Bisa dijelaskan lagi dengan kalimat lain?", control: "free_text", options: [], recommendedOptionId: null, recommendationReason: null, targetFields: ["orderDestination"] },
+    } } });
+
+    const result = await runVideoInterviewTurn({ userId: USER_ID, projectId: PROJECT_ID, content: "ya" }, deps);
+
+    expect(result.reply.content).toContain("083111064486");
+  });
+
+  it("names the unconfirmed menu price so a yes can finish the interview", async () => {
+    const deps = dependencies({ project: { ...project(), videoType: "menu_showcase" }, responses: { interviewer: {
+      draft: { ...completeDraft, menuItems: [{ name: "Roti Abon", price: "Rp10.000" }, { name: "Roti Cokelat", price: null }] }, turn: null,
+    } } });
+
+    const result = await runVideoInterviewTurn({ userId: USER_ID, projectId: PROJECT_ID, content: "sudah" }, deps);
+
+    expect(result.reply.content).toContain("Rp10.000");
+  });
+
+  it("accepts an exact promo detail from the latest answer even when the model omits its provenance", async () => {
+    const offer = { label: "Diskon pelajar", detail: "Diskon 10%" };
+    const deps = dependencies({ responses: { interviewer: {
+      draft: { ...completeDraft, offer, facts: [{ field: "offer.label", value: offer.label, source: "user_message" }] }, turn: null,
+    }, planner: { ...plan, brief: { ...completeDraft, offer, facts: [
+      { field: "offer.label", value: offer.label, source: "user_message" },
+      { field: "offer.detail", value: offer.detail, source: "user_message" },
+    ] } } } });
+    deps.messages.listOwned.mockResolvedValue([...transcript(), { ...transcript()[0]!, id: "m-2", content: "Diskon 10%" }]);
+
+    const result = await runVideoInterviewTurn({ userId: USER_ID, projectId: PROJECT_ID, content: "Diskon 10%" }, deps);
+
+    expect(result.project.status).toBe("awaiting_approval");
+  });
+
+  it("accepts an explicit yes to the previous specific confirmation question", async () => {
+    const destination = "083111064486";
+    const deps = dependencies({ responses: { interviewer: { draft: { ...completeDraft, orderDestination: destination }, turn: null }, planner: { ...plan, brief: completeDraft } } });
+    deps.messages.listOwned.mockResolvedValue([
+      ...transcript(),
+      { ...transcript()[0]!, id: "m-2", role: "assistant", content: `Mohon konfirmasi tujuan pesanan "${destination}". Apakah sudah benar?`, controls: { control: "free_text", targetFields: ["orderDestination"] } },
+      { ...transcript()[0]!, id: "m-3", content: "Ya, benar" },
+    ]);
+
+    const result = await runVideoInterviewTurn({ userId: USER_ID, projectId: PROJECT_ID, content: "Ya, benar" }, deps);
+
+    expect(result.project.status).toBe("awaiting_approval");
   });
 
   it("refuses a turn on a project that can no longer change its brief", async () => {

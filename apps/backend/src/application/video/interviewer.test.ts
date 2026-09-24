@@ -61,7 +61,7 @@ describe("runInterviewer", () => {
     expect(result.turn).toEqual(turn);
     expect(result.generatedBy).toEqual({
       profileId: "primary", provider: "google", model: "gemini-2.0",
-      promptVersion: "interviewer@v1", requestId: "local-request-1",
+      promptVersion: "interviewer@v2", requestId: "local-request-1",
     });
   });
 
@@ -74,7 +74,7 @@ describe("runInterviewer", () => {
     expect(request).toMatchObject({
       task: "interviewer",
       context: { userId: USER_ID, projectId: PROJECT_ID },
-      promptVersion: "interviewer@v1",
+      promptVersion: "interviewer@v2",
       schema: { name: "interview_result", version: "v1" },
     });
     expect(request?.messages).toEqual([{ role: "user", content: "buat video jualan kopi ini" }]);

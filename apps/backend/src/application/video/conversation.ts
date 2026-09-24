@@ -2,6 +2,10 @@ import type { AIService } from "../../domain/ai-service/contracts";
 import {
   BRIEF_SCHEMA_VERSION,
   DRAFT_BRIEF_SCHEMA_VERSION,
+  type BriefField,
+  commercialFactValues,
+  findMissingBriefFields,
+  findUnsupportedCommercialFacts,
   isBriefDraftComplete,
   videoBriefDraftSchema,
   videoBriefSchema,
@@ -12,6 +16,7 @@ import type {
   VideoProjectRepository, VideoStoryboardRevisionRepository,
 } from "../../domain/video/contracts";
 import { VideoError } from "../../domain/video/errors";
+import type { InterviewTurn } from "../../domain/video/interview";
 import { STORYBOARD_SCHEMA_VERSION, normalizeStoryboard } from "../../domain/video/storyboard";
 import { canMutateProjectAssets } from "../../domain/video/state-machine";
 import type { VideoMessage, VideoProject } from "../../domain/video/types";
@@ -82,7 +87,8 @@ export async function runVideoInterviewTurn(
   );
 
   const assetIds = assets.map((asset) => asset.id);
-  const complete = isBriefDraftComplete(interviewer.draft, activeProject.videoType);
+  const draft = confirmLatestCommercialFacts(interviewer.draft, transcript);
+  const complete = isBriefDraftComplete(draft, activeProject.videoType);
   let project = activeProject;
   let replyContent: string;
   let controls: unknown = null;
@@ -93,14 +99,15 @@ export async function runVideoInterviewTurn(
         userId: command.userId,
         projectId: activeProject.id,
         schemaVersion: DRAFT_BRIEF_SCHEMA_VERSION,
-        brief: interviewer.draft,
+        brief: draft,
         generatedBy: interviewer.generatedBy,
         sourceMessageIds: [message.id],
       },
       { projects: dependencies.projects, briefRevisions: dependencies.briefRevisions },
     );
-    replyContent = interviewer.turn?.question ?? "Bisa dijelaskan lagi dengan kalimat lain?";
-    controls = interviewer.turn;
+    const nextTurn = unresolvedInterviewTurn(draft, activeProject, interviewer.turn, transcript);
+    replyContent = nextTurn.question;
+    controls = nextTurn;
   } else if (assetIds.length === 0) {
     // A storyboard has to reference a real asset, so the interview cannot close on an empty project.
     // The brief is complete and stored as such; the user just needs to add a photo.
@@ -109,7 +116,7 @@ export async function runVideoInterviewTurn(
         userId: command.userId,
         projectId: activeProject.id,
         schemaVersion: BRIEF_SCHEMA_VERSION,
-        brief: interviewer.draft,
+        brief: draft,
         generatedBy: interviewer.generatedBy,
         sourceMessageIds: [message.id],
       },
@@ -118,7 +125,7 @@ export async function runVideoInterviewTurn(
     replyContent = "Brief sudah lengkap. Unggah minimal satu foto produk supaya storyboard bisa disusun.";
   } else {
     // `isBriefDraftComplete` has already proven this parses, so the cast is a narrow, checked one.
-    const brief = videoBriefSchema.parse(interviewer.draft);
+    const brief = videoBriefSchema.parse(draft);
     const plan = await runPlanner(
       { userId: command.userId, project: activeProject, transcript, brief, assetIds },
       { ai: dependencies.ai, createRequestId: dependencies.createId },
@@ -129,7 +136,7 @@ export async function runVideoInterviewTurn(
         userId: command.userId,
         projectId: activeProject.id,
         schemaVersion: BRIEF_SCHEMA_VERSION,
-        brief: plan.brief,
+        brief,
         generatedBy: plan.generatedBy,
         sourceMessageIds: [message.id],
       },
@@ -166,6 +173,63 @@ export async function runVideoInterviewTurn(
   });
 
   return { message, reply, project };
+}
+
+function confirmLatestCommercialFacts(draft: VideoBriefDraft, transcript: readonly VideoMessage[]): VideoBriefDraft {
+  const latestAnswer = [...transcript].reverse().find((message) => message.role === "user")?.content ?? "";
+  const previousQuestion = transcript[transcript.length - 2];
+  const confirmed = commercialFactValues(draft)
+    .filter(({ field, value }) => !draft.facts.some((fact) => fact.field === field && fact.value === value && fact.source !== "asset_analysis"))
+    .flatMap(({ field, value }): VideoBriefDraft["facts"] => {
+      if (containsWholeValue(latestAnswer, value)) return [{ field, value, source: "user_message" as const }];
+      if (confirmedPreviousQuestion(latestAnswer, previousQuestion, field, value)) return [{ field, value, source: "user_confirmation" as const }];
+      return [];
+    });
+  return confirmed.length ? { ...draft, facts: [...draft.facts, ...confirmed] } : draft;
+}
+
+function confirmedPreviousQuestion(answer: string, previous: VideoMessage | undefined, field: string, value: string): boolean {
+  if (!/^(ya|iya|betul|benar|setuju)(?:[\s,]+benar)?[.!]?$/iu.test(answer.trim()) || previous?.role !== "assistant") return false;
+  return previous.content === confirmationQuestion(field, value);
+}
+
+function confirmationQuestion(field: string, value: string): string {
+  const label = field === "orderDestination" ? "tujuan pesanan" : field.startsWith("menuItems") ? "harga menu" : "rincian promo";
+  return `Mohon konfirmasi ${label} "${value}". Apakah sudah benar?`;
+}
+
+function containsWholeValue(message: string, value: string): boolean {
+  const index = message.indexOf(value);
+  return index >= 0 && !/[\p{L}\p{N}_@]/u.test(message[index - 1] ?? "") && !/[\p{L}\p{N}_]/u.test(message[index + value.length] ?? "");
+}
+
+const BRIEF_QUESTIONS: Record<string, string> = {
+  productName: "Apa nama produk yang dipromosikan?",
+  audience: "Siapa target pembelinya?",
+  objective: "Apa tujuan utama videonya?",
+  keyMessage: "Apa pesan utama yang ingin disampaikan?",
+  offer: "Apa rincian promo yang ingin ditampilkan?",
+  callToAction: "Apa ajakan beli untuk penutup video?",
+  menuItems: "Apa saja nama dan harga menu yang ingin ditampilkan?",
+};
+
+function unresolvedInterviewTurn(draft: VideoBriefDraft, project: VideoProject, turn: InterviewTurn | null, transcript: readonly VideoMessage[]): InterviewTurn {
+  const parsed = videoBriefSchema.safeParse(draft);
+  const missing: readonly BriefField[] = parsed.success
+    ? findMissingBriefFields(parsed.data, project.videoType)
+    : (["productName", "audience", "objective", "keyMessage"] as const).filter((field) => draft[field] === null);
+  const unsupported = parsed.success ? findUnsupportedCommercialFacts(parsed.data) : [];
+  const previousQuestion = transcript[transcript.length - 2];
+  if (turn && !/dijelaskan lagi|jelaskan lagi|kalimat lain|parafras/iu.test(turn.question)
+    && !(previousQuestion?.role === "assistant" && previousQuestion.content === turn.question)
+    && turn.targetFields.some((field) => missing.includes(field as BriefField) || unsupported.includes(field))) return turn;
+
+  const field: string = missing[0] ?? unsupported[0] ?? "keyMessage";
+  const value = commercialFactValues(draft).find((fact) => fact.field === field)?.value;
+  const question = value
+    ? confirmationQuestion(field, value)
+    : BRIEF_QUESTIONS[field] ?? (field.startsWith("menuItems") ? "Mohon konfirmasi harga menu yang ingin ditampilkan." : "Apa tujuan pesanan yang ingin ditampilkan?");
+  return { question, control: "free_text", options: [], recommendedOptionId: null, recommendationReason: null, targetFields: [field], briefComplete: false };
 }
 
 /** A stored draft that no longer parses reads as "no draft" rather than failing the turn. */

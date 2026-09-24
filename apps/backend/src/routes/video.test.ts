@@ -13,6 +13,7 @@ const mocks = vi.hoisted(() => ({
   listProjectAssets: vi.fn(),
   appendVideoMessage: vi.fn(),
   runVideoInterviewTurn: vi.fn(),
+  openVideoInterview: vi.fn(),
   listVideoMessages: vi.fn(),
   getLatestBriefRevision: vi.fn(),
   getLatestStoryboardRevision: vi.fn(),
@@ -34,6 +35,7 @@ vi.mock("@/application/video/conversation", async () => {
   const actual = await vi.importActual<typeof import("@/application/video/conversation")>("@/application/video/conversation");
   return { ...actual, runVideoInterviewTurn: mocks.runVideoInterviewTurn };
 });
+vi.mock("@/application/video/open-interview", () => ({ openVideoInterview: mocks.openVideoInterview }));
 vi.mock("@/application/video/revisions", async () => {
   const actual = await vi.importActual<typeof import("@/application/video/revisions")>("@/application/video/revisions");
   return { ...actual, getLatestBriefRevision: mocks.getLatestBriefRevision, getLatestStoryboardRevision: mocks.getLatestStoryboardRevision };
@@ -120,6 +122,20 @@ describe("video project routes", () => {
     mocks.registerProjectAsset.mockResolvedValue(asset);
     mocks.deleteProjectAsset.mockResolvedValue(undefined);
     mocks.listProjectAssets.mockResolvedValue([assetPreview]);
+  });
+
+  it("opens an authenticated conversation with a persisted assistant message", async () => {
+    mocks.openVideoInterview.mockResolvedValue([reply]);
+    const response = await send("POST", `/video-projects/${project.id}/messages/opening`, { token: "token" });
+    expect(response.status).toBe(200);
+    await expect(response.json()).resolves.toEqual({ messages: [replyResponse] });
+    expect(mocks.openVideoInterview).toHaveBeenCalledWith({ userId: user.id, projectId: project.id }, undefined);
+  });
+
+  it("requires authentication before opening a conversation", async () => {
+    const response = await send("POST", `/video-projects/${project.id}/messages/opening`);
+    expect(response.status).toBe(401);
+    expect(mocks.openVideoInterview).not.toHaveBeenCalled();
   });
 
   it("requires authentication on every route", async () => {

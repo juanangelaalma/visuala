@@ -45,6 +45,9 @@ export const videoApi = {
       signal,
     });
   },
+  openInterview(projectId: string, signal?: AbortSignal) {
+    return browserApiFetch<{ messages: VideoMessage[] }>(`${projectPath(projectId)}/messages/opening`, { method: "POST", signal });
+  },
   listMessages(projectId: string, signal?: AbortSignal) {
     return browserApiFetch<{ messages: VideoMessage[] }>(`${projectPath(projectId)}/messages`, { signal });
   },
