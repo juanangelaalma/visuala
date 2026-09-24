@@ -308,7 +308,10 @@ function retryAfterMs(value: string | null): number | null {
 }
 
 function inputMessage(message: AIMessage, asset: ResolvedAIAsset | undefined): unknown {
-  const content: Array<Record<string, unknown>> = [{ type: "input_text", text: message.content }];
+  const content: Array<Record<string, unknown>> = [{
+    type: message.role === "assistant" ? "output_text" : "input_text",
+    text: message.content,
+  }];
   if (message.assetId && asset?.assetId === message.assetId) {
     content.push({
       type: "input_image",

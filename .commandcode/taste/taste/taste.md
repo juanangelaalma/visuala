@@ -9,12 +9,25 @@
 - Uses Makefiles as the primary entry point for dev/build/test/db commands, with per-package Makefiles mirroring the existing app's target style (dev, build, test, coverage, refresh) rather than ad-hoc scripts; when new commands are only exposed as package.json scripts, asks for them to be added to the Makefile instead. Confidence: 0.6
 - Expects code and infrastructure artifacts to live with the service that owns them (e.g. moving DB schema/migrations out of the frontend app into the backend service that is the only schema consumer). Confidence: 0.6
 - Prefers removing duplication across workspace apps by extracting shared/generated code into a shared `packages/*` module rather than keeping a copy in each app. Confidence: 0.6
-- Writes in Indonesian and expects replies in the same language — mirror the user's language. Confidence: 0.65
+- Writes in Indonesian and expects replies in the same language — mirror the user's language. Confidence: 0.7
+- Expects leftover debug logging (stray `console.log`/`console.debug` statements) cleaned out of the source before committing, while intentional lifecycle/server/CLI and error logging is kept. Confidence: 0.55
 - Pushes for a complete, consistent relocation when migrating: challenges anything left behind that "could" stay — DB migrations and even code with no production caller — and wants it moved to the owning service. Confidence: 0.6
 - Expects each service to have its own working local `.env` (gitignored, with a committed `.env.example` template) and notices when a new service has none, so it can be booted locally. Confidence: 0.55
-- When asked to commit after a cohesive change, expects the whole set committed together rather than split into incremental commits. Confidence: 0.5
+- When asked to commit after a cohesive change, expects the whole set committed together rather than split into incremental commits. Confidence: 0.6
 - When the backend lacks the endpoints a feature needs, prefers building the UI now against clearly-labelled local fixtures behind an env flag — with a notes doc listing each gap, its stand-in, and the condition that removes it — rather than deferring the UI or faking data silently. Confidence: 0.55
 - When facing a technical choice (e.g. which provider/adapter path to use), expects an explicit recommendation plus a pros-and-cons breakdown per option before deciding, not one option presented as settled. Confidence: 0.65
 - When a concrete runtime error is reported (e.g. a pasted stack trace, with no other request attached), expects it diagnosed to the actual root cause — verified against the real environment — and fixed first, before continuing the previously planned feature work. Confidence: 0.6
 - Keeps deferred work in durable docs (backlog notes, plan files under `docs/`) and expects the agent to consult them to re-establish scope across sessions, rather than being re-briefed from scratch. Confidence: 0.5
 - Once the foundation slice exists, prefers closing gaps for real — implementing the missing backend endpoints and calling the existing (AI) service as intended, then deleting the frontend mock seam and updating the gap notes — over extending the mocked fixtures. Confidence: 0.5
+- Expects the agent to read all named context artifacts first (AGENTS.md, design spec, plan, progress ledger, prior task reports) and explicitly not edit until it has done so. Confidence: 0.7
+- After each task/phase, expects a separate, explicit code review step (with re-review after fixes) before moving on, not an all-at-once review at the end. Confidence: 0.7
+- Uses a spec-driven development workflow: design specs and plans under `docs/superpowers/` and per-task briefs/reports plus a progress ledger under `.superpowers/sdd/`, and expects the agent to update those docs as it completes tasks. Confidence: 0.6
+- Keeps a code knowledge graph and expects the agent to run `graphify update .` after making source changes. Confidence: 0.7
+- Works in a shared, often-dirty checkout and expects unrelated changes left untouched — no reverts and no edits to files not in scope — plus no commits unless explicitly asked and never editing `.env`. Confidence: 0.6
+- Standardises on pnpm for workspace tooling, driving per-package commands through `pnpm --filter <pkg> ...`. Confidence: 0.55
+- App's user-facing copy/product strings are written in Indonesian (e.g. button labels, error messages); expects new UI text to match. Confidence: 0.5
+- Uses Playwright for browser-level E2E tests and expects the agent to install/set up the needed test tooling itself before running. Confidence: 0.6
+- Wants a feature proven to actually work end-to-end against the running stack ("pastikan sudah bisa"), not just claimed done after code changes. Confidence: 0.6
+- Prefers E2E coverage of the whole user flow — create project → upload asset → AI interview/chat → approve → render → produced output — rather than stopping at a shallow smoke path. Confidence: 0.5
+- Prefers test runs to use a dedicated throwaway test user/account rather than writing test data into their personal account. Confidence: 0.5
+- Wants support services spun up for a test session (AI gateway, render worker) left running afterwards so they can continue trying the flow manually. Confidence: 0.45

@@ -154,7 +154,7 @@ export function VideoChat({ messages, onSend }: { messages: VideoMessage[]; onSe
             disabled={pending}
             className={`min-h-10 rounded-full bg-primary px-5 text-sm font-semibold text-black disabled:cursor-not-allowed disabled:opacity-50 ${focusRing}`}
           >
-            {pending ? "Mengirim…" : "Hello"}
+            {pending ? "Mengirim…" : "Kirim"}
           </button>
         </div>
       </div>

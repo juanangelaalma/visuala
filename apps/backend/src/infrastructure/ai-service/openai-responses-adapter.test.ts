@@ -53,7 +53,7 @@ describe("OpenAIResponsesAdapter requests", () => {
               { type: "input_text", text: "See image" },
               { type: "input_image", detail: "auto", image_url: "data:image/png;base64,AQID" },
             ] },
-            { role: "assistant", content: [{ type: "input_text", text: "I see it" }] },
+            { role: "assistant", content: [{ type: "output_text", text: "I see it" }] },
             { role: "user", content: [{ type: "input_text", text: "Describe it" }] },
           ],
           max_output_tokens: 321,
