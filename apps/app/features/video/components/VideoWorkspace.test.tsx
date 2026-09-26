@@ -1,11 +1,12 @@
 // @vitest-environment jsdom
 
 import { act, fireEvent, render, screen } from "@testing-library/react";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({
   loadVideoWorkspace: vi.fn(),
   sendMessage: vi.fn(),
+  openInterview: vi.fn(),
   approveProject: vi.fn(),
   deleteAsset: vi.fn(),
   deleteProject: vi.fn(),
@@ -33,6 +34,10 @@ const workspace = {
 };
 const approvableWorkspace = { ...workspace, brief: { isComplete: true }, storyboard: {} };
 
+beforeEach(() => {
+  mocks.openInterview.mockResolvedValue({ messages: [{ id: "opening", role: "assistant", content: "Apa produknya?", controls: null, assetIds: [], createdAt: "now" }] });
+});
+
 afterEach(() => {
   vi.clearAllMocks();
   router.push.mockReset();
@@ -47,6 +52,34 @@ describe("VideoWorkspace", () => {
     expect(screen.getByRole("status").textContent).toContain("Memuat proyek video...");
     expect(await screen.findByRole("heading", { name: "Es Kopi" })).toBeTruthy();
     expect(mocks.loadVideoWorkspace).toHaveBeenCalledTimes(1);
+  });
+
+  it("shows the stored AI question on a fresh project before accepting an answer", async () => {
+    const opening = { id: "opening", role: "assistant", content: "Siapa target pembelinya?", controls: null, assetIds: [], createdAt: "now" };
+    mocks.loadVideoWorkspace.mockResolvedValue(workspace);
+    mocks.openInterview.mockResolvedValue({ messages: [opening] });
+    render(<VideoWorkspace projectId="project-1" />);
+    expect(await screen.findByText("Siapa target pembelinya?")).toBeTruthy();
+    expect(mocks.openInterview).toHaveBeenCalledTimes(1);
+    expect(screen.queryByText("Kirim pesan pertama. AI akan menanyakan satu hal pada satu waktu.")).toBeNull();
+  });
+
+  it("renders the workspace while the first AI question is still pending", async () => {
+    mocks.loadVideoWorkspace.mockResolvedValue(workspace);
+    mocks.openInterview.mockReturnValue(new Promise(() => {}));
+    render(<VideoWorkspace projectId="project-1" />);
+
+    expect(await screen.findByRole("heading", { name: "Es Kopi" })).toBeTruthy();
+    expect(screen.getByText("AI sedang menyiapkan pertanyaan pertama…")).toBeTruthy();
+    expect((screen.getByRole("button", { name: "Kirim" }) as HTMLButtonElement).disabled).toBe(true);
+  });
+
+  it("lets the user retry a failed opening without starting the chat themselves", async () => {
+    mocks.loadVideoWorkspace.mockResolvedValue(workspace);
+    mocks.openInterview.mockRejectedValueOnce(new Error("offline")).mockResolvedValueOnce({ messages: [{ id: "opening", role: "assistant", content: "Apa produknya?", controls: null, assetIds: [], createdAt: "now" }] });
+    render(<VideoWorkspace projectId="project-1" />);
+    fireEvent.click(await screen.findByRole("button", { name: "Coba mulai percakapan lagi" }));
+    expect(await screen.findByText("Apa produknya?")).toBeTruthy();
   });
 
   it("renders a not-found state for a 404 and a login action for a 401", async () => {
@@ -88,7 +121,7 @@ describe("VideoWorkspace", () => {
 
   it("reloads after chat and approval, updates assets after deletion, and downloads through the API callback", async () => {
     mocks.loadVideoWorkspace.mockResolvedValue(approvableWorkspace);
-    mocks.sendMessage.mockResolvedValue({});
+    mocks.sendMessage.mockResolvedValue({ message: { id: "answer", role: "user", content: "Halo", controls: null, assetIds: [], createdAt: "now" }, reply: { id: "next", role: "assistant", content: "Siapa pembelinya?", controls: null, assetIds: [], createdAt: "now" }, project: workspace.project });
     mocks.approveProject.mockResolvedValue({});
     mocks.deleteAsset.mockResolvedValue({ deleted: true });
     mocks.downloadVersion.mockResolvedValue(undefined);
@@ -96,16 +129,16 @@ describe("VideoWorkspace", () => {
 
     const input = await screen.findByLabelText("Pesan Anda");
     fireEvent.change(input, { target: { value: "Halo" } });
-    fireEvent.click(screen.getByRole("button", { name: "Kirim" }));
+    await act(async () => fireEvent.click(screen.getByRole("button", { name: "Kirim" })));
     await vi.waitFor(() => expect(mocks.loadVideoWorkspace).toHaveBeenCalledTimes(2));
 
-    fireEvent.click(screen.getByRole("button", { name: "Setujui brief dan storyboard" }));
+    await act(async () => fireEvent.click(screen.getByRole("button", { name: "Setujui brief dan storyboard" })));
     await vi.waitFor(() => expect(mocks.loadVideoWorkspace).toHaveBeenCalledTimes(3));
 
-    fireEvent.click(screen.getByRole("button", { name: "Hapus aset" }));
+    await act(async () => fireEvent.click(screen.getByRole("button", { name: "Hapus aset" })));
     await vi.waitFor(() => expect(screen.queryByRole("button", { name: "Hapus aset" })).toBeNull());
 
-    fireEvent.click(screen.getByRole("button", { name: "Unduh" }));
+    await act(async () => fireEvent.click(screen.getByRole("button", { name: "Unduh" })));
     await vi.waitFor(() => expect(mocks.downloadVersion).toHaveBeenCalledWith("project-1", "version-1"));
   });
 

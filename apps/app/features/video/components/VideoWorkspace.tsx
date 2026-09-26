@@ -32,6 +32,7 @@ export function VideoWorkspace({ projectId }: { projectId: string }) {
   const [deleteConfirmation, setDeleteConfirmation] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState("");
+  const [openingError, setOpeningError] = useState("");
   const generation = useRef(0);
 
   const reload = useCallback(() => {
@@ -47,12 +48,31 @@ export function VideoWorkspace({ projectId }: { projectId: string }) {
     const requestGeneration = ++generation.current;
     queueMicrotask(() => {
       if (controller.signal.aborted) return;
-      setIsLoading(true);
+      if (requestNumber === 0) setIsLoading(true);
       setError(null);
-      setWorkspace(null);
+      if (requestNumber === 0) {
+        setWorkspace(null);
+        setOpeningError("");
+      }
       void videoApi.loadVideoWorkspace(projectId, controller.signal)
         .then((loadedWorkspace) => {
-          if (!controller.signal.aborted && requestGeneration === generation.current) setWorkspace(loadedWorkspace);
+          if (controller.signal.aborted || requestGeneration !== generation.current) return;
+          setWorkspace(loadedWorkspace);
+          if (loadedWorkspace.messages.length === 0 && ["draft", "interviewing"].includes(loadedWorkspace.project.status)) {
+            void videoApi.openInterview(projectId, controller.signal)
+              .then(({ messages }) => {
+                if (controller.signal.aborted || requestGeneration !== generation.current) return;
+                setOpeningError("");
+                setWorkspace((current) => current?.project.id === projectId && current.messages.length === 0
+                  ? { ...current, messages }
+                  : current);
+              })
+              .catch((openingFailure: unknown) => {
+                if (!controller.signal.aborted && requestGeneration === generation.current) {
+                  setOpeningError(browserApiErrorMessage(openingFailure, "AI belum dapat memulai percakapan. Coba lagi."));
+                }
+              });
+          }
         })
         .catch((requestError: unknown) => {
           if (!controller.signal.aborted && requestGeneration === generation.current) setError(requestError);
@@ -116,6 +136,19 @@ export function VideoWorkspace({ projectId }: { projectId: string }) {
     }
   }
 
+  async function retryOpening() {
+    const requestGeneration = generation.current;
+    setOpeningError("");
+    try {
+      const opened = await videoApi.openInterview(project.id);
+      if (requestGeneration === generation.current) {
+        setWorkspace((current) => current?.project.id === project.id ? { ...current, messages: opened.messages } : current);
+      }
+    } catch (openingFailure) {
+      if (requestGeneration === generation.current) setOpeningError(browserApiErrorMessage(openingFailure, "AI belum dapat memulai percakapan. Coba lagi."));
+    }
+  }
+
   return (
     <div>
       <Link href="/dashboard/videos" className="mb-6 inline-flex min-h-11 items-center rounded-full px-3 text-sm font-semibold text-neutral-400 hover:text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary">
@@ -132,7 +165,12 @@ export function VideoWorkspace({ projectId }: { projectId: string }) {
 
       <div className="mt-6 grid gap-6 xl:grid-cols-[minmax(0,1fr)_360px] xl:items-start">
         <div className="space-y-6">
-          <VideoChat messages={messages} onSend={async (content, assetIds) => { await videoApi.sendMessage(project.id, content, assetIds); reload(); }} />
+          <VideoChat key={project.id} messages={messages} openingError={openingError} onRetryOpening={retryOpening} onSend={async (content, assetIds) => {
+            const result = await videoApi.sendMessage(project.id, content, assetIds);
+            setWorkspace((current) => current ? { ...current, project: result.project, messages: [...current.messages, result.message, result.reply] } : current);
+            reload();
+            return result;
+          }} />
           <VideoStoryboardPanel revision={storyboard} />
         </div>
 
