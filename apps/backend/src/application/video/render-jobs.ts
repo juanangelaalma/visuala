@@ -83,7 +83,7 @@ export async function createRenderJob(
 
   // The template and the style-pack version are chosen once, here, and frozen: a later registry or
   // pack edit must not change what a job that is already queued renders.
-  const template = selectTemplate({ videoType: project.videoType, aspectRatio: project.settings.aspectRatio });
+  const template = selectTemplate({ videoType: project.videoType, aspectRatio: project.settings.aspectRatio, styleId: project.styleId });
 
   // The seed is fixed before any render starts: that is what makes a rerender reproducible. The
   // schema refuses unknown fields, so a field may only be added by raising the schema version.

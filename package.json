@@ -4,6 +4,7 @@
   "private": true,
   "packageManager": "pnpm@9.15.4",
   "scripts": {
+    "prepare": "test -f antislop.md || cp vendor/antislop/antislop.md antislop.md",
     "dev": "turbo dev",
     "build": "turbo build",
     "lint": "turbo lint",

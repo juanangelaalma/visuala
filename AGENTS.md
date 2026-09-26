@@ -4,6 +4,11 @@
 This version has breaking changes — APIs, conventions, and file structure may all differ from your training data. Read the relevant guide in `node_modules/next/dist/docs/` before writing any code. Heed deprecation notices.
 <!-- END:nextjs-agent-rules -->
 
+## Project requirements
+
+- For UI, visual design, copy, people/accessibility, responsive layout, or code-comment work, use the Antislop core in `antislop.md` and the matching globally installed Antislop skill when available. The upstream MIT-licensed core snapshot lives in `vendor/antislop/antislop.md`; `pnpm install` copies it to the root when missing. Optional skills remain install-dependent.
+- Keep the vendored core and root copy synchronized when updating Antislop. Do not fetch or execute an installer during dependency installation.
+
 ## Clarifications
 
 When asking the user for clarification or decisions, use the `question` tool with explicit options instead of asking free-form text only. Include a recommended option when appropriate, and allow a custom answer when useful.

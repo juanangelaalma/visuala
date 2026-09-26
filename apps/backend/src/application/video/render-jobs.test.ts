@@ -112,13 +112,22 @@ describe("createRenderJob", () => {
     expect(deps.projects.transition).toHaveBeenCalledWith(PROJECT_ID, USER_ID, "approved", "rendering");
   });
 
-  it("returns the first job for a repeated idempotency key without writing again", async () => {
-    const existing = job({ id: "job-existing" });
+  it("returns the first job and its frozen template version for a repeated idempotency key", async () => {
+    const existing = job({
+      id: "job-existing",
+      inputSnapshot: {
+        schemaVersion: "render-input@v2",
+        templateId: "product-spotlight",
+        templateVersion: "1.0.0",
+        styleId: "bold_pop",
+      },
+    });
     const deps = dependencies({ existingJob: existing, status: "rendering" });
 
     const result = await createRenderJob({ userId: USER_ID, projectId: PROJECT_ID, idempotencyKey: "render-0001" }, deps);
 
     expect(result).toEqual({ job: existing, created: false });
+    expect(result.job.inputSnapshot).toMatchObject({ templateId: "product-spotlight", templateVersion: "1.0.0" });
     expect(deps.jobs.create).not.toHaveBeenCalled();
   });
 

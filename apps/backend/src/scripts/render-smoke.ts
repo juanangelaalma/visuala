@@ -16,18 +16,14 @@ import { HyperFramesRenderEngine } from "@/infrastructure/video/hyperframes/hype
 import { gsapScriptPath } from "@/infrastructure/video/hyperframes/gsap-script";
 import { RENDER_INPUT_SCHEMA_VERSION } from "@/domain/video/render-input";
 import { readRenderWorkerConfig } from "@/domain/video/render-config";
+import { stylePackFor } from "@/domain/video/style-packs";
+import { buildSmokeContent, runValidatedSmoke } from "./render-smoke-options";
 
 const run = promisify(execFile);
-
-function flag(name: string, fallback: string): string {
-  const index = process.argv.indexOf(`--${name}`);
-  return index === -1 ? fallback : (process.argv[index + 1] ?? fallback);
-}
-
-const aspectRatio = flag("aspect-ratio", "9:16") as "9:16" | "1:1" | "16:9";
-const resolution = flag("resolution", "720p") as "720p" | "1080p";
-const durationSeconds = Number(flag("duration", "6")) as 6 | 10 | 15;
-const keep = process.argv.includes("--keep");
+await runValidatedSmoke(process.argv.slice(2), async ({ templateId, styleId, content, aspectRatio, resolution, durationSeconds, keep, template }) => {
+const videoType = template.supports[0];
+if (!videoType) throw new Error("Smoke template has no supported video type.");
+const fixture = buildSmokeContent(content, durationSeconds);
 const config = readRenderWorkerConfig();
 
 // A real image, generated locally: the smoke run must exercise the same materialization path a
@@ -47,22 +43,19 @@ const manifest = buildRenderManifest({
     schemaVersion: RENDER_INPUT_SCHEMA_VERSION,
     briefRevisionId: "00000000-0000-4000-8000-000000000003",
     storyboardRevisionId: "00000000-0000-4000-8000-000000000004",
-    styleId: "bold_pop",
+    styleId,
     settings: { durationSeconds, aspectRatio, resolution, language: "id", voiceOverEnabled: false, musicEnabled: false },
     variantSeed: "00000000-0000-4000-8000-000000000005",
-    templateId: "product-spotlight",
-    templateVersion: "1.0.0",
-    stylePackVersion: "1.0.0",
+    templateId,
+    templateVersion: template.version,
+    stylePackVersion: stylePackFor(styleId).version,
     fps: config.fps,
   },
-  videoType: "product_promo",
+  videoType,
   fps: config.fps,
-  scenes: [
-    { order: 1, startSeconds: 0, endSeconds: durationSeconds / 2, visual: "smoke", onScreenTitle: "Smoke", onScreenCopy: "Scene one", voiceOver: null, caption: null, assetIds: ["asset-1"], audioCue: null, transition: "fade" },
-    { order: 2, startSeconds: durationSeconds / 2, endSeconds: durationSeconds, visual: "smoke", onScreenTitle: "Smoke", onScreenCopy: "Scene two", voiceOver: null, caption: null, assetIds: ["asset-1"], audioCue: null, transition: "fade" },
-  ],
-  brief: { productName: "Smoke", brandName: null, keyMessage: "Smoke", callToAction: null, orderDestination: null, menuItems: null },
-  assets: [{ id: "asset-1", objectKey: "smoke/asset-1.png", sha256: sha256Hex(assetBytes), mimeType: "image/png", byteSize: assetBytes.byteLength, width: assetSide, height: assetSide }],
+  scenes: fixture.scenes,
+  brief: fixture.brief,
+  assets: [{ id: "00000000-0000-4000-8000-000000000006", objectKey: "smoke/asset-1.png", sha256: sha256Hex(assetBytes), mimeType: "image/png", byteSize: assetBytes.byteLength, width: assetSide, height: assetSide }],
 });
 
 // The engine reads assets through the object store. A smoke run has no project in storage, so it
@@ -87,3 +80,4 @@ if (keep) {
   await rm(dir, { recursive: true, force: true });
   console.log("Work directory removed.");
 }
+});
