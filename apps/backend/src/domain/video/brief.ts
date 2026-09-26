@@ -75,7 +75,7 @@ export function findUnsupportedCommercialFacts(brief: VideoBrief): readonly stri
   return commercialFactValues(brief).filter((fact) => !confirmed.has(`${fact.field}=${fact.value}`)).map((fact) => fact.field);
 }
 
-export function commercialFactValues(brief: VideoBrief): readonly { field: string; value: string }[] {
+export function commercialFactValues(brief: Pick<VideoBriefDraft, "offer" | "orderDestination" | "menuItems">): readonly { field: string; value: string }[] {
   const values: { field: string; value: string }[] = [];
   if (brief.offer) {
     values.push({ field: "offer.label", value: brief.offer.label });

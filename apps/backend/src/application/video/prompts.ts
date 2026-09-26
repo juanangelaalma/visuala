@@ -5,7 +5,7 @@ import { MAX_SCENE_COPY_CHARS, MAX_SCENE_TITLE_CHARS, STORYBOARD_TRANSITIONS } f
 import type { VideoMessage, VideoProject } from "../../domain/video/types";
 
 /** Bump when the wording below changes: the version is frozen into every `generated_by` snapshot. */
-export const INTERVIEWER_PROMPT_VERSION = "interviewer@v1";
+export const INTERVIEWER_PROMPT_VERSION = "interviewer@v2";
 export const PLANNER_PROMPT_VERSION = "planner@v1";
 
 const LANGUAGE_NAMES: Readonly<Record<string, string>> = {
@@ -51,13 +51,15 @@ export function interviewerInstructions(input: {
     "",
     "Rules:",
     "- Return the complete updated draft every turn, keeping every field you already know.",
+    "- For every offer.label, offer.detail, orderDestination, and menuItems[i].price in the draft, include a facts entry with the exact field path and identical value; use source user_message or user_confirmation only when the user said or confirmed it. Never drop a prior confirmed fact.",
+    "- Prefer the user's latest explicit choice when earlier answers conflict. If the user repeats a clear answer, record it and move on; do not ask them to paraphrase it.",
     `- Fill a field only from something the user said or confirmed. Never invent a price, discount, address, phone number, brand, health claim, or product fact. Leave it null instead.`,
     "- Ask about at most one field, the most useful missing one, and write the question in the language given above.",
     `- When the answer has a natural set of choices, use control "single_select" or "multi_select" with 2 to 6 options and give each a short label. Use "free_text" when the answer must be typed.`,
     `- Valid controls: ${INTERVIEW_TURN_CONTROLS.join(", ")}.`,
     "- When one choice is clearly better for this product or video type, set recommendedOptionId to that option's id and explain it in one sentence in recommendationReason. Never recommend silently.",
     "- When the user does not know a value, offer an answer that leaves it out instead of inventing one.",
-    "- Set briefComplete to true only when every required field is filled and every commercial value came from the user.",
+    "- Set turn to null and briefComplete to true only when every required field is filled and every commercial value has a matching confirmed facts entry. If unfinished, ask specifically for the missing value or confirmation.",
     "- targetFields names the draft fields this question resolves.",
   ].join("\n");
 }
