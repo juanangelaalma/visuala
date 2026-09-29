@@ -8,7 +8,7 @@ const PROJECT_ID = "33333333-3333-4333-8333-333333333333";
 const settings = { durationSeconds: 10, aspectRatio: "9:16", resolution: "1080p", language: "id", voiceOverEnabled: true, musicEnabled: true } as const;
 
 function project(status: VideoProject["status"]): VideoProject {
-  return { id: PROJECT_ID, userId: USER_ID, title: "Promo Kopi", videoType: "product_promo", styleId: "bold_pop", status, settings, revisionRenderCount: 0, createdAt: "created", updatedAt: "updated" };
+  return { id: PROJECT_ID, userId: USER_ID, title: "Promo Kopi", videoType: "product_promo", styleId: "creative-mode", status, settings, revisionRenderCount: 0, createdAt: "created", updatedAt: "updated" };
 }
 
 function message(overrides: Partial<VideoMessage> = {}): VideoMessage {

@@ -10,7 +10,7 @@ const PROJECT_ID = "33333333-3333-4333-8333-333333333333";
 const settings: VideoOutputSettings = { durationSeconds: 10, aspectRatio: "9:16", resolution: "1080p", language: "id", voiceOverEnabled: true, musicEnabled: true };
 
 function project(overrides: Partial<VideoProject> = {}): VideoProject {
-  return { id: PROJECT_ID, userId: USER_ID, title: "Promo Kopi", videoType: "product_promo", styleId: "bold_pop", status: "interviewing", settings, revisionRenderCount: 0, createdAt: "created", updatedAt: "updated", ...overrides };
+  return { id: PROJECT_ID, userId: USER_ID, title: "Promo Kopi", videoType: "product_promo", styleId: "creative-mode", status: "interviewing", settings, revisionRenderCount: 0, createdAt: "created", updatedAt: "updated", ...overrides };
 }
 
 function transcript(): VideoMessage[] {
@@ -20,7 +20,7 @@ function transcript(): VideoMessage[] {
 const draft = {
   productName: "Kopi Susu", productCategory: null, audience: null, objective: null, keyMessage: null,
   offer: null, callToAction: null, orderDestination: null, brandName: null,
-  styleId: "bold_pop" as const, outputSettings: settings, menuItems: null, facts: [],
+  styleId: "creative-mode" as const, outputSettings: settings, menuItems: null, facts: [],
 };
 
 const turn = {

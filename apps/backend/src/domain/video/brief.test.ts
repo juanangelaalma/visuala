@@ -12,7 +12,7 @@ const baseBrief: VideoBrief = {
   callToAction: "Pesan sekarang",
   orderDestination: null,
   brandName: "Kopi Bang Aldi",
-  styleId: "warm_artisan" as const,
+  styleId: "creative-mode" as const,
   outputSettings: { durationSeconds: 10, aspectRatio: "9:16", resolution: "1080p", language: "id", voiceOverEnabled: true, musicEnabled: true },
   menuItems: null,
   facts: [],

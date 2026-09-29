@@ -108,7 +108,7 @@ describe("SupabaseVideoMessageRepository", () => {
   });
 
   it("carries explicit controls and asset ids through unchanged", async () => {
-    const controls = { styleId: "bold_pop", requestedTone: "hangat" };
+    const controls = { styleId: "creative-mode", requestedTone: "hangat" };
     const { client, calls } = makeClient([{ data: { ...MESSAGE_ROW, controls, asset_ids: [ASSET_ID] }, error: null }]);
     const repository = new SupabaseVideoMessageRepository(client as never);
 

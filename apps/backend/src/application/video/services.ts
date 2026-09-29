@@ -1,46 +1,49 @@
+import { mkdtemp, readFile, rm, writeFile, mkdir } from "node:fs/promises";
+import { dirname, join } from "node:path";
+import { tmpdir } from "node:os";
 import { createAIService } from "../ai-service/services";
 import { createSupabaseServiceRoleClient } from "../../infrastructure/supabase/clients";
 import { SupabaseAssetObjectStore, readAssetBucket } from "../../infrastructure/ai-service/supabase-asset-object-store";
 import { SupabaseVideoProjectRepository } from "../../infrastructure/video/supabase-video-project-repository";
 import { SupabaseProjectAssetRepository } from "../../infrastructure/video/supabase-project-asset-repository";
 import { SupabaseVideoMessageRepository } from "../../infrastructure/video/supabase-video-message-repository";
-import { SupabaseVideoBriefRevisionRepository, SupabaseVideoStoryboardRevisionRepository } from "../../infrastructure/video/supabase-video-revision-repositories";
-import { SupabaseVideoVersionRepository } from "../../infrastructure/video/supabase-version-repository";
-import { SupabaseRenderJobRepository } from "../../infrastructure/video/supabase-render-job-repository";
+import { SupabaseVideoBriefRevisionRepository } from "../../infrastructure/video/supabase-video-revision-repositories";
 import { createSupabaseSignedUrlFactory } from "../../infrastructure/video/supabase-signed-urls";
+import { SupabaseArtDirectionRevisionRepository, SupabaseCompositionArtifactRepository, SupabaseCompositionEventRepository, SupabaseCompositionRevisionRepository } from "../../infrastructure/video-engine/supabase-composition-repositories";
+import { SupabaseRenderJobRepository, SupabaseVideoVersionRepository } from "../../infrastructure/video-engine/supabase-render-repositories";
+import { SupabaseCompositionArtifactStore } from "../../infrastructure/video-engine/composition-artifact-store";
+import { createCatalogInstaller } from "../../infrastructure/video-engine/catalog-installer";
+import { createHyperframesCli } from "../../infrastructure/video-engine/hyperframes-cli";
+import { createFsCatalogSource } from "../../infrastructure/video-engine/fs-catalog-source";
+import { createFsDesignPackSource } from "../../infrastructure/video-engine/fs-design-pack-source";
+import { gsapScriptPath, resolveFontFile } from "../../infrastructure/video-engine/font-file";
+import { HyperFramesRenderEngine } from "../../infrastructure/video-engine/hyperframes-render-engine";
+import { writeComposition } from "../../infrastructure/video-engine/composition-writer";
 import { readAssetLimits } from "../../domain/video/limits";
-import { readRenderWorkerConfig } from "../../domain/video/render-config";
-import { HyperFramesRenderEngine } from "../../infrastructure/video/hyperframes/hyperframes-render-engine";
-import { gsapScriptPath } from "../../infrastructure/video/hyperframes/gsap-script";
-import { createRenderWorkspace } from "../../infrastructure/video/hyperframes/workspace";
-import type { RenderWorkerDependencies } from "./render-worker";
-import type { ProjectAssetRepository, VideoBriefRevisionRepository, VideoMessageRepository, VideoRenderJobRepository, VideoStoryboardRevisionRepository, VideoVersionRepository } from "../../domain/video/contracts";
+import { COMPOSITION_FPS } from "../../domain/video-engine/composition";
+import { readRenderWorkerConfig } from "../../infrastructure/video-engine/render-worker-config";
 import { VIDEO_AI_SCHEMAS } from "./ai-schemas";
+import { VIDEO_ENGINE_AI_SCHEMAS } from "../video-engine/ai-schemas";
+import { compileComposition } from "../video-engine/compile";
+import { runComposition } from "../video-engine/compose";
+import { runRenderJob } from "../video-engine/render-job";
+import type { ComposeDependencies } from "../video-engine/compose";
+import type { RenderJobDependencies } from "../video-engine/render-job";
 import type { VideoConversationDependencies } from "./conversation";
 import type { ProjectDependencies } from "./projects";
+import type { ProjectAssetRepository, VideoBriefRevisionRepository, VideoMessageRepository } from "../../domain/video/contracts";
 
 /** This module is the single place the video application layer is allowed to construct infrastructure. */
 
-/**
- * Approval reads the project it is moving, the latest brief revision, and the latest storyboard
- * revision, and it stamps the snapshot from the server clock — never from client input.
- */
-export function createVideoApprovalServices(
-  environment: Readonly<Record<string, string | undefined>> = process.env,
-) {
-  const supabase = createSupabaseServiceRoleClient(environment);
+const OUTPUT_QUALITY = { preview: "draft", final: "high" } as const;
 
-  return {
-    projects: new SupabaseVideoProjectRepository(supabase),
-    briefRevisions: new SupabaseVideoBriefRevisionRepository(supabase),
-    storyboardRevisions: new SupabaseVideoStoryboardRevisionRepository(supabase),
-    now: () => new Date().toISOString(),
-  };
+function videoVersionObjectKey(projectId: string, versionId: string): string {
+  return `video-versions/${projectId}/${versionId}.mp4`;
 }
 
 /**
- * The chat turn's dependencies: the video repositories plus the AI service, with the video
- * orchestrator's structured-output schemas registered so the adapter can hand them to the provider.
+ * The chat turn's dependencies: the video repositories plus the AI service, with the interview's
+ * structured-output schema registered so the adapter can hand it to the provider.
  */
 export function createVideoConversationServices(
   environment: Readonly<Record<string, string | undefined>> = process.env,
@@ -52,13 +55,12 @@ export function createVideoConversationServices(
     assets: new SupabaseProjectAssetRepository(supabase),
     messages: new SupabaseVideoMessageRepository(supabase),
     briefRevisions: new SupabaseVideoBriefRevisionRepository(supabase),
-    storyboardRevisions: new SupabaseVideoStoryboardRevisionRepository(supabase),
     ai: createAIService({ environment, schemas: VIDEO_AI_SCHEMAS }),
     createId: () => crypto.randomUUID(),
   };
 }
 
-/** The project, asset, message, revision, render job, and version repositories the video routes share. */
+/** Everything a request-scoped use case needs: the repositories, the object store, and short-lived URLs. */
 export function createVideoProjectServices(
   environment: Readonly<Record<string, string | undefined>> = process.env,
 ): ProjectDependencies & {
@@ -67,11 +69,14 @@ export function createVideoProjectServices(
   signedUrl: (objectKey: string) => Promise<string | null>;
   messages: VideoMessageRepository;
   briefRevisions: VideoBriefRevisionRepository;
-  storyboardRevisions: VideoStoryboardRevisionRepository;
-  versions: VideoVersionRepository;
-  /** The render job repository, named `jobs` because that is the key the render use cases depend on. */
-  jobs: VideoRenderJobRepository;
-  /** The frame rate the render worker uses, so the intake freezes the same one it will render at. */
+  versions: SupabaseVideoVersionRepository;
+  jobs: SupabaseRenderJobRepository;
+  artDirectionRevisions: SupabaseArtDirectionRevisionRepository;
+  compositionRevisions: SupabaseCompositionRevisionRepository;
+  artifacts: SupabaseCompositionArtifactRepository;
+  events: SupabaseCompositionEventRepository;
+  objectStore: SupabaseAssetObjectStore;
+  /** The frame rate intake freezes into a job, so a queued job renders at the rate it was planned at. */
   fps: number;
 } {
   const supabase = createSupabaseServiceRoleClient(environment);
@@ -82,45 +87,89 @@ export function createVideoProjectServices(
     assets: new SupabaseProjectAssetRepository(supabase),
     messages: new SupabaseVideoMessageRepository(supabase),
     briefRevisions: new SupabaseVideoBriefRevisionRepository(supabase),
-    storyboardRevisions: new SupabaseVideoStoryboardRevisionRepository(supabase),
     versions: new SupabaseVideoVersionRepository(supabase),
     jobs: new SupabaseRenderJobRepository(supabase),
+    artDirectionRevisions: new SupabaseArtDirectionRevisionRepository(supabase),
+    compositionRevisions: new SupabaseCompositionRevisionRepository(supabase),
+    artifacts: new SupabaseCompositionArtifactRepository(supabase),
+    events: new SupabaseCompositionEventRepository(supabase),
     objectStore: new SupabaseAssetObjectStore(supabase, bucket),
     limits: readAssetLimits(environment),
     createId: () => crypto.randomUUID(),
     signedUrl: createSupabaseSignedUrlFactory(supabase, bucket),
-    // The intake freezes the same frame rate the worker will render at, so a config change cannot
-    // make a queued job claim one fps and render another.
-    fps: readRenderWorkerConfig(environment).fps,
+    fps: COMPOSITION_FPS,
   };
 }
 
-/** The render worker: the same repositories as the API, plus the engine and the worker's own config. */
-export function createRenderWorkerServices(
+/** The compose endpoint: the request repositories plus the planner, the catalog, and the compiler. */
+export function createComposeServices(
   environment: Readonly<Record<string, string | undefined>> = process.env,
-  /** The process's stop signal, so an in-flight render is aborted rather than killed on shutdown. */
-  shutdownSignal?: AbortSignal,
-): RenderWorkerDependencies {
+): ComposeDependencies {
   const supabase = createSupabaseServiceRoleClient(environment);
   const bucket = readAssetBucket(environment);
-  const config = readRenderWorkerConfig(environment);
   const objectStore = new SupabaseAssetObjectStore(supabase, bucket);
+  const artifactStore = new SupabaseCompositionArtifactStore(supabase, bucket);
 
   return {
-    createId: () => crypto.randomUUID(),
-    now: () => new Date().toISOString(),
-    fps: config.fps,
-    config,
-    shutdownSignal,
-    // The one place the workspace's filesystem implementation meets the worker's port.
-    createWorkspace: (jobId) => createRenderWorkspace(config.workRoot, jobId),
     projects: new SupabaseVideoProjectRepository(supabase),
     assets: new SupabaseProjectAssetRepository(supabase),
     briefRevisions: new SupabaseVideoBriefRevisionRepository(supabase),
-    storyboardRevisions: new SupabaseVideoStoryboardRevisionRepository(supabase),
-    versions: new SupabaseVideoVersionRepository(supabase),
-    jobs: new SupabaseRenderJobRepository(supabase),
-    objectStore,
-    engine: new HyperFramesRenderEngine({ config, objectStore, gsapScriptPath: gsapScriptPath() }),
+    artDirectionRevisions: new SupabaseArtDirectionRevisionRepository(supabase),
+    compositionRevisions: new SupabaseCompositionRevisionRepository(supabase),
+    artifacts: new SupabaseCompositionArtifactRepository(supabase),
+    events: new SupabaseCompositionEventRepository(supabase),
+    ai: createAIService({ environment, schemas: VIDEO_ENGINE_AI_SCHEMAS }),
+    designPack: createFsDesignPackSource(),
+    loadCatalog: () => createFsCatalogSource().load(),
+    createId: () => crypto.randomUUID(),
+    compile: (command) =>
+      compileComposition(command, {
+        installer: createCatalogInstaller({ cli: createHyperframesCli() }),
+        artifactStore,
+        write: (compiled, targetDir) =>
+          writeComposition(compiled, targetDir, {
+            objectStore,
+            gsapScriptPath: gsapScriptPath(),
+            resolveFontFile,
+          }),
+      }),
   };
+}
+
+/** The render worker: the engine, the artifact reader, and the upload path. */
+export function createRenderWorkerServices(
+  environment: Readonly<Record<string, string | undefined>> = process.env,
+): RenderJobDependencies {
+  const supabase = createSupabaseServiceRoleClient(environment);
+  const bucket = readAssetBucket(environment);
+  const objectStore = new SupabaseAssetObjectStore(supabase, bucket);
+
+  return {
+    jobs: new SupabaseRenderJobRepository(supabase),
+    versions: new SupabaseVideoVersionRepository(supabase),
+    artifacts: new SupabaseCompositionArtifactRepository(supabase),
+    events: new SupabaseCompositionEventRepository(supabase),
+    artifactStore: new SupabaseCompositionArtifactStore(supabase, bucket),
+    materialize: materializeArtifactFiles,
+    engine: new HyperFramesRenderEngine(readRenderWorkerConfig(environment).engine),
+    upload: (objectKey, bytes, mimeType) => objectStore.write(objectKey, bytes, mimeType),
+    readOutput: (path) => readFile(path),
+    createScratchDir: () => mkdtemp(join(readRenderWorkerConfig(environment).workRoot ?? tmpdir(), "visuala-render-")),
+    removeScratchDir: (dir) => rm(dir, { recursive: true, force: true }),
+    outputKey: videoVersionObjectKey,
+    createId: () => crypto.randomUUID(),
+    qualityFor: (kind) => OUTPUT_QUALITY[kind],
+    maxArtifactFileBytes: 64 * 1024 * 1024,
+  };
+}
+
+export { runComposition, runRenderJob };
+
+/** Writes a downloaded artifact back to disk in the layout the renderer reads. */
+async function materializeArtifactFiles(files: readonly { path: string; bytes: Uint8Array }[], targetDir: string): Promise<void> {
+  for (const file of files) {
+    const destination = join(targetDir, file.path);
+    await mkdir(dirname(destination), { recursive: true });
+    await writeFile(destination, file.bytes);
+  }
 }

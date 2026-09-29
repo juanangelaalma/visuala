@@ -40,7 +40,19 @@ export type VideoBrief = z.infer<typeof videoBriefSchema>;
 
 export const DRAFT_BRIEF_SCHEMA_VERSION = "video-brief-draft@v1";
 
-export type BriefField = "productName" | "audience" | "objective" | "keyMessage" | "offer" | "callToAction" | "menuItems";
+/** Every field the interview can track, including the ones no recipe currently requires. */
+export const BRIEF_FIELDS = [
+  "productName",
+  "audience",
+  "objective",
+  "keyMessage",
+  "offer",
+  "callToAction",
+  "orderDestination",
+  "menuItems",
+] as const;
+
+export type BriefField = (typeof BRIEF_FIELDS)[number];
 
 const BASE_REQUIRED_FIELDS: readonly BriefField[] = ["productName", "audience", "objective", "keyMessage"];
 
@@ -50,6 +62,7 @@ export const REQUIRED_BRIEF_FIELDS: Record<VideoType, readonly BriefField[]> = {
   discount_promo: [...BASE_REQUIRED_FIELDS, "offer"],
   product_launch: [...BASE_REQUIRED_FIELDS, "callToAction"],
   menu_showcase: [...BASE_REQUIRED_FIELDS, "menuItems"],
+  storefront_showcase: [...BASE_REQUIRED_FIELDS, "orderDestination"],
 };
 
 export function findMissingBriefFields(brief: VideoBrief, videoType: VideoType): readonly BriefField[] {

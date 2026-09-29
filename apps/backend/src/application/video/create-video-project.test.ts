@@ -9,7 +9,7 @@ const IDEMPOTENCY_KEY = "44444444-4444-4444-8444-444444444444";
 const settings = { durationSeconds: 6 as const, aspectRatio: "9:16" as const, resolution: "720p" as const, language: "id", voiceOverEnabled: true, musicEnabled: true };
 
 function project(overrides: Partial<VideoProject> = {}): VideoProject {
-  return { id: PROJECT_ID, userId: USER_ID, title: "Promo Kopi", videoType: "product_promo", styleId: "bold_pop", status: "draft", settings, revisionRenderCount: 0, createdAt: "created", updatedAt: "updated", ...overrides };
+  return { id: PROJECT_ID, userId: USER_ID, title: "Promo Kopi", videoType: "product_promo", styleId: "creative-mode", status: "draft", settings, revisionRenderCount: 0, createdAt: "created", updatedAt: "updated", ...overrides };
 }
 
 function dependencies(existing: VideoProject | null = null) {
@@ -23,7 +23,7 @@ function dependencies(existing: VideoProject | null = null) {
 }
 
 function command(overrides = {}) {
-  return { userId: USER_ID, idempotencyKey: IDEMPOTENCY_KEY, title: " Promo Kopi ", videoType: "product_promo" as const, styleId: "bold_pop" as const, settings, ...overrides };
+  return { userId: USER_ID, idempotencyKey: IDEMPOTENCY_KEY, title: " Promo Kopi ", videoType: "product_promo" as const, styleId: "creative-mode" as const, settings, ...overrides };
 }
 
 describe("createVideoProject", () => {
@@ -33,7 +33,7 @@ describe("createVideoProject", () => {
     const result = await createVideoProject(command(), deps);
 
     expect(result).toEqual({ project: project({ title: "Promo Kopi" }), created: true });
-    expect(deps.projects.create).toHaveBeenCalledWith({ id: PROJECT_ID, userId: USER_ID, idempotencyKey: IDEMPOTENCY_KEY, title: "Promo Kopi", videoType: "product_promo", styleId: "bold_pop", settings });
+    expect(deps.projects.create).toHaveBeenCalledWith({ id: PROJECT_ID, userId: USER_ID, idempotencyKey: IDEMPOTENCY_KEY, title: "Promo Kopi", videoType: "product_promo", styleId: "creative-mode", settings });
   });
 
   it("returns an existing project for a repeated key without creating", async () => {

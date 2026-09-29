@@ -12,15 +12,23 @@ describe("video output settings", () => {
       .toMatchObject({ durationSeconds: 10 });
   });
 
-  it("rejects an unsupported duration, ratio, resolution, or language", () => {
-    expect(() => validateOutputSettings(settings({ durationSeconds: 7 as never }))).toThrowError(expect.objectContaining({ code: "video_input_invalid" }));
+  it("accepts any duration inside the project range", () => {
+    expect(validateOutputSettings(settings({ durationSeconds: 4 }))).toMatchObject({ durationSeconds: 4 });
+    expect(validateOutputSettings(settings({ durationSeconds: 7 }))).toMatchObject({ durationSeconds: 7 });
+    expect(validateOutputSettings(settings({ durationSeconds: 30 }))).toMatchObject({ durationSeconds: 30 });
+  });
+
+  it("rejects a duration outside the range and an unsupported ratio, resolution, or language", () => {
+    expect(() => validateOutputSettings(settings({ durationSeconds: 3 }))).toThrowError(expect.objectContaining({ code: "video_input_invalid" }));
+    expect(() => validateOutputSettings(settings({ durationSeconds: 31 }))).toThrowError(expect.objectContaining({ code: "video_input_invalid" }));
+    expect(() => validateOutputSettings(settings({ durationSeconds: 7.5 }))).toThrowError(expect.objectContaining({ code: "video_input_invalid" }));
     expect(() => validateOutputSettings(settings({ aspectRatio: "4:5" as never }))).toThrowError(expect.objectContaining({ code: "video_input_invalid" }));
     expect(() => validateOutputSettings(settings({ resolution: "4k" as never }))).toThrowError(expect.objectContaining({ code: "video_input_invalid" }));
     expect(() => validateOutputSettings(settings({ language: "xx" as never }))).toThrowError(expect.objectContaining({ code: "video_input_invalid" }));
   });
 
-  it("publishes all four style presets with preview text", () => {
-    expect(VIDEO_STYLE_PRESETS.map((preset) => preset.id)).toEqual(["bold_pop", "clean_product", "warm_artisan", "premium_dark"]);
+  it("publishes the one design pack this pipeline ships, with preview text", () => {
+    expect(VIDEO_STYLE_PRESETS.map((preset) => preset.id)).toEqual(["creative-mode"]);
     expect(VIDEO_STYLE_PRESETS.every((preset) => preset.label.length > 0 && preset.description.length > 0)).toBe(true);
   });
 

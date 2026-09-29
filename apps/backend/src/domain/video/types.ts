@@ -1,10 +1,12 @@
 import type { AssetMimeType } from "../ai-service/assets";
 
-export type VideoType = "product_promo" | "discount_promo" | "product_launch" | "menu_showcase";
-export type VideoDurationSeconds = 6 | 10 | 15;
+export type VideoType = "product_promo" | "discount_promo" | "product_launch" | "menu_showcase" | "storefront_showcase";
+/** Seconds of finished video. The project owns the choice, inside 4..30. */
+export type VideoDurationSeconds = number;
 export type VideoAspectRatio = "9:16" | "1:1" | "16:9";
 export type VideoResolution = "720p" | "1080p";
-export type VideoStyleId = "bold_pop" | "clean_product" | "warm_artisan" | "premium_dark";
+/** One Design Pack ships with this pipeline; a customer pack becomes another id here. */
+export type VideoStyleId = "creative-mode";
 export type VideoLanguage = string;
 
 export type VideoProjectStatus =

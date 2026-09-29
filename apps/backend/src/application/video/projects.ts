@@ -1,14 +1,13 @@
 import { VideoError } from "../../domain/video/errors";
-import type {
-  ProjectAssetRepository, VideoProjectRepository, VideoVersionRepository,
-} from "../../domain/video/contracts";
+import type { ProjectAssetRepository, VideoProjectRepository } from "../../domain/video/contracts";
+import type { VideoVersionRepository } from "../../domain/video-engine/contracts";
 import type { AssetObjectStore } from "../../domain/ai-service/assets";
 import type { VideoOutputSettings, VideoProject, VideoStyleId, VideoType } from "../../domain/video/types";
 
 export type ProjectDependencies = {
   projects: VideoProjectRepository;
   assets: Pick<ProjectAssetRepository, "listOwned" | "softDelete">;
-  versions: Pick<VideoVersionRepository, "listOwned">;
+  versions: Pick<VideoVersionRepository, "listFinalOwned">;
   objectStore: AssetObjectStore;
   createId: () => string;
 };
@@ -38,7 +37,7 @@ export async function deleteVideoProject(projectId: string, userId: string, depe
 
   const [assets, versions] = await Promise.all([
     dependencies.assets.listOwned(projectId, userId),
-    dependencies.versions.listOwned(projectId, userId),
+    dependencies.versions.listFinalOwned(projectId, userId),
   ]);
 
   await dependencies.projects.softDelete(projectId, userId);

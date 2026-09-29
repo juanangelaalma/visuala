@@ -1,8 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 import type { AIService } from "../../domain/ai-service/contracts";
 import { AIError } from "../../domain/ai-service/errors";
-import type { CreateStoryboardRevisionInput } from "../../domain/video/contracts";
-import type { GeneratedBy, ProjectAsset, VideoDurationSeconds, VideoMessage, VideoOutputSettings, VideoProject, VideoStoryboardRevision } from "../../domain/video/types";
+import type { GeneratedBy, ProjectAsset, VideoDurationSeconds, VideoMessage, VideoOutputSettings, VideoProject } from "../../domain/video/types";
 import { runVideoInterviewTurn } from "./conversation";
 
 const USER_ID = "11111111-1111-4111-8111-111111111111";
@@ -17,7 +16,7 @@ const generatedBy: GeneratedBy = { profileId: "primary", provider: "google", mod
 const partialDraft = {
   productName: "Kopi Susu", productCategory: null, audience: null, objective: null, keyMessage: null,
   offer: null, callToAction: null, orderDestination: null, brandName: null,
-  styleId: "bold_pop" as const, outputSettings: settings, menuItems: null, facts: [],
+  styleId: "creative-mode" as const, outputSettings: settings, menuItems: null, facts: [],
 };
 
 const completeDraft = {
@@ -41,7 +40,7 @@ const turn = {
 
 const plan = {
   brief: completeDraft,
-  storyboard: {
+  legacyPlan: {
     scenes: [
       { order: 1, startSeconds: 0, endSeconds: 5, visual: "Produk di meja", onScreenTitle: "Kopi Susu", onScreenCopy: "Manisnya pas", voiceOver: "Coba kopi susu kami", caption: "Coba kopi susu kami", assetIds: [ASSET_ID], audioCue: null, transition: "fade" as const },
       { order: 2, startSeconds: 5, endSeconds: 10, visual: "Logo", onScreenTitle: "Pesan sekarang", onScreenCopy: "WhatsApp kami", voiceOver: "Pesan sekarang", caption: "Pesan sekarang", assetIds: [ASSET_ID], audioCue: null, transition: "cut" as const },
@@ -50,7 +49,7 @@ const plan = {
 };
 
 function project(status: VideoProject["status"] = "interviewing"): VideoProject {
-  return { id: PROJECT_ID, userId: USER_ID, title: "Promo Kopi", videoType: "product_promo", styleId: "bold_pop", status, settings, revisionRenderCount: 0, createdAt: "created", updatedAt: "updated" };
+  return { id: PROJECT_ID, userId: USER_ID, title: "Promo Kopi", videoType: "product_promo", styleId: "creative-mode", status, settings, revisionRenderCount: 0, createdAt: "created", updatedAt: "updated" };
 }
 
 function asset(): ProjectAsset {
@@ -68,7 +67,7 @@ function transcript(): VideoMessage[] {
 }
 
 function aiService(options: { responses?: Record<string, unknown>; failure?: AIError } = {}): AIService {
-  const responses = options.responses ?? { interviewer: { draft: partialDraft, turn }, planner: plan };
+  const responses = options.responses ?? { interviewer: { draft: partialDraft, turn } };
   return {
     generateText: vi.fn(),
     generateStructured: vi.fn(async (request: { task: string }) => {
@@ -110,14 +109,6 @@ function dependencies(options: {
       latestOwned: vi.fn(async (): Promise<typeof briefRevision | null> => null),
       getOwned: vi.fn(async (): Promise<typeof briefRevision | null> => briefRevision),
     },
-    storyboardRevisions: {
-      create: vi.fn(async (input: CreateStoryboardRevisionInput): Promise<VideoStoryboardRevision> => ({
-        id: "sb-1", projectId: input.projectId, userId: input.userId, version: 1, schemaVersion: input.schemaVersion,
-        briefRevisionId: input.briefRevisionId, scenes: input.scenes,
-        totalDurationSeconds: input.totalDurationSeconds as VideoDurationSeconds,
-        generatedBy: input.generatedBy as GeneratedBy, createdAt: "created",
-      })),
-    },
     ai: aiService(options),
     createId: () => "generated-id",
   };
@@ -131,7 +122,6 @@ describe("runVideoInterviewTurn", () => {
 
     expect(deps.briefRevisions.create).toHaveBeenCalledOnce();
     expect(deps.briefRevisions.create.mock.calls[0]?.[0]).toMatchObject({ schemaVersion: "video-brief-draft@v1", isComplete: false });
-    expect(deps.storyboardRevisions.create).not.toHaveBeenCalled();
     expect(deps.projects.transition).not.toHaveBeenCalled();
     expect(result.reply.controls).toEqual(turn);
     expect(result.reply.role).toBe("assistant");
@@ -149,30 +139,28 @@ describe("runVideoInterviewTurn", () => {
     expect(userAppend).toBeLessThan(modelCall ?? Number.POSITIVE_INFINITY);
   });
 
-  it("plans the brief and storyboard and opens approval once the draft is complete and an asset exists", async () => {
-    const deps = dependencies({ responses: { interviewer: { draft: completeDraft, turn: null }, planner: plan } });
+  it("stores the finished brief and opens approval once the draft is complete", async () => {
+    const deps = dependencies({ responses: { interviewer: { draft: completeDraft, turn: null } } });
 
     const result = await runVideoInterviewTurn({ userId: USER_ID, projectId: PROJECT_ID, content: "sudah lengkap" }, deps);
 
-    expect(vi.mocked(deps.ai.generateStructured).mock.calls.map((call) => (call[0] as { task: string }).task)).toEqual(["interviewer", "planner"]);
+    // The interview turn costs one model call: planning happens later, on demand.
+    expect(vi.mocked(deps.ai.generateStructured).mock.calls.map((call) => (call[0] as { task: string }).task)).toEqual(["interviewer"]);
     expect(deps.briefRevisions.create.mock.calls[0]?.[0]).toMatchObject({ schemaVersion: "v1", isComplete: true });
-    expect(deps.storyboardRevisions.create).toHaveBeenCalledOnce();
-    expect(deps.storyboardRevisions.create.mock.calls[0]?.[0]).toMatchObject({ totalDurationSeconds: 10, briefRevisionId: BRIEF_ID });
+    expect(deps.briefRevisions.create).toHaveBeenCalledOnce();
     expect(deps.projects.transition).toHaveBeenCalledWith(PROJECT_ID, USER_ID, "interviewing", "awaiting_approval");
     expect(result.project.status).toBe("awaiting_approval");
     expect(result.reply.controls).toBeNull();
   });
 
-  it("keeps the brief but asks for a photo when a complete brief has no asset to reference", async () => {
+  it("finishes without an asset, because a composition can be built from internal modules alone", async () => {
     const deps = dependencies({ assets: [], responses: { interviewer: { draft: completeDraft, turn: null } } });
 
     const result = await runVideoInterviewTurn({ userId: USER_ID, projectId: PROJECT_ID, content: "sudah lengkap" }, deps);
 
     expect(vi.mocked(deps.ai.generateStructured)).toHaveBeenCalledOnce();
-    expect(deps.storyboardRevisions.create).not.toHaveBeenCalled();
-    expect(deps.projects.transition).not.toHaveBeenCalled();
-    expect(result.reply.content).toContain("Unggah");
-    expect(result.project.status).toBe("interviewing");
+    expect(deps.briefRevisions.create).toHaveBeenCalledOnce();
+    expect(result.project.status).toBe("awaiting_approval");
   });
 
   it("finishes when the latest answer contains the exact WhatsApp destination but the model omits its fact", async () => {
@@ -291,7 +279,6 @@ describe("runVideoInterviewTurn", () => {
 
     expect(deps.messages.append).toHaveBeenCalledOnce();
     expect(deps.briefRevisions.create).not.toHaveBeenCalled();
-    expect(deps.storyboardRevisions.create).not.toHaveBeenCalled();
   });
 
   it("refuses a project that is not the caller's", async () => {

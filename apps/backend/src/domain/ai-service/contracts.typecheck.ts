@@ -32,7 +32,9 @@ type ExpectedTask =
   | "connection_test"
   | "interviewer"
   | "planner"
-  | "product_analysis";
+  | "product_analysis"
+  | "art_director"
+  | "composition_planner";
 type ExpectedErrorCode =
   | "AI_CONFIG_ERROR"
   | "AI_CAPABILITY_UNSUPPORTED"

@@ -1,17 +1,18 @@
 import { describe, expect, it, vi } from "vitest";
 import { createVersionDownloadUrl, listVideoVersions } from "./versions";
-import type { VideoProject, VideoVersion } from "../../domain/video/types";
+import type { VideoProject } from "../../domain/video/types";
+import type { VideoVersion } from "../../domain/video-engine/contracts";
 
 const USER_ID = "11111111-1111-4111-8111-111111111111";
 const PROJECT_ID = "33333333-3333-4333-8333-333333333333";
 const VERSION_ID = "88888888-8888-4888-8888-888888888888";
 
 function project(status: VideoProject["status"] = "ready"): VideoProject {
-  return { id: PROJECT_ID, userId: USER_ID, title: "Promo Kopi", videoType: "product_promo", styleId: "bold_pop", status, settings: { durationSeconds: 10, aspectRatio: "9:16", resolution: "1080p", language: "id", voiceOverEnabled: true, musicEnabled: true }, revisionRenderCount: 0, createdAt: "created", updatedAt: "updated" };
+  return { id: PROJECT_ID, userId: USER_ID, title: "Promo Kopi", videoType: "product_promo", styleId: "creative-mode", status, settings: { durationSeconds: 10, aspectRatio: "9:16", resolution: "1080p", language: "id", voiceOverEnabled: true, musicEnabled: true }, revisionRenderCount: 0, createdAt: "created", updatedAt: "updated" };
 }
 
 function version(overrides: Partial<VideoVersion> = {}): VideoVersion {
-  return { id: VERSION_ID, projectId: PROJECT_ID, userId: USER_ID, versionNumber: 2, renderJobId: "job-1", outputObjectKey: `video-versions/${PROJECT_ID}/${VERSION_ID}.mp4`, durationSeconds: 10, aspectRatio: "9:16", resolution: "1080p", manifestHash: "hash", createdAt: "created", ...overrides };
+  return { id: VERSION_ID, projectId: PROJECT_ID, userId: USER_ID, versionNumber: 2, renderJobId: "job-1", outputObjectKey: `video-versions/${PROJECT_ID}/${VERSION_ID}.mp4`, kind: "final", durationSeconds: 10, aspectRatio: "9:16", resolution: "1080p", compositionHash: "a".repeat(64), createdAt: "created", ...overrides };
 }
 
 function dependencies() {
@@ -19,7 +20,7 @@ function dependencies() {
     signedUrl: vi.fn(async (key: string): Promise<string | null> => `https://signed.example/${key}`),
     projects: { getOwned: vi.fn(async (): Promise<VideoProject | null> => project()) },
     versions: {
-      listOwned: vi.fn(async (): Promise<VideoVersion[]> => [version()]),
+      listFinalOwned: vi.fn(async (): Promise<VideoVersion[]> => [version()]),
       getOwned: vi.fn(async (): Promise<VideoVersion | null> => version()),
     },
   };
@@ -55,7 +56,7 @@ describe("versions", () => {
     deps.projects.getOwned.mockResolvedValue(null);
 
     await expect(listVideoVersions({ userId: "user-b", projectId: PROJECT_ID }, deps)).rejects.toMatchObject({ code: "video_project_not_found" });
-    expect(deps.versions.listOwned).not.toHaveBeenCalled();
+    expect(deps.versions.listFinalOwned).not.toHaveBeenCalled();
   });
 
   it("keeps a version whose object is gone and reports a null playback url", async () => {

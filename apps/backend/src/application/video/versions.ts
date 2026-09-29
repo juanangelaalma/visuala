@@ -1,11 +1,11 @@
 import { VideoError } from "../../domain/video/errors";
-import type { VideoProjectRepository, VideoVersionRepository } from "../../domain/video/contracts";
-import type { VideoVersion } from "../../domain/video/types";
+import type { VideoProjectRepository } from "../../domain/video/contracts";
+import type { VideoVersion, VideoVersionRepository } from "../../domain/video-engine/contracts";
 
 export type VersionDependencies = {
   signedUrl: (objectKey: string) => Promise<string | null>;
   projects: Pick<VideoProjectRepository, "getOwned">;
-  versions: Pick<VideoVersionRepository, "listOwned" | "getOwned">;
+  versions: Pick<VideoVersionRepository, "listFinalOwned" | "getOwned">;
 };
 
 export type VersionResponse = {
@@ -30,7 +30,8 @@ export async function listVideoVersions(
 ): Promise<VersionResponse[]> {
   await requireOwnedProject(command.projectId, command.userId, dependencies);
 
-  const versions = await dependencies.versions.listOwned(command.projectId, command.userId);
+  // Previews are a working draft, not a deliverable: the list a user downloads holds finals only.
+  const versions = await dependencies.versions.listFinalOwned(command.projectId, command.userId);
   return Promise.all(versions.map(async (version) => toVersionResponse(version, await dependencies.signedUrl(version.outputObjectKey))));
 }
 

@@ -1,6 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { z } from "zod";
-import type { AssetMimeType, AssetObjectStore } from "../../domain/ai-service/assets";
+import type { AssetObjectStore, StoredObjectMimeType } from "../../domain/ai-service/assets";
 import type { Database } from "@visuala/db";
 
 export const DEFAULT_ASSET_BUCKET = "assets";
@@ -17,7 +17,7 @@ export class SupabaseAssetObjectStore implements AssetObjectStore {
     private readonly bucket: string = DEFAULT_ASSET_BUCKET,
   ) {}
 
-  async write(key: string, bytes: Uint8Array, mimeType: AssetMimeType): Promise<void> {
+  async write(key: string, bytes: Uint8Array, mimeType: StoredObjectMimeType): Promise<void> {
     const { error } = await this.client.storage.from(this.bucket).upload(key, bytes, { contentType: mimeType, upsert: false });
     if (error) throw error;
   }

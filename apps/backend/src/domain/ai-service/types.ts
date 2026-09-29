@@ -1,11 +1,17 @@
 import type { ZodType } from "zod";
 import type { AIErrorCode } from "./errors";
 
-export type AITask =
-  | "connection_test"
-  | "interviewer"
-  | "planner"
-  | "product_analysis";
+/** The one list of task names: the type, the env config validation, and the docs all read it. */
+export const AI_TASKS = [
+  "connection_test",
+  "interviewer",
+  "planner",
+  "product_analysis",
+  "art_director",
+  "composition_planner",
+] as const;
+
+export type AITask = (typeof AI_TASKS)[number];
 
 export type AIMessageRole = "user" | "assistant";
 

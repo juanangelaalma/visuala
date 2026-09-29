@@ -8,7 +8,7 @@ const PROJECT_ID = "33333333-3333-4333-8333-333333333333";
 const settings = { durationSeconds: 6 as const, aspectRatio: "9:16" as const, resolution: "720p" as const, language: "id", voiceOverEnabled: true, musicEnabled: true };
 
 function project(overrides = {}) {
-  return { id: PROJECT_ID, userId: USER_ID, title: "Promo Kopi", videoType: "product_promo" as const, styleId: "bold_pop" as const, status: "draft" as const, settings, revisionRenderCount: 0, createdAt: "created", updatedAt: "updated", ...overrides };
+  return { id: PROJECT_ID, userId: USER_ID, title: "Promo Kopi", videoType: "product_promo" as const, styleId: "creative-mode" as const, status: "draft" as const, settings, revisionRenderCount: 0, createdAt: "created", updatedAt: "updated", ...overrides };
 }
 
 function asset(overrides = {}) {
@@ -16,7 +16,7 @@ function asset(overrides = {}) {
 }
 
 function version(overrides = {}) {
-  return { id: "v1", projectId: PROJECT_ID, userId: USER_ID, versionNumber: 1, renderJobId: "job-1", outputObjectKey: "video-versions/p/v1.mp4", durationSeconds: 6, aspectRatio: "9:16", resolution: "720p", manifestHash: "hash", createdAt: "created", ...overrides };
+  return { id: "v1", projectId: PROJECT_ID, userId: USER_ID, versionNumber: 1, renderJobId: "job-1", outputObjectKey: "video-versions/p/v1.mp4", kind: "final" as const, durationSeconds: 6, aspectRatio: "9:16", resolution: "720p", compositionHash: "0".repeat(64), createdAt: "created", ...overrides };
 }
 
 function dependencies() {
@@ -34,7 +34,7 @@ function dependencies() {
       consumeRerender: vi.fn(async () => project()),
     },
     assets: { listOwned: vi.fn(async () => [asset()]), softDelete: vi.fn(async () => undefined) },
-    versions: { listOwned: vi.fn(async () => [version()]) },
+    versions: { listFinalOwned: vi.fn(async () => [version()]) },
     objectStore: { write: vi.fn(), read: vi.fn(), delete: vi.fn() },
   };
 }

@@ -10,6 +10,12 @@ build:
 worker:
 	pnpm worker
 
+catalog:
+	pnpm catalog:generate
+
+compose-smoke:
+	pnpm compose:smoke -- $(ARGS)
+
 lint:
 	pnpm lint
 

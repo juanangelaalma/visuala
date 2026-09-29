@@ -13,24 +13,21 @@ import {
 } from "../../domain/video/brief";
 import type {
   ProjectAssetRepository, VideoBriefRevisionRepository, VideoMessageRepository,
-  VideoProjectRepository, VideoStoryboardRevisionRepository,
+  VideoProjectRepository,
 } from "../../domain/video/contracts";
 import { VideoError } from "../../domain/video/errors";
 import type { InterviewTurn } from "../../domain/video/interview";
-import { STORYBOARD_SCHEMA_VERSION, normalizeStoryboard } from "../../domain/video/storyboard";
 import { canMutateProjectAssets } from "../../domain/video/state-machine";
 import type { VideoMessage, VideoProject } from "../../domain/video/types";
 import { runInterviewer } from "./interviewer";
 import { appendVideoMessage } from "./messages";
-import { runPlanner } from "./planner";
-import { saveBriefRevision, saveStoryboardRevision } from "./revisions";
+import { saveBriefRevision } from "./revisions";
 
 export type VideoConversationDependencies = {
   projects: Pick<VideoProjectRepository, "getOwned" | "transition">;
   assets: Pick<ProjectAssetRepository, "listOwned">;
   messages: VideoMessageRepository;
   briefRevisions: Pick<VideoBriefRevisionRepository, "create" | "latestOwned" | "getOwned">;
-  storyboardRevisions: Pick<VideoStoryboardRevisionRepository, "create">;
   ai: AIService;
   createId: () => string;
 };
@@ -50,7 +47,7 @@ export type VideoInterviewTurnResult = {
 
 /**
  * One chat turn, end to end: store what the user said, ask the interviewer for the updated draft and
- * its next question, and, once the draft is genuinely complete, plan the brief and storyboard and
+ * its next question, and, once the draft is genuinely complete, stores the finished brief and
  * open the project for approval.
  *
  * The user's message is written before the model is called, through the same use case the route used
@@ -108,59 +105,25 @@ export async function runVideoInterviewTurn(
     const nextTurn = unresolvedInterviewTurn(draft, activeProject, interviewer.turn, transcript);
     replyContent = nextTurn.question;
     controls = nextTurn;
-  } else if (assetIds.length === 0) {
-    // A storyboard has to reference a real asset, so the interview cannot close on an empty project.
-    // The brief is complete and stored as such; the user just needs to add a photo.
+  } else {
+    // `isBriefDraftComplete` has already proven this parses, so the cast is a narrow, checked one.
+    const brief = videoBriefSchema.parse(draft);
     await saveBriefRevision(
       {
         userId: command.userId,
         projectId: activeProject.id,
         schemaVersion: BRIEF_SCHEMA_VERSION,
-        brief: draft,
+        brief,
         generatedBy: interviewer.generatedBy,
         sourceMessageIds: [message.id],
       },
       { projects: dependencies.projects, briefRevisions: dependencies.briefRevisions },
     );
-    replyContent = "Brief sudah lengkap. Unggah minimal satu foto produk supaya storyboard bisa disusun.";
-  } else {
-    // `isBriefDraftComplete` has already proven this parses, so the cast is a narrow, checked one.
-    const brief = videoBriefSchema.parse(draft);
-    const plan = await runPlanner(
-      { userId: command.userId, project: activeProject, transcript, brief, assetIds },
-      { ai: dependencies.ai, createRequestId: dependencies.createId },
-    );
 
-    const briefRevision = await saveBriefRevision(
-      {
-        userId: command.userId,
-        projectId: activeProject.id,
-        schemaVersion: BRIEF_SCHEMA_VERSION,
-        brief,
-        generatedBy: plan.generatedBy,
-        sourceMessageIds: [message.id],
-      },
-      { projects: dependencies.projects, briefRevisions: dependencies.briefRevisions },
-    );
-
-    await saveStoryboardRevision(
-      {
-        userId: command.userId,
-        projectId: activeProject.id,
-        schemaVersion: STORYBOARD_SCHEMA_VERSION,
-        briefRevisionId: briefRevision.id,
-        scenes: normalizeStoryboard(plan.storyboard.scenes, activeProject.settings, assetIds),
-        generatedBy: plan.generatedBy,
-      },
-      {
-        projects: dependencies.projects,
-        briefRevisions: dependencies.briefRevisions,
-        storyboardRevisions: dependencies.storyboardRevisions,
-      },
-    );
-
+    // The brief is the interview's whole output. The composition is planned on demand, once the user
+    // asks for a preview, so an interview turn never pays for a plan the user may not want yet.
     project = await enterAwaitingApproval(activeProject, command.userId, dependencies);
-    replyContent = "Brief dan storyboard sudah siap. Periksa lalu setujui untuk mulai render.";
+    replyContent = "Brief sudah lengkap. Minta preview kalau sudah siap.";
   }
 
   const reply = await dependencies.messages.append({

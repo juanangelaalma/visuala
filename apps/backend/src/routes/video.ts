@@ -1,15 +1,16 @@
 import { Elysia, t } from "elysia";
 import { z } from "zod";
-import { approveVideoProject } from "@/application/video/approval";
 import { deleteProjectAsset, listProjectAssets, registerProjectAsset } from "@/application/video/assets";
 import { runVideoInterviewTurn } from "@/application/video/conversation";
 import { listVideoMessages, toMessageResponse } from "@/application/video/messages";
 import { openVideoInterview } from "@/application/video/open-interview";
 import { createVideoProject } from "@/application/video/create-video-project";
 import { deleteVideoProject, getVideoProject, listVideoProjects, toProjectResponse } from "@/application/video/projects";
-import { getLatestBriefRevision, getLatestStoryboardRevision } from "@/application/video/revisions";
-import { cancelRenderJob, createRenderJob, getRenderJob, listVideoRenderJobs, toRenderJobResponse } from "@/application/video/render-jobs";
-import { createVideoApprovalServices, createVideoConversationServices, createVideoProjectServices } from "@/application/video/services";
+import { getLatestBriefRevision } from "@/application/video/revisions";
+import { cancelRenderJob, getLatestComposition, getLatestRenderJob, getRenderJob, listCompositionRevisions, toRenderJobResponse } from "@/application/video/compositions";
+import { runComposition } from "@/application/video-engine/compose";
+import { queueRenderJob } from "@/application/video-engine/queue-render-job";
+import { createComposeServices, createVideoConversationServices, createVideoProjectServices } from "@/application/video/services";
 import { createVersionDownloadUrl, listVideoVersions } from "@/application/video/versions";
 import { MAX_ASSET_BYTES } from "@/domain/ai-service/assets";
 import { VideoError } from "@/domain/video/errors";
@@ -30,7 +31,12 @@ const appendMessageBodySchema = z.object({
 /** `userId`, `status`, and the snapshot are server-owned, so a strict body refuses them outright. */
 const createRenderJobBodySchema = z.object({
   idempotencyKey: z.string(),
+  compositionRevisionId: z.string().uuid(),
+  kind: z.enum(["preview", "final"]),
+  parentVersionId: z.string().uuid().optional(),
 }).strict();
+
+const COMPOSITION_LIST_LIMIT = 20;
 
 function invalidAsset(): VideoError {
   return new VideoError("video_asset_invalid", INVALID_ASSET_MESSAGE);
@@ -87,8 +93,8 @@ export const videoProjectRoutes = new Elysia({ name: "video-project-routes" })
       const parsed = appendMessageBodySchema.safeParse(body);
       if (!parsed.success) return status(422, invalidRequest);
 
-      // One turn: the user's message, the interviewer's next question, and, when the brief is
-      // finished, the brief and storyboard revisions that open the project for approval.
+      // One turn: the user's message, the interviewer's next question, and, when the brief is finished,
+      // the stored brief that the composition pass will read.
       const { message, reply, project } = await runVideoInterviewTurn(
         { userId: user.id, projectId: params.projectId, ...parsed.data },
         createVideoConversationServices(),
@@ -113,22 +119,39 @@ export const videoProjectRoutes = new Elysia({ name: "video-project-routes" })
     }),
     { auth: true, detail: { tags: ["video"] } },
   )
+  .post(
+    "/video-projects/:projectId/compositions",
+    async ({ params, set, user }) => {
+      // Planning and compiling are one pass: the reply carries the revision the user must approve, and
+      // the preview that follows is rendered from the artifact this call froze.
+      const result = await runComposition({ userId: user.id, projectId: params.projectId }, createComposeServices());
+      set.status = 201;
+      return {
+        composition: {
+          id: result.compositionRevisionId,
+          compositionHash: result.compositionHash,
+          isFallback: result.isFallback,
+          validationIssues: result.validationIssues,
+        },
+      };
+    },
+    { auth: true, detail: { tags: ["video"] } },
+  )
   .get(
-    "/video-projects/:projectId/storyboard",
+    "/video-projects/:projectId/compositions",
     async ({ params, user }) => ({
-      storyboard: await getLatestStoryboardRevision({ userId: user.id, projectId: params.projectId }, createVideoProjectServices()),
+      compositions: await listCompositionRevisions(
+        { userId: user.id, projectId: params.projectId, limit: COMPOSITION_LIST_LIMIT },
+        createVideoProjectServices(),
+      ),
     }),
     { auth: true, detail: { tags: ["video"] } },
   )
-  .post(
-    "/video-projects/:projectId/approve",
-    async ({ params, user }) => {
-      const { project, approval } = await approveVideoProject(
-        { userId: user.id, projectId: params.projectId },
-        createVideoApprovalServices(),
-      );
-      return { project: toProjectResponse(project), approval };
-    },
+  .get(
+    "/video-projects/:projectId/compositions/latest",
+    async ({ params, user }) => ({
+      composition: await getLatestComposition({ userId: user.id, projectId: params.projectId }, createVideoProjectServices()),
+    }),
     { auth: true, detail: { tags: ["video"] } },
   )
   .post(
@@ -172,8 +195,15 @@ export const videoProjectRoutes = new Elysia({ name: "video-project-routes" })
       const parsed = createRenderJobBodySchema.safeParse(body);
       if (!parsed.success) return status(422, invalidRequest);
 
-      const { job, created } = await createRenderJob(
-        { userId: user.id, projectId: params.projectId, idempotencyKey: parsed.data.idempotencyKey },
+      const { job, created } = await queueRenderJob(
+        {
+          userId: user.id,
+          projectId: params.projectId,
+          compositionRevisionId: parsed.data.compositionRevisionId,
+          kind: parsed.data.kind,
+          idempotencyKey: parsed.data.idempotencyKey,
+          ...(parsed.data.parentVersionId ? { parentVersionId: parsed.data.parentVersionId } : {}),
+        },
         createVideoProjectServices(),
       );
 
@@ -185,10 +215,11 @@ export const videoProjectRoutes = new Elysia({ name: "video-project-routes" })
     { auth: true, ...jsonBody, detail: { tags: ["video"] } },
   )
   .get(
-    "/video-projects/:projectId/render-jobs",
-    async ({ params, user }) => ({
-      jobs: await listVideoRenderJobs({ userId: user.id, projectId: params.projectId }, createVideoProjectServices()),
-    }),
+    "/video-projects/:projectId/render-jobs/latest",
+    async ({ params, user }) => {
+      const job = await getLatestRenderJob({ userId: user.id, projectId: params.projectId }, createVideoProjectServices());
+      return { job: job ? toRenderJobResponse(job) : null };
+    },
     { auth: true, detail: { tags: ["video"] } },
   )
   .get(

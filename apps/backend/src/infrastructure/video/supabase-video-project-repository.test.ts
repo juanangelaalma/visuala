@@ -7,7 +7,7 @@ const ROW = {
   idempotency_key: "44444444-4444-4444-8444-444444444444",
   title: "Promo Kopi",
   video_type: "product_promo",
-  style_id: "bold_pop",
+  style_id: "creative-mode",
   duration_seconds: 6,
   aspect_ratio: "9:16",
   resolution: "720p",
@@ -70,7 +70,7 @@ describe("SupabaseVideoProjectRepository", () => {
       idempotencyKey: ROW.idempotency_key,
       title: ROW.title,
       videoType: "product_promo",
-      styleId: "bold_pop",
+      styleId: "creative-mode",
       settings: { durationSeconds: 6, aspectRatio: "9:16", resolution: "720p", language: "id", voiceOverEnabled: true, musicEnabled: true },
     });
 

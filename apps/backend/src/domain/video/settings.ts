@@ -1,27 +1,29 @@
 import { z } from "zod";
 import { VideoError } from "./errors";
-import { assertRenderCombinationSupported } from "./render-compatibility";
 import type { VideoAspectRatio, VideoDurationSeconds, VideoOutputSettings, VideoResolution, VideoStyleId } from "./types";
 
-export const VIDEO_TYPES = ["product_promo", "discount_promo", "product_launch", "menu_showcase"] as const;
+/** The five recipes. A recipe is the requirement set of one video type, so this is the one list. */
+export const VIDEO_TYPES = ["product_promo", "discount_promo", "product_launch", "menu_showcase", "storefront_showcase"] as const;
 export const videoTypeSchema = z.enum(VIDEO_TYPES);
-export const VIDEO_DURATIONS_SECONDS = [6, 10, 15] as const;
+export const VIDEO_MIN_DURATION_SECONDS = 4;
+export const VIDEO_MAX_DURATION_SECONDS = 30;
 export const VIDEO_ASPECT_RATIOS = ["9:16", "1:1", "16:9"] as const;
 export const VIDEO_RESOLUTIONS = ["720p", "1080p"] as const;
-export const VIDEO_STYLE_IDS = ["bold_pop", "clean_product", "warm_artisan", "premium_dark"] as const;
+export const VIDEO_STYLE_IDS = ["creative-mode"] as const;
 
 /** Languages the TTS decision record confirmed. Update from docs/decisions/2026-09-21-media-providers.md only. */
 export const VIDEO_LANGUAGES = ["id", "en"] as const;
 
 export const VIDEO_STYLE_PRESETS: readonly { id: VideoStyleId; label: string; description: string }[] = [
-  { id: "bold_pop", label: "Bold Pop", description: "Warna tebal, kontras tinggi, dan gerak cepat untuk promo yang mencolok." },
-  { id: "clean_product", label: "Clean Product", description: "Latar bersih dan fokus penuh pada produk, cocok untuk katalog." },
-  { id: "warm_artisan", label: "Warm Artisan", description: "Nuansa hangat dan tekstur lembut untuk produk rumahan." },
-  { id: "premium_dark", label: "Premium Dark", description: "Latar gelap dan aksen elegan untuk kesan eksklusif." },
+  {
+    id: "creative-mode",
+    label: "Creative Mode",
+    description: "Poster editorial neo-brutalis: warna blok tebal, huruf besar, garis tegas, dan gerak yang pasti.",
+  },
 ];
 
 export const outputSettingsSchema = z.object({
-  durationSeconds: z.union([z.literal(6), z.literal(10), z.literal(15)]),
+  durationSeconds: z.number().int().min(VIDEO_MIN_DURATION_SECONDS).max(VIDEO_MAX_DURATION_SECONDS),
   aspectRatio: z.enum(VIDEO_ASPECT_RATIOS),
   resolution: z.enum(VIDEO_RESOLUTIONS),
   language: z.string().trim().min(2).max(12),
@@ -46,11 +48,14 @@ export function frameDimensions(settings: Pick<VideoOutputSettings, "aspectRatio
   }
 }
 
+/**
+ * Settings are validated here and nowhere else. Whether the composition fits the frame is the engine's
+ * own validator's business, because that depends on the modules and catalog items the plan chose.
+ */
 export function validateOutputSettings(input: unknown): VideoOutputSettings {
   const parsed = outputSettingsSchema.safeParse(input);
   if (!parsed.success) throw invalidSettings();
   if (!isSupportedLanguage(parsed.data.language)) throw invalidSettings();
-  assertRenderCombinationSupported(parsed.data);
   return parsed.data;
 }
 

@@ -1,0 +1,63 @@
+{
+  "styleId": "creative-mode",
+  "version": "1",
+  "aspectRatios": ["9:16", "1:1", "16:9"],
+  "colors": {
+    "cream": "#EFE9D9",
+    "cream2": "#E4DCC4",
+    "ink": "#0F0F0F",
+    "ink2": "#2A2A2A",
+    "green": "#1F8A4C",
+    "greenDark": "#136636",
+    "pink": "#F06CA8",
+    "pinkDark": "#D14E8B",
+    "orange": "#E85A1F",
+    "yellow": "#F5C518"
+  },
+  "typography": {
+    "displayFamily": "Archivo Black",
+    "monoFamily": "JetBrains Mono",
+    "bodyFamily": "Space Grotesk",
+    "ramp": {
+      "display-hero": { "family": "display", "cqw": 15.5, "weight": 400, "lineHeight": 0.84, "tracking": -0.02, "uppercase": true },
+      "display-xl": { "family": "display", "cqw": 11.0, "weight": 400, "lineHeight": 0.9, "tracking": -0.01, "uppercase": true },
+      "display-lg": { "family": "display", "cqw": 8.0, "weight": 400, "lineHeight": 0.9, "tracking": -0.01, "uppercase": true },
+      "display-head": { "family": "display", "cqw": 4.2, "weight": 400, "lineHeight": 0.92, "tracking": -0.01, "uppercase": true },
+      "step-num": { "family": "display", "cqw": 7.0, "weight": 400, "lineHeight": 0.85, "uppercase": false },
+      "stat-num": { "family": "display", "cqw": 6.4, "weight": 400, "lineHeight": 0.88, "uppercase": false },
+      "marker": { "family": "display", "cqw": 2.4, "weight": 400, "lineHeight": 1.0, "uppercase": true },
+      "badge-label": { "family": "display", "cqw": 1.46, "weight": 400, "lineHeight": 1.0, "uppercase": true },
+      "mono-kicker": { "family": "mono", "cqw": 1.25, "weight": 400, "lineHeight": 1.3, "tracking": 0.14, "uppercase": true },
+      "mono-label": { "family": "mono", "cqw": 1.25, "weight": 400, "lineHeight": 1.3, "tracking": 0.06, "uppercase": true },
+      "body-lg": { "family": "body", "cqw": 1.46, "weight": 400, "lineHeight": 1.4, "uppercase": false },
+      "body-md": { "family": "body", "cqw": 1.25, "weight": 400, "lineHeight": 1.3, "uppercase": false }
+    }
+  },
+  "spacing": {
+    "framePad": "3.3cqw",
+    "contentGutter": "5cqw",
+    "gridGap": "1.5cqw",
+    "cellPad": "1.7cqw"
+  },
+  "motion": {
+    "energy": "bold",
+    "enterSeconds": 0.5,
+    "exitSeconds": 0.3,
+    "staggerSeconds": 0.12
+  },
+  "fonts": [
+    { "family": "Archivo Black", "package": "@fontsource/archivo-black", "weight": 400, "file": "archivo-black-latin-400-normal.woff2" },
+    { "family": "Space Grotesk", "package": "@fontsource/space-grotesk", "weight": 400, "file": "space-grotesk-latin-400-normal.woff2" },
+    { "family": "JetBrains Mono", "package": "@fontsource/jetbrains-mono", "weight": 400, "file": "jetbrains-mono-latin-400-normal.woff2" }
+  ],
+  "rules": {
+    "maxAccentsPerFrame": 3,
+    "minLoadBearingCqw": 1.4,
+    "headlineMaxWidthCqw": 78,
+    "borderCqw": 0.4,
+    "ruleCqw": 0.3,
+    "hardShadow": "1.25cqw 1.25cqw 0",
+    "radius": { "structural": "0", "circle": "50%", "pill": "999px" },
+    "rotation": { "badge": -4, "stamp": -6 }
+  }
+}

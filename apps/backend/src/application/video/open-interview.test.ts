@@ -6,7 +6,7 @@ import { openVideoInterview } from "./open-interview";
 const userId = "11111111-1111-4111-8111-111111111111";
 const projectId = "33333333-3333-4333-8333-333333333333";
 const project = {
-  id: projectId, userId, title: "Kopi", videoType: "product_promo", styleId: "bold_pop", status: "draft",
+  id: projectId, userId, title: "Kopi", videoType: "product_promo", styleId: "creative-mode", status: "draft",
   settings: { durationSeconds: 10, aspectRatio: "9:16", resolution: "1080p", language: "id", voiceOverEnabled: true, musicEnabled: false },
   revisionRenderCount: 0, createdAt: "created", updatedAt: "updated",
 } as VideoProject;

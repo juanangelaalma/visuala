@@ -1,0 +1,5738 @@
+{
+  "items": [
+    {
+      "description": "A question is typed on a rising keyboard, sent, and answered by an AI that streams its reply word by word on a measured token rhythm - thinking dot, uneven bursts, bulleted list - before the app cuts to a branded closing card",
+      "dimensions": {
+        "height": 1920,
+        "width": 1080
+      },
+      "duration": 19.3333,
+      "name": "ai-chat-reveal",
+      "tags": [
+        "showcase",
+        "mock-ui",
+        "ai",
+        "chat",
+        "vertical",
+        "ad-template"
+      ],
+      "title": "AI Chat Reveal",
+      "type": "block"
+    },
+    {
+      "description": "A compact data card with deterministic bar growth and value callouts.",
+      "name": "animated-bar-chart",
+      "tags": [
+        "data"
+      ],
+      "title": "Animated Bar Chart",
+      "type": "component"
+    },
+    {
+      "description": "Fitness app product showcase with three floating smartphone screens",
+      "dimensions": {
+        "height": 1080,
+        "width": 1920
+      },
+      "duration": 5.5,
+      "name": "app-showcase",
+      "tags": [
+        "showcase",
+        "app",
+        "3d"
+      ],
+      "title": "App Showcase",
+      "type": "block"
+    },
+    {
+      "description": "Apple-style finance counter that counts from $0 to $10,000, flashes green, and bursts money icons with sound.",
+      "dimensions": {
+        "height": 1080,
+        "width": 1920
+      },
+      "duration": 5,
+      "name": "apple-money-count",
+      "tags": [
+        "showcase",
+        "finance",
+        "kinetic",
+        "youtube",
+        "sfx"
+      ],
+      "title": "Apple Money Count",
+      "type": "block"
+    },
+    {
+      "description": "A GSAP MotionPath primitive that flies a callout along a curved arc with autorotation.",
+      "name": "arc-motion-path",
+      "tags": [
+        "video-primitive",
+        "motionpath",
+        "gsap-plugin",
+        "hyperframes-native"
+      ],
+      "title": "Arc Motion Path",
+      "type": "component"
+    },
+    {
+      "description": "A slotted scene renders as live ASCII: a canvas samples the source's luminance grid (rasterized once at mount) and draws glyphs from a density ramp charset; resolution steps coarse to fine as the piece resolves, then holds legible-fine.",
+      "name": "ascii-render-pass",
+      "tags": [
+        "motion-primitive",
+        "experiment",
+        "texture",
+        "ascii",
+        "quantize"
+      ],
+      "title": "ASCII Render Pass",
+      "type": "component"
+    },
+    {
+      "description": "An authored S-curve sweeps through a deterministic ASCII grid, flipping cells away to reveal a labeled panel.",
+      "name": "ascii-trail-reveal",
+      "tags": [
+        "motion-primitive",
+        "intro",
+        "reveal",
+        "ascii",
+        "trail",
+        "grid"
+      ],
+      "title": "ASCII Trail Reveal",
+      "type": "component"
+    },
+    {
+      "description": "Three soft accent-derived aurora fields drift in an exact ambient loop over a deep base and faint vignette.",
+      "name": "aurora-drift",
+      "tags": [
+        "motion-primitive",
+        "background",
+        "aurora",
+        "gradient",
+        "ambient",
+        "loopable"
+      ],
+      "title": "Aurora Drift",
+      "type": "component"
+    },
+    {
+      "description": "Lettermark avatars populate a loose elliptical cloud while fine SVG links draw between the community and its central proof label.",
+      "name": "avatar-cloud",
+      "tags": [
+        "effects",
+        "avatars",
+        "community",
+        "network",
+        "social-proof",
+        "prove"
+      ],
+      "title": "Avatar Cloud",
+      "type": "component"
+    },
+    {
+      "description": "A distance-falloff avatar group lift with bouncy hover return",
+      "name": "avatar-group-hover",
+      "tags": [
+        "video-primitive",
+        "transition-primitive",
+        "transitions-dev-port",
+        "avatar",
+        "hover"
+      ],
+      "title": "Avatar Group Hover",
+      "type": "component"
+    },
+    {
+      "description": "A transitions.dev-inspired notification badge pop with elastic scale and count reveal",
+      "name": "badge-pop",
+      "tags": [
+        "video-primitive",
+        "transition-primitive",
+        "transitions-dev-port",
+        "badge",
+        "microinteraction"
+      ],
+      "title": "Badge Pop",
+      "type": "component"
+    },
+    {
+      "description": "Ranked bars grow and overtake each other as a time series advances, with the axis rescaling as values climb and the accent handing over to whoever leads",
+      "dimensions": {
+        "height": 1080,
+        "width": 1920
+      },
+      "duration": 12,
+      "name": "bar-chart-race",
+      "tags": [
+        "data",
+        "chart",
+        "statistics",
+        "ranking"
+      ],
+      "title": "Bar Chart Race",
+      "type": "block"
+    },
+    {
+      "description": "A single music-hit sting: impact flash, micro scale-pulse on the subject, immediate decay.",
+      "name": "beat-accent",
+      "tags": [
+        "motion-primitive",
+        "effects",
+        "burst",
+        "sting",
+        "emphasize",
+        "impact"
+      ],
+      "title": "Beat Accent",
+      "type": "component"
+    },
+    {
+      "description": "A beat-driven speed ramp, freeze-frame hit, and hard-cut sequence for music-led promos and montages.",
+      "dimensions": {
+        "height": 1080,
+        "width": 1920
+      },
+      "duration": 6,
+      "name": "beat-freeze-cut",
+      "tags": [
+        "transition",
+        "music",
+        "beat-driven",
+        "freeze-frame"
+      ],
+      "title": "Beat Freeze Cut",
+      "type": "block"
+    },
+    {
+      "description": "An accent-derived backdrop pulses its glow intensity and saturation on a deterministic, supplied beat grid.",
+      "name": "beat-pulse-background",
+      "tags": [
+        "motion-primitive",
+        "background",
+        "beat",
+        "pulse",
+        "rhythmic",
+        "reactive"
+      ],
+      "title": "Beat Pulse Background",
+      "type": "component"
+    },
+    {
+      "description": "A paused master-timeline orchestration spine that pins titled beat rows to evenly spaced named labels. Each row enters on its label, holds with the sequence, then exits with the group.",
+      "name": "beat-timeline",
+      "tags": [
+        "orchestration",
+        "transitions",
+        "sequencing",
+        "bridge",
+        "timeline"
+      ],
+      "title": "Beat Timeline",
+      "type": "component"
+    },
+    {
+      "description": "Two full-bleed content slots compare before and after states as a persistent divider wipes the after layer over the before layer and rests at a configurable split. Callers fill the named before/after slot panels; token-styled defaults render when a slot is left empty.",
+      "name": "before-after-wipe",
+      "tags": [
+        "prop",
+        "ui-props",
+        "compare",
+        "comparison",
+        "split-screen",
+        "holdable",
+        "before-after",
+        "wipe",
+        "slots"
+      ],
+      "title": "Before After Wipe",
+      "type": "component"
+    },
+    {
+      "description": "Warm AI creator intro sequence that resolves into an X follow card for @_blue_sweater_.",
+      "dimensions": {
+        "height": 1080,
+        "width": 1920
+      },
+      "duration": 12,
+      "name": "blue-sweater-intro-video",
+      "tags": [
+        "showcase",
+        "ai",
+        "creator",
+        "sfx"
+      ],
+      "title": "Blue Sweater Intro Video",
+      "type": "block"
+    },
+    {
+      "description": "An Operator Black word-level content reveal that resolves its own text from controlled blur",
+      "name": "blur-in",
+      "tags": [
+        "video-primitive",
+        "blur-in",
+        "text-effect"
+      ],
+      "title": "Blur In",
+      "type": "component"
+    },
+    {
+      "description": "Words arrive clean and depart upward with increasing blur for airy exits.",
+      "name": "blur-out-up",
+      "tags": [
+        "motion-primitive",
+        "typography"
+      ],
+      "title": "Blur Out Up",
+      "type": "component"
+    },
+    {
+      "description": "Splits text into letters and reveals each glyph from below with deterministic staggered timing",
+      "name": "bottom-up-letters",
+      "tags": [
+        "motion-primitive",
+        "text",
+        "letters",
+        "reveal"
+      ],
+      "title": "Bottom Up Letters",
+      "type": "component"
+    },
+    {
+      "description": "A generic app surface in token-native device chrome (browser, window, or phone). The screen is a slot for caller img/video/HTML with a token-styled skeleton default; one settle entrance, a readable hold, and an optional screen swap.",
+      "name": "browser-device-stage",
+      "tags": [
+        "stage",
+        "product-demo",
+        "device",
+        "browser",
+        "phone",
+        "slot",
+        "chrome"
+      ],
+      "title": "Browser Device Stage",
+      "type": "component"
+    },
+    {
+      "description": "Responsive REC, battery, editable date placeholder, and timeline-driven counter overlay for creator-camera and camcorder treatments",
+      "dimensions": {
+        "height": 1080,
+        "width": 1920
+      },
+      "duration": 4,
+      "name": "camcorder-hud",
+      "tags": [
+        "camcorder",
+        "camera",
+        "recording",
+        "hud",
+        "overlay",
+        "creator",
+        "media-treatment-overlay"
+      ],
+      "title": "Camcorder HUD",
+      "type": "block"
+    },
+    {
+      "description": "Camera tracks toward or away from the subject while the field of view changes the opposite way, so the subject holds its frame size while the background collapses behind it or rushes in. Focal length is solved from dolly distance every frame against d * tan(FOV/2) = const, not keyframed beside it. Requires depth: the subject sits on the z = 0 plane and the content behind it must be layered or genuinely 3D (translateZ at two or more distinct depths) -- a flat element gains nothing from this move.",
+      "dimensions": {
+        "height": 1080,
+        "width": 1920
+      },
+      "duration": 4,
+      "name": "camera-dolly-zoom",
+      "tags": [
+        "camera",
+        "depth",
+        "3d",
+        "cinematic"
+      ],
+      "title": "Dolly Zoom (Vertigo Shot)",
+      "type": "block"
+    },
+    {
+      "description": "A 3D camera-rig-style card stack with depth, parallax, and focus shift.",
+      "name": "camera-rig-depth-stack",
+      "tags": [
+        "advanced-motion",
+        "hyperframes-native"
+      ],
+      "title": "Camera Rig Depth Stack",
+      "type": "component"
+    },
+    {
+      "description": "A camera and QR recognition moment with a viewfinder sweep, bracket lock, confirmation pulse, and verified next beat.",
+      "name": "camera-scan-gate",
+      "tags": [
+        "prop",
+        "ui-props",
+        "camera",
+        "qr",
+        "scan",
+        "recognition",
+        "interaction",
+        "demonstrate"
+      ],
+      "title": "Camera Scan Gate",
+      "type": "component"
+    },
+    {
+      "description": "Procedural handheld, telephoto and rig camera shake for any wrapper: nine measured profiles with per-lens projection, closed-form and seek-safe",
+      "name": "camera-shake",
+      "tags": [
+        "camera",
+        "shake",
+        "handheld",
+        "effect",
+        "cinematic"
+      ],
+      "title": "Camera Shake",
+      "type": "component"
+    },
+    {
+      "description": "Leaves sweep through the frame and part to reveal the headline.",
+      "dimensions": {
+        "height": 1080,
+        "width": 1920
+      },
+      "duration": 12,
+      "name": "canopy-part-title",
+      "tags": [
+        "3d-motion",
+        "title-card",
+        "leaves",
+        "organic",
+        "depth-of-field",
+        "two-headlines",
+        "sweep"
+      ],
+      "title": "Canopy Part Title",
+      "type": "block"
+    },
+    {
+      "description": "Auto-inverting text using mix-blend-mode: difference — flips between white and black per-pixel against the background",
+      "name": "caption-blend-difference",
+      "tags": [
+        "text",
+        "text-effect",
+        "effect",
+        "blend-mode",
+        "contrast",
+        "inversion"
+      ],
+      "title": "Blend Difference",
+      "type": "component"
+    },
+    {
+      "description": "One sentence written across a world far larger than the frame. Each word is sized against everything already written, so the block grows geometrically and the camera pulls back at a steady rate to keep landing the new word at the same size. Old words stay lit and simply become small.",
+      "name": "caption-camera-follow",
+      "tags": [
+        "captions",
+        "caption-style",
+        "camera",
+        "typography",
+        "motion-primitive",
+        "portrait"
+      ],
+      "title": "Camera Follow Captions",
+      "type": "component"
+    },
+    {
+      "description": "Left-to-right clip-path wipe reveal per word",
+      "name": "caption-clip-wipe",
+      "tags": [
+        "captions",
+        "caption-style",
+        "wipe",
+        "clip-path",
+        "reveal"
+      ],
+      "title": "Clip Wipe",
+      "type": "component"
+    },
+    {
+      "description": "Dual-font system with dramatic size contrast for emphasis words",
+      "name": "caption-editorial-emphasis",
+      "tags": [
+        "captions",
+        "caption-style",
+        "editorial",
+        "typography",
+        "emphasis"
+      ],
+      "title": "Editorial Emphasis",
+      "type": "component"
+    },
+    {
+      "description": "Emoji integration with stroked text and horizontal squeeze entrance",
+      "name": "caption-emoji-pop",
+      "tags": [
+        "captions",
+        "caption-style",
+        "emoji",
+        "social"
+      ],
+      "title": "Emoji Pop",
+      "type": "component"
+    },
+    {
+      "description": "RGB chromatic aberration with CRT scanline overlay",
+      "name": "caption-glitch-rgb",
+      "tags": [
+        "captions",
+        "caption-style",
+        "glitch",
+        "cyber",
+        "tech"
+      ],
+      "title": "Glitch RGB",
+      "type": "component"
+    },
+    {
+      "description": "Gradient-clipped text with elastic bounce entrance",
+      "name": "caption-gradient-fill",
+      "tags": [
+        "captions",
+        "caption-style",
+        "gradient",
+        "colorful"
+      ],
+      "title": "Gradient Fill",
+      "type": "component"
+    },
+    {
+      "description": "Red background sweep behind each active word, TikTok-style",
+      "name": "caption-highlight",
+      "tags": [
+        "captions",
+        "caption-style",
+        "highlight",
+        "social",
+        "tiktok"
+      ],
+      "title": "Highlight",
+      "type": "component"
+    },
+    {
+      "description": "Full-screen single-word display with alternating entrance directions",
+      "name": "caption-kinetic-slam",
+      "tags": [
+        "captions",
+        "caption-style",
+        "kinetic",
+        "typography",
+        "slam"
+      ],
+      "title": "Kinetic Slam",
+      "type": "component"
+    },
+    {
+      "description": "Character scramble animation before text reveal",
+      "name": "caption-matrix-decode",
+      "tags": [
+        "captions",
+        "caption-style",
+        "matrix",
+        "scramble",
+        "decode"
+      ],
+      "title": "Matrix Decode",
+      "type": "component"
+    },
+    {
+      "description": "Multi-color neon glow accents with wiggle drift animation",
+      "name": "caption-neon-accent",
+      "tags": [
+        "captions",
+        "caption-style",
+        "neon",
+        "glow",
+        "accent"
+      ],
+      "title": "Neon Accent",
+      "type": "component"
+    },
+    {
+      "description": "Cyan and magenta neon glow with keyword accent colors",
+      "name": "caption-neon-glow",
+      "tags": [
+        "captions",
+        "caption-style",
+        "neon",
+        "glow",
+        "gaming"
+      ],
+      "title": "Neon Glow",
+      "type": "component"
+    },
+    {
+      "description": "Behind-subject 3D text layering with vertical stretch effect",
+      "name": "caption-parallax-layers",
+      "tags": [
+        "captions",
+        "caption-style",
+        "parallax",
+        "3d",
+        "depth"
+      ],
+      "title": "Parallax Layers",
+      "type": "component"
+    },
+    {
+      "description": "Keyword words trigger colored particle explosions",
+      "name": "caption-particle-burst",
+      "tags": [
+        "captions",
+        "caption-style",
+        "particles",
+        "burst",
+        "effects"
+      ],
+      "title": "Particle Burst",
+      "type": "component"
+    },
+    {
+      "description": "Pill-shaped container with per-word karaoke color highlight",
+      "name": "caption-pill-karaoke",
+      "tags": [
+        "captions",
+        "caption-style",
+        "karaoke",
+        "pill"
+      ],
+      "title": "Pill Karaoke",
+      "type": "component"
+    },
+    {
+      "description": "Flowing texture mask over large uppercase text — ships with 6 textures (lava, marble, metal, wood, concrete, rock), configurable via the texture variable",
+      "name": "caption-texture",
+      "tags": [
+        "captions",
+        "caption-style",
+        "texture",
+        "mask"
+      ],
+      "title": "Texture",
+      "type": "component"
+    },
+    {
+      "description": "Elegant font-weight transition between caption lines",
+      "name": "caption-weight-shift",
+      "tags": [
+        "captions",
+        "caption-style",
+        "minimal",
+        "typography"
+      ],
+      "title": "Weight Shift",
+      "type": "component"
+    },
+    {
+      "description": "A transitions.dev-inspired card resize primitive that expands a compact card into a detail panel",
+      "name": "card-resize",
+      "tags": [
+        "video-primitive",
+        "transition-primitive",
+        "transitions-dev-port",
+        "card",
+        "layout"
+      ],
+      "title": "Card Resize",
+      "type": "component"
+    },
+    {
+      "description": "Image cards ride a circle with a size gradient by depth angle, sweeping in fast-slow-fast swings (Circle style 1); 12 image slots.",
+      "dimensions": {
+        "height": 1080,
+        "width": 1920
+      },
+      "duration": 6,
+      "name": "carousel-circle-1",
+      "tags": [
+        "carousel",
+        "gallery",
+        "images",
+        "showcase",
+        "circle"
+      ],
+      "title": "Circle Carousel 1",
+      "type": "block"
+    },
+    {
+      "description": "Image cards ride a circle with a size gradient by depth angle, sweeping in fast-slow-fast swings (Circle style 2); 12 image slots.",
+      "dimensions": {
+        "height": 1080,
+        "width": 1920
+      },
+      "duration": 6,
+      "name": "carousel-circle-2",
+      "tags": [
+        "carousel",
+        "gallery",
+        "images",
+        "showcase",
+        "circle"
+      ],
+      "title": "Circle Carousel 2",
+      "type": "block"
+    },
+    {
+      "description": "Image cards ride a circle with a size gradient by depth angle, sweeping in fast-slow-fast swings (Circle style 3); 12 image slots.",
+      "dimensions": {
+        "height": 1080,
+        "width": 1920
+      },
+      "duration": 6,
+      "name": "carousel-circle-3",
+      "tags": [
+        "carousel",
+        "gallery",
+        "images",
+        "showcase",
+        "circle"
+      ],
+      "title": "Circle Carousel 3",
+      "type": "block"
+    },
+    {
+      "description": "Image cards ride a circle with a size gradient by depth angle, sweeping in fast-slow-fast swings (Circle style 4); 12 image slots.",
+      "dimensions": {
+        "height": 1080,
+        "width": 1920
+      },
+      "duration": 6,
+      "name": "carousel-circle-4",
+      "tags": [
+        "carousel",
+        "gallery",
+        "images",
+        "showcase",
+        "circle"
+      ],
+      "title": "Circle Carousel 4",
+      "type": "block"
+    },
+    {
+      "description": "Image cards ride a circle with a size gradient by depth angle, sweeping in fast-slow-fast swings (Circle style 5); 12 image slots.",
+      "dimensions": {
+        "height": 1080,
+        "width": 1920
+      },
+      "duration": 6,
+      "name": "carousel-circle-5",
+      "tags": [
+        "carousel",
+        "gallery",
+        "images",
+        "showcase",
+        "circle"
+      ],
+      "title": "Circle Carousel 5",
+      "type": "block"
+    },
+    {
+      "description": "Image cards on a spinning 3D Fibonacci sphere, billboarded to the camera, sized by camera distance (Orbit style 1); 24 image slots.",
+      "dimensions": {
+        "height": 1080,
+        "width": 1920
+      },
+      "duration": 6,
+      "name": "carousel-orbit-1",
+      "tags": [
+        "carousel",
+        "gallery",
+        "images",
+        "showcase",
+        "orbit",
+        "3d"
+      ],
+      "title": "Orbit Carousel 1",
+      "type": "block"
+    },
+    {
+      "description": "Image cards on a spinning 3D Fibonacci sphere, billboarded to the camera, sized by camera distance (Orbit style 2); 24 image slots.",
+      "dimensions": {
+        "height": 1080,
+        "width": 1920
+      },
+      "duration": 6,
+      "name": "carousel-orbit-2",
+      "tags": [
+        "carousel",
+        "gallery",
+        "images",
+        "showcase",
+        "orbit",
+        "3d"
+      ],
+      "title": "Orbit Carousel 2",
+      "type": "block"
+    },
+    {
+      "description": "Image cards on a spinning 3D Fibonacci sphere, billboarded to the camera, sized by camera distance (Orbit style 3); 24 image slots.",
+      "dimensions": {
+        "height": 1080,
+        "width": 1920
+      },
+      "duration": 6,
+      "name": "carousel-orbit-3",
+      "tags": [
+        "carousel",
+        "gallery",
+        "images",
+        "showcase",
+        "orbit",
+        "3d"
+      ],
+      "title": "Orbit Carousel 3",
+      "type": "block"
+    },
+    {
+      "description": "Image cards on a spinning 3D Fibonacci sphere, billboarded to the camera, sized by camera distance (Orbit style 4); 24 image slots.",
+      "dimensions": {
+        "height": 1080,
+        "width": 1920
+      },
+      "duration": 6,
+      "name": "carousel-orbit-4",
+      "tags": [
+        "carousel",
+        "gallery",
+        "images",
+        "showcase",
+        "orbit",
+        "3d"
+      ],
+      "title": "Orbit Carousel 4",
+      "type": "block"
+    },
+    {
+      "description": "Image cards on a spinning 3D Fibonacci sphere, billboarded to the camera, sized by camera distance (Orbit style 5); 24 image slots.",
+      "dimensions": {
+        "height": 1080,
+        "width": 1920
+      },
+      "duration": 6,
+      "name": "carousel-orbit-5",
+      "tags": [
+        "carousel",
+        "gallery",
+        "images",
+        "showcase",
+        "orbit",
+        "3d"
+      ],
+      "title": "Orbit Carousel 5",
+      "type": "block"
+    },
+    {
+      "description": "Image cards ride an open bezier path (arc, V, diagonal, wave, S-curve) with depth scaling and tangent rotation (Path style 1); 24 image slots.",
+      "dimensions": {
+        "height": 1080,
+        "width": 1920
+      },
+      "duration": 6,
+      "name": "carousel-path-1",
+      "tags": [
+        "carousel",
+        "gallery",
+        "images",
+        "showcase",
+        "path"
+      ],
+      "title": "Path Carousel 1",
+      "type": "block"
+    },
+    {
+      "description": "Image cards ride an open bezier path (arc, V, diagonal, wave, S-curve) with depth scaling and tangent rotation (Path style 2); 12 image slots.",
+      "dimensions": {
+        "height": 1080,
+        "width": 1920
+      },
+      "duration": 6,
+      "name": "carousel-path-2",
+      "tags": [
+        "carousel",
+        "gallery",
+        "images",
+        "showcase",
+        "path"
+      ],
+      "title": "Path Carousel 2",
+      "type": "block"
+    },
+    {
+      "description": "Image cards ride an open bezier path (arc, V, diagonal, wave, S-curve) with depth scaling and tangent rotation (Path style 3); 12 image slots.",
+      "dimensions": {
+        "height": 1080,
+        "width": 1920
+      },
+      "duration": 6,
+      "name": "carousel-path-3",
+      "tags": [
+        "carousel",
+        "gallery",
+        "images",
+        "showcase",
+        "path"
+      ],
+      "title": "Path Carousel 3",
+      "type": "block"
+    },
+    {
+      "description": "Image cards ride an open bezier path (arc, V, diagonal, wave, S-curve) with depth scaling and tangent rotation (Path style 4); 24 image slots.",
+      "dimensions": {
+        "height": 1080,
+        "width": 1920
+      },
+      "duration": 6,
+      "name": "carousel-path-4",
+      "tags": [
+        "carousel",
+        "gallery",
+        "images",
+        "showcase",
+        "path"
+      ],
+      "title": "Path Carousel 4",
+      "type": "block"
+    },
+    {
+      "description": "Image cards ride an open bezier path (arc, V, diagonal, wave, S-curve) with depth scaling and tangent rotation (Path style 5); 24 image slots.",
+      "dimensions": {
+        "height": 1080,
+        "width": 1920
+      },
+      "duration": 6,
+      "name": "carousel-path-5",
+      "tags": [
+        "carousel",
+        "gallery",
+        "images",
+        "showcase",
+        "path"
+      ],
+      "title": "Path Carousel 5",
+      "type": "block"
+    },
+    {
+      "description": "A headline mask-reveals word by word while a circle carousel converges from off-frame and threads the line, collapses to centre, hard-cuts to a second line that arrives at 1.4× (Circle style 1).",
+      "dimensions": {
+        "height": 1080,
+        "width": 1920
+      },
+      "duration": 5,
+      "name": "carousel-text-circle-1",
+      "tags": [
+        "carousel",
+        "title-card",
+        "kinetic-text",
+        "images",
+        "showcase",
+        "circle"
+      ],
+      "title": "Text + Circle Carousel 1",
+      "type": "block"
+    },
+    {
+      "description": "A headline mask-reveals word by word while a circle carousel converges from off-frame and threads the line, collapses to centre, hard-cuts to a second line that arrives at 1.4× (Circle style 2).",
+      "dimensions": {
+        "height": 1080,
+        "width": 1920
+      },
+      "duration": 5,
+      "name": "carousel-text-circle-2",
+      "tags": [
+        "carousel",
+        "title-card",
+        "kinetic-text",
+        "images",
+        "showcase",
+        "circle"
+      ],
+      "title": "Text + Circle Carousel 2",
+      "type": "block"
+    },
+    {
+      "description": "A headline mask-reveals word by word while a circle carousel converges from off-frame and threads the line, collapses to centre, hard-cuts to a second line that arrives at 1.4× (Circle style 3).",
+      "dimensions": {
+        "height": 1080,
+        "width": 1920
+      },
+      "duration": 5,
+      "name": "carousel-text-circle-3",
+      "tags": [
+        "carousel",
+        "title-card",
+        "kinetic-text",
+        "images",
+        "showcase",
+        "circle"
+      ],
+      "title": "Text + Circle Carousel 3",
+      "type": "block"
+    },
+    {
+      "description": "A headline mask-reveals word by word while a circle carousel converges from off-frame and threads the line, collapses to centre, hard-cuts to a second line that arrives at 1.4× (Circle style 4).",
+      "dimensions": {
+        "height": 1080,
+        "width": 1920
+      },
+      "duration": 5,
+      "name": "carousel-text-circle-4",
+      "tags": [
+        "carousel",
+        "title-card",
+        "kinetic-text",
+        "images",
+        "showcase",
+        "circle"
+      ],
+      "title": "Text + Circle Carousel 4",
+      "type": "block"
+    },
+    {
+      "description": "A headline mask-reveals word by word while a circle carousel converges from off-frame and threads the line, collapses to centre, hard-cuts to a second line that arrives at 1.4× (Circle style 5).",
+      "dimensions": {
+        "height": 1080,
+        "width": 1920
+      },
+      "duration": 5,
+      "name": "carousel-text-circle-5",
+      "tags": [
+        "carousel",
+        "title-card",
+        "kinetic-text",
+        "images",
+        "showcase",
+        "circle"
+      ],
+      "title": "Text + Circle Carousel 5",
+      "type": "block"
+    },
+    {
+      "description": "A ring of large image cards tilted into a row under a 3D camera, each card turning toward the centre (Vision style 1); 12 image slots.",
+      "dimensions": {
+        "height": 1080,
+        "width": 1920
+      },
+      "duration": 6,
+      "name": "carousel-vision-1",
+      "tags": [
+        "carousel",
+        "gallery",
+        "images",
+        "showcase",
+        "vision",
+        "3d"
+      ],
+      "title": "Vision Carousel 1",
+      "type": "block"
+    },
+    {
+      "description": "A ring of large image cards tilted into a row under a 3D camera, each card turning toward the centre (Vision style 2); 12 image slots.",
+      "dimensions": {
+        "height": 1080,
+        "width": 1920
+      },
+      "duration": 6,
+      "name": "carousel-vision-2",
+      "tags": [
+        "carousel",
+        "gallery",
+        "images",
+        "showcase",
+        "vision",
+        "3d"
+      ],
+      "title": "Vision Carousel 2",
+      "type": "block"
+    },
+    {
+      "description": "A ring of large image cards tilted into a row under a 3D camera, each card turning toward the centre (Vision style 3); 12 image slots.",
+      "dimensions": {
+        "height": 1080,
+        "width": 1920
+      },
+      "duration": 6,
+      "name": "carousel-vision-3",
+      "tags": [
+        "carousel",
+        "gallery",
+        "images",
+        "showcase",
+        "vision",
+        "3d"
+      ],
+      "title": "Vision Carousel 3",
+      "type": "block"
+    },
+    {
+      "description": "A ring of large image cards tilted into a row under a 3D camera, each card turning toward the centre (Vision style 4); 12 image slots.",
+      "dimensions": {
+        "height": 1080,
+        "width": 1920
+      },
+      "duration": 6,
+      "name": "carousel-vision-4",
+      "tags": [
+        "carousel",
+        "gallery",
+        "images",
+        "showcase",
+        "vision",
+        "3d"
+      ],
+      "title": "Vision Carousel 4",
+      "type": "block"
+    },
+    {
+      "description": "A ring of large image cards tilted into a row under a 3D camera, each card turning toward the centre (Vision style 5); 12 image slots.",
+      "dimensions": {
+        "height": 1080,
+        "width": 1920
+      },
+      "duration": 6,
+      "name": "carousel-vision-5",
+      "tags": [
+        "carousel",
+        "gallery",
+        "images",
+        "showcase",
+        "vision",
+        "3d"
+      ],
+      "title": "Vision Carousel 5",
+      "type": "block"
+    },
+    {
+      "description": "Headline glyphs hold in a deterministic scatter, then reassemble with an overshooting slam and a three-frame landing shake.",
+      "name": "char-slam-explode",
+      "tags": [
+        "motion-primitive",
+        "typography",
+        "text-treatment",
+        "scatter",
+        "slam",
+        "impact"
+      ],
+      "title": "Char Slam Explode",
+      "type": "component"
+    },
+    {
+      "description": "One chart builds from data in reading order and lands the exact supplied values: staggered bars, a left-to-right line with area fill, a sweeping donut, or filling progress bars, with an accented value callout on the emphasized datum.",
+      "name": "chart-story",
+      "tags": [
+        "motion-primitive",
+        "proof",
+        "stats",
+        "chart",
+        "bars",
+        "line",
+        "donut",
+        "progress",
+        "deterministic"
+      ],
+      "title": "Chart Story",
+      "type": "component"
+    },
+    {
+      "description": "One message arrives on the measured entry - scale 0.75, 0.12s, growing from its sender's corner. The type is an enum switched like marker-highlight's style: a received or sent bubble with a real tail, a large emoji row, an image, or a link card with title and domain. The atom that chat-thread builds conversations from",
+      "name": "chat-message",
+      "tags": [
+        "video-primitive",
+        "chat",
+        "mock-ui",
+        "message"
+      ],
+      "title": "Chat Message",
+      "type": "component"
+    },
+    {
+      "description": "The measured conversation as one mountable scene at full fidelity: status bar, back badge, avatar and name pill, bubbles with real iMessage tails, a Delivered receipt, large emoji rows, a media placeholder, a link card, and typing dots holding the beat. Every message picks its type by prefix - recv:/sent: text, emoji: a large row, img media, card:Title~domain a link card - and heights are measured at mount so any thread fits",
+      "name": "chat-thread",
+      "tags": [
+        "motion-primitive",
+        "chat",
+        "mock-ui",
+        "conversation",
+        "vertical"
+      ],
+      "title": "Chat Thread",
+      "type": "component"
+    },
+    {
+      "description": "A portrait ChatGPT-style exchange types and sends a prompt, streams an answer, assembles a comparison table, and scrolls back through the result",
+      "dimensions": {
+        "height": 1920,
+        "width": 1080
+      },
+      "duration": 14.9,
+      "name": "chatgpt-exchange",
+      "tags": [
+        "showcase",
+        "mock-ui",
+        "ai",
+        "chat",
+        "vertical",
+        "ad-template"
+      ],
+      "title": "ChatGPT Exchange",
+      "type": "block"
+    },
+    {
+      "description": "A fast slide wipe with RGB channel split on peak frames.",
+      "name": "chromatic-aberration-wipe",
+      "tags": [
+        "video-primitive",
+        "transition-primitive"
+      ],
+      "title": "Chromatic Aberration Wipe",
+      "type": "component"
+    },
+    {
+      "description": "Shader transition with chromatic aberration radial split",
+      "dimensions": {
+        "height": 1080,
+        "width": 1920
+      },
+      "duration": 4,
+      "name": "chromatic-radial-split",
+      "tags": [
+        "transition",
+        "shader"
+      ],
+      "title": "Chromatic Radial Split",
+      "type": "block"
+    },
+    {
+      "description": "Shader transition with dramatic zoom blur",
+      "dimensions": {
+        "height": 1080,
+        "width": 1920
+      },
+      "duration": 4,
+      "name": "cinematic-zoom",
+      "tags": [
+        "transition",
+        "shader"
+      ],
+      "title": "Cinematic Zoom",
+      "type": "block"
+    },
+    {
+      "description": "A portrait Claude-style exchange types a prompt, works through search and reasoning steps, then streams a detailed answer with citations and actions",
+      "dimensions": {
+        "height": 1920,
+        "width": 1080
+      },
+      "duration": 21.4,
+      "name": "claude-exchange",
+      "tags": [
+        "showcase",
+        "mock-ui",
+        "ai",
+        "chat",
+        "vertical",
+        "ad-template"
+      ],
+      "title": "Claude Exchange",
+      "type": "block"
+    },
+    {
+      "description": "Syntax-highlighted code on a lit, beveled 3D slab that rotates through real space and settles to a readable rest — true WebGL depth and lighting, not a 2D transform.",
+      "dimensions": {
+        "height": 1080,
+        "width": 1920
+      },
+      "duration": 8,
+      "name": "code-3d-extrude",
+      "tags": [
+        "code",
+        "code-animation",
+        "3d",
+        "webgl",
+        "developer"
+      ],
+      "title": "Code 3D Extrude",
+      "type": "block"
+    },
+    {
+      "description": "An edit shown as a colored diff — removed lines collapse in red, added lines expand in green.",
+      "dimensions": {
+        "height": 1080,
+        "width": 1920
+      },
+      "duration": 6,
+      "name": "code-diff",
+      "tags": [
+        "code",
+        "code-animation",
+        "diff",
+        "developer"
+      ],
+      "title": "Code Diff",
+      "type": "block"
+    },
+    {
+      "description": "A highlight band sweeps across a target line while the surrounding context dims — draws the eye to one line.",
+      "dimensions": {
+        "height": 1080,
+        "width": 1920
+      },
+      "duration": 5,
+      "name": "code-highlight",
+      "tags": [
+        "code",
+        "code-animation",
+        "highlight",
+        "developer"
+      ],
+      "title": "Code Highlight Sweep",
+      "type": "block"
+    },
+    {
+      "description": "One snippet transforms into another — tokens glide between positions, leavers fade out, enterers fade in. Shiki Magic Move re-driven as a paused GSAP timeline.",
+      "dimensions": {
+        "height": 1080,
+        "width": 1920
+      },
+      "duration": 7,
+      "name": "code-morph",
+      "tags": [
+        "code",
+        "code-animation",
+        "morph",
+        "refactor",
+        "developer"
+      ],
+      "title": "Code Morph",
+      "type": "block"
+    },
+    {
+      "description": "Thousands of GPU points scatter through space and fly to the exact glyph pixels of the code, resolving into readable syntax-highlighted text — a particle system, not a token tween.",
+      "dimensions": {
+        "height": 1080,
+        "width": 1920
+      },
+      "duration": 8,
+      "name": "code-particle-assemble",
+      "tags": [
+        "code",
+        "code-animation",
+        "particles",
+        "gpu",
+        "webgl",
+        "developer"
+      ],
+      "title": "Code Particle Assemble",
+      "type": "block"
+    },
+    {
+      "description": "The camera scrolls a long file to bring a target line to center and spotlights it — for walking through real modules.",
+      "dimensions": {
+        "height": 1080,
+        "width": 1920
+      },
+      "duration": 6,
+      "name": "code-scroll",
+      "tags": [
+        "code",
+        "code-animation",
+        "scroll",
+        "developer"
+      ],
+      "title": "Code Scroll To Line",
+      "type": "block"
+    },
+    {
+      "description": "The code compiles into existence: a GPU fragment shader resolves it out of seeded noise with a chromatic dissolve front and edge glow, then holds crisp.",
+      "dimensions": {
+        "height": 1080,
+        "width": 1920
+      },
+      "duration": 7,
+      "name": "code-shader-dissolve",
+      "tags": [
+        "code",
+        "code-animation",
+        "shader",
+        "webgl",
+        "developer"
+      ],
+      "title": "Code Shader Dissolve",
+      "type": "block"
+    },
+    {
+      "description": "A tiled headline surface flips cell by cell under a sweeping depth field to reveal the rear headline.",
+      "dimensions": {
+        "height": 1080,
+        "width": 1920
+      },
+      "duration": 8,
+      "name": "code-slice-hero",
+      "tags": [
+        "3d-motion",
+        "transition",
+        "typography",
+        "tiles",
+        "flip",
+        "webgl2",
+        "shadows",
+        "two-headlines"
+      ],
+      "title": "Code Slice Hero",
+      "type": "block"
+    },
+    {
+      "description": "Apple Terminal Pro profile: black background with grey text and lime green cursor, per-character typing animation of a shell session.",
+      "dimensions": {
+        "height": 1080,
+        "width": 1920
+      },
+      "duration": 12,
+      "name": "code-snippet-apple-terminal-pro",
+      "tags": [
+        "code",
+        "developer",
+        "showcase",
+        "terminal",
+        "apple",
+        "apple-terminal"
+      ],
+      "title": "Code Snippet - Apple Terminal Pro",
+      "type": "block"
+    },
+    {
+      "description": "VS Code workbench with per-character typing animation in the Dark 2026 theme. Full editor chrome with activity bar, sidebar, tabs, terminal, and status bar.",
+      "dimensions": {
+        "height": 1080,
+        "width": 1920
+      },
+      "duration": 11,
+      "name": "code-snippet-dark-2026",
+      "tags": [
+        "code",
+        "developer",
+        "showcase",
+        "vscode"
+      ],
+      "title": "Code Snippet - Dark 2026",
+      "type": "block"
+    },
+    {
+      "description": "VS Code workbench with per-character typing animation in the Dark Modern theme. Full editor chrome with activity bar, sidebar, tabs, terminal, and status bar.",
+      "dimensions": {
+        "height": 1080,
+        "width": 1920
+      },
+      "duration": 11,
+      "name": "code-snippet-dark-modern",
+      "tags": [
+        "code",
+        "developer",
+        "showcase",
+        "vscode"
+      ],
+      "title": "Code Snippet - Dark Modern",
+      "type": "block"
+    },
+    {
+      "description": "A token-chrome terminal panel runs one command: the prompt line types deterministically behind an integer-cycle caret, executes after a beat, and output lines print one per cue before a fresh prompt appears.",
+      "name": "code-terminal-run",
+      "tags": [
+        "motion-primitive",
+        "product-demo",
+        "terminal",
+        "typing",
+        "deterministic"
+      ],
+      "title": "Code Terminal Run",
+      "type": "component"
+    },
+    {
+      "description": "Token-streamed typing reveal with a caret that tracks the frontier — deterministic, no CSS animation.",
+      "dimensions": {
+        "height": 1080,
+        "width": 1920
+      },
+      "duration": 5,
+      "name": "code-typing",
+      "tags": [
+        "code",
+        "code-animation",
+        "typing",
+        "developer"
+      ],
+      "title": "Code Typing",
+      "type": "block"
+    },
+    {
+      "description": "Headline reveal through a feathered, leaning wipe front that is blurred and colour-mapped as it passes, then settles to clean type and wipes off again — the After Effects masked-text + Compound Blur + Colorama 'shiny wipe' as a deterministic canvas effect on any text element",
+      "name": "colorama-wipe",
+      "tags": [
+        "text",
+        "reveal",
+        "wipe",
+        "colorama",
+        "gradient",
+        "blur",
+        "headline",
+        "saas"
+      ],
+      "title": "Colorama Wipe",
+      "type": "component"
+    },
+    {
+      "description": "Two full-bleed panels compare before and after states as a persistent divider wipes the vivid after layer over the muted before layer and rests at a configurable split.",
+      "name": "comparison-split",
+      "tags": [
+        "prop",
+        "ui-props",
+        "compare",
+        "holdable",
+        "before-after",
+        "wipe"
+      ],
+      "title": "Comparison Split",
+      "type": "component"
+    },
+    {
+      "description": "A deterministic celebration burst with seeded particles and gravity.",
+      "name": "confetti",
+      "tags": [
+        "effect"
+      ],
+      "title": "Confetti",
+      "type": "component"
+    },
+    {
+      "description": "A token-driven conic progress ring whose angular fill and center count settle together from one registered percentage.",
+      "name": "conic-progress-ring",
+      "tags": [
+        "data",
+        "progress",
+        "ring",
+        "conic-gradient",
+        "prove",
+        "demonstrate"
+      ],
+      "title": "Conic Progress Ring",
+      "type": "component"
+    },
+    {
+      "description": "Feature nodes brighten in narration order as real-length SVG connectors draw outward from a fixed central hub, then settle into one lockup.",
+      "name": "constellation-hub",
+      "tags": [
+        "motion-primitive",
+        "feature-tour",
+        "hub",
+        "nodes",
+        "connector",
+        "reveal"
+      ],
+      "title": "Constellation Hub",
+      "type": "component"
+    },
+    {
+      "description": "An iridescent soap-bubble planet: a slowly spinning sphere of nebula bands, dust lanes and twinkling stars wrapped in a refracting glass limb with chromatic aberration at the edge.",
+      "dimensions": {
+        "height": 1080,
+        "width": 1920
+      },
+      "duration": 10,
+      "name": "cosmic-orb",
+      "tags": [
+        "webgl",
+        "shader",
+        "background",
+        "showcase",
+        "3d"
+      ],
+      "title": "Cosmic Orb",
+      "type": "block"
+    },
+    {
+      "description": "A token-native stat counter that eases between values, counting up or down, and lands with a restrained scale pulse.",
+      "name": "count-up",
+      "tags": [
+        "motion-primitive",
+        "proof",
+        "stats",
+        "counter",
+        "number",
+        "countdown",
+        "deterministic"
+      ],
+      "title": "Count Up",
+      "type": "component"
+    },
+    {
+      "description": "Shader transition with cross-warped morphing",
+      "dimensions": {
+        "height": 1080,
+        "width": 1920
+      },
+      "duration": 4,
+      "name": "cross-warp-morph",
+      "tags": [
+        "transition",
+        "shader"
+      ],
+      "title": "Cross Warp Morph",
+      "type": "block"
+    },
+    {
+      "description": "A display-scale action line lands per word and fills the frame with air, one generous CTA capsule pops beneath it with a single overshoot, and the finished close holds completely still.",
+      "name": "cta-close",
+      "tags": [
+        "motion-primitive",
+        "ui-props",
+        "cta",
+        "end-card",
+        "close",
+        "ask"
+      ],
+      "title": "CTA Close",
+      "type": "component"
+    },
+    {
+      "description": "A canonical closing lockup that reveals an action line, pops in an accent CTA capsule, settles supporting microcopy, and holds with confidence.",
+      "name": "cta-lockup",
+      "tags": [
+        "motion-primitive",
+        "ui-props",
+        "cta",
+        "end-card",
+        "lockup",
+        "ask"
+      ],
+      "title": "CTA Lockup",
+      "type": "component"
+    },
+    {
+      "description": "A chain of bevelled cuboids rides a travelling wave as a content carousel.",
+      "dimensions": {
+        "height": 1080,
+        "width": 1920
+      },
+      "duration": 6.67,
+      "name": "cuboid-carousel",
+      "tags": [
+        "3d-motion",
+        "carousel",
+        "cards",
+        "travelling-wave",
+        "pbr",
+        "shadows",
+        "room-environment"
+      ],
+      "title": "Cuboid Carousel",
+      "type": "block"
+    },
+    {
+      "description": "A tutorial cursor path: on a settings screen the arrow clicks through three steps, leaving a dotted trail spaced evenly by distance and a numbered marker at each click; each step's trail fades as the next move begins.",
+      "name": "cursor-glyph-trail",
+      "tags": [
+        "cursor",
+        "motion-primitive",
+        "demonstrate",
+        "trail",
+        "tutorial",
+        "steps",
+        "deterministic"
+      ],
+      "title": "Cursor Glyph Trail",
+      "type": "component"
+    },
+    {
+      "description": "A velocity-matched directional hard cut: the outgoing subject accelerates with power4.in, swaps at peak velocity, and the incoming subject continues in the same direction with power4.out.",
+      "name": "cut-the-curve",
+      "tags": [
+        "transition",
+        "directional-cut",
+        "velocity-match",
+        "whip",
+        "bridge",
+        "demonstrate"
+      ],
+      "title": "Cut the Curve",
+      "type": "component"
+    },
+    {
+      "description": "Animated bar + line chart with staggered reveal, NYT-style typography, and value labels",
+      "dimensions": {
+        "height": 1080,
+        "width": 1920
+      },
+      "duration": 15,
+      "name": "data-chart",
+      "tags": [
+        "data",
+        "chart",
+        "statistics"
+      ],
+      "title": "Data Chart",
+      "type": "block"
+    },
+    {
+      "description": "A metric line draws downward as its value counts down and the ambient background darkens in lockstep.",
+      "name": "decline-chart",
+      "tags": [
+        "motion-primitive",
+        "data",
+        "chart",
+        "decline",
+        "metric",
+        "problem"
+      ],
+      "title": "Decline Chart",
+      "type": "component"
+    },
+    {
+      "description": "A phone or tablet mockup staged as a physical scene prop with a screen slot for arbitrary reconstructed UI, rising onto the stage, settling, and holding an idle float",
+      "name": "device-frame-stage",
+      "tags": [
+        "prop",
+        "device",
+        "mobile",
+        "tablet",
+        "ui-props",
+        "holdable"
+      ],
+      "title": "Device Frame Stage",
+      "type": "component"
+    },
+    {
+      "description": "A directional scene push that slides one panel over another.",
+      "name": "directional-wipe",
+      "tags": [
+        "transition-primitive"
+      ],
+      "title": "Directional Wipe",
+      "type": "component"
+    },
+    {
+      "description": "Shader transition with fractal noise domain warping",
+      "dimensions": {
+        "height": 1080,
+        "width": 1920
+      },
+      "duration": 4,
+      "name": "domain-warp-dissolve",
+      "tags": [
+        "transition",
+        "shader"
+      ],
+      "title": "Domain Warp Dissolve",
+      "type": "block"
+    },
+    {
+      "description": "A centered content card stays subtly alive through loop-exact rotation, scale breathing, and a slow light sweep.",
+      "name": "drift-hold",
+      "tags": [
+        "motion-primitive",
+        "camera",
+        "ambient",
+        "drift",
+        "hold",
+        "loopable"
+      ],
+      "title": "Drift Hold",
+      "type": "component"
+    },
+    {
+      "description": "A responsive animated grid background driven by CSS variables for SaaS, code, and data scenes",
+      "name": "dynamic-grid",
+      "tags": [
+        "video-primitive",
+        "motion-primitive",
+        "background",
+        "grid",
+        "ui"
+      ],
+      "title": "Dynamic Grid",
+      "type": "component"
+    },
+    {
+      "description": "A moving element renders with N ghosted copies of itself at t minus i times delta, opacity stepped down per ghost; one traversal, echoes collapsing into the settled element at rest.",
+      "name": "echo-trail",
+      "tags": [
+        "motion-primitive",
+        "demonstrate",
+        "trail",
+        "onion-skin",
+        "ghosts",
+        "deterministic"
+      ],
+      "title": "Echo Trail",
+      "type": "component"
+    },
+    {
+      "description": "Finite neutral-warm light layers for a seek-safe camera-flash cut or social reveal",
+      "dimensions": {
+        "height": 1080,
+        "width": 1920
+      },
+      "duration": 4,
+      "name": "editorial-flash-overlay",
+      "tags": [
+        "flash",
+        "editorial",
+        "social",
+        "light",
+        "transition",
+        "overlay",
+        "media-treatment-overlay"
+      ],
+      "title": "Editorial Flash Overlay",
+      "type": "block"
+    },
+    {
+      "description": "The never-fully-lands arrival: an element covers most of its move in the first fifth of the duration and creeps the rest to the last frame, exits along its arrival vector, and carries shutter motion blur — from any side or by scale, one call per element, plus the ease on its own for any tween",
+      "name": "extended-keyframe",
+      "tags": [
+        "motion",
+        "ease",
+        "arrival",
+        "kinetic-type",
+        "text",
+        "motion-blur",
+        "after-effects",
+        "slide-in",
+        "scale-in"
+      ],
+      "title": "Extended Keyframe",
+      "type": "component"
+    },
+    {
+      "description": "A faceted low-poly mass of 36 triangles continuously reshapes between three authored silhouettes (blob, mark, badge) with per-facet flat shading that recomputes as the vertices move. Light reads from the upper left; lit facets lift toward a pale accent-tinted tone while turned-away facets fall toward near-black. One calm continuous morph, then a settled hold.",
+      "name": "facet-morph",
+      "tags": [
+        "motion-primitive",
+        "intro",
+        "morph",
+        "low-poly",
+        "svg",
+        "deterministic"
+      ],
+      "title": "Facet Morph",
+      "type": "component"
+    },
+    {
+      "description": "A calm transition primitive that fades one layer out, passes through a wash, and reveals the next layer",
+      "name": "fade-through",
+      "tags": [
+        "motion-primitive",
+        "transition",
+        "fade",
+        "crossfade",
+        "scene"
+      ],
+      "title": "Fade Through",
+      "type": "component"
+    },
+    {
+      "description": "Shader transition with white flash crossfade",
+      "dimensions": {
+        "height": 1080,
+        "width": 1920
+      },
+      "duration": 4,
+      "name": "flash-through-white",
+      "tags": [
+        "transition",
+        "shader"
+      ],
+      "title": "Flash Through White",
+      "type": "block"
+    },
+    {
+      "description": "Animated decision tree with SVG connectors, sticky-note nodes, cursor interaction, and typing correction",
+      "dimensions": {
+        "height": 1080,
+        "width": 1920
+      },
+      "duration": 12,
+      "name": "flowchart",
+      "tags": [
+        "diagram",
+        "flowchart",
+        "interactive"
+      ],
+      "title": "Flowchart",
+      "type": "block"
+    },
+    {
+      "description": "Portrait animated decision tree with SVG connectors, sticky-note nodes, cursor interaction, and typing correction",
+      "dimensions": {
+        "height": 2560,
+        "width": 1440
+      },
+      "duration": 12,
+      "name": "flowchart-vertical",
+      "tags": [
+        "diagram",
+        "flowchart",
+        "interactive",
+        "portrait"
+      ],
+      "title": "Flowchart Vertical",
+      "type": "block"
+    },
+    {
+      "description": "A premium focus pull from heavy blur to crisp text, then a soft blur-out exit.",
+      "name": "focus-blur-resolve",
+      "tags": [
+        "motion-primitive",
+        "typography"
+      ],
+      "title": "Focus Blur Resolve",
+      "type": "component"
+    },
+    {
+      "description": "Focus shifts once between two cards at different apparent depths through synchronized blur, dimming, scale, and parallax.",
+      "name": "focus-rack",
+      "tags": [
+        "motion-primitive",
+        "camera",
+        "focus",
+        "focus-rack",
+        "depth",
+        "parallax",
+        "emphasize"
+      ],
+      "title": "Focus Rack",
+      "type": "component"
+    },
+    {
+      "description": "Moves attention between two side-by-side cards as one recedes with scale, blur, and dimming while the other advances to full focus.",
+      "name": "focus-swap",
+      "tags": [
+        "effect",
+        "ui-props",
+        "focus",
+        "blur",
+        "attention",
+        "demonstrate"
+      ],
+      "title": "Focus Swap",
+      "type": "component"
+    },
+    {
+      "description": "Timeline-driven paper, tape, and flash dressing for a freeze-frame or background-removed subject",
+      "dimensions": {
+        "height": 1080,
+        "width": 1920
+      },
+      "duration": 4,
+      "name": "freeze-frame-dressing",
+      "tags": [
+        "freeze-frame",
+        "cutout",
+        "scrapbook",
+        "paper",
+        "social",
+        "overlay",
+        "media-treatment-overlay"
+      ],
+      "title": "Freeze-Frame Dressing",
+      "type": "block"
+    },
+    {
+      "description": "An orbiting camera follows an ice logo as it breaks apart, reforms into two text moments, and fades.",
+      "dimensions": {
+        "height": 1080,
+        "width": 1920
+      },
+      "duration": 22.5,
+      "name": "frost-sequence-camera-orbit",
+      "tags": [
+        "3d-motion",
+        "ice",
+        "frost",
+        "camera-orbit",
+        "logo",
+        "particles",
+        "webgpu",
+        "two-headlines"
+      ],
+      "title": "Frost Sequence Camera Orbit",
+      "type": "block"
+    },
+    {
+      "description": "An infinite corridor of panels: a square tunnel receding to a vanishing point, its floor, ceiling and walls tiled with saturated colour slabs and caller-supplied images that swell toward camera and exit past you, the far end dissolving into fog.",
+      "dimensions": {
+        "height": 1080,
+        "width": 1920
+      },
+      "duration": 12,
+      "name": "gallery-tunnel",
+      "tags": [
+        "webgl",
+        "3d",
+        "background",
+        "showcase",
+        "depth",
+        "loop"
+      ],
+      "title": "Gallery Tunnel",
+      "type": "block"
+    },
+    {
+      "description": "A contact circle taps a mobile pill button, releases it into a new labeled accent state, and lifts away.",
+      "name": "gesture-tap",
+      "tags": [
+        "motion-primitive",
+        "gesture",
+        "tap",
+        "interaction",
+        "ui-props"
+      ],
+      "title": "Gesture Tap",
+      "type": "component"
+    },
+    {
+      "description": "Glass shards fly in through fog and tile themselves into the headline.",
+      "dimensions": {
+        "height": 1080,
+        "width": 1920
+      },
+      "duration": 12.16,
+      "name": "glass-shard-title",
+      "tags": [
+        "3d-motion",
+        "title-card",
+        "glass",
+        "voronoi",
+        "shards",
+        "fog",
+        "hdr"
+      ],
+      "title": "Glass Shard Title",
+      "type": "block"
+    },
+    {
+      "description": "Shader transition with digital glitch artifacts",
+      "dimensions": {
+        "height": 1080,
+        "width": 1920
+      },
+      "duration": 4,
+      "name": "glitch",
+      "tags": [
+        "transition",
+        "shader"
+      ],
+      "title": "Glitch",
+      "type": "block"
+    },
+    {
+      "description": "A card lands with a restrained slam, catches one diagonal specular gloss, and holds perfectly still.",
+      "name": "gloss-sweep",
+      "tags": [
+        "motion-primitive",
+        "celebration",
+        "gloss",
+        "card",
+        "badge",
+        "payoff"
+      ],
+      "title": "Gloss Sweep",
+      "type": "component"
+    },
+    {
+      "description": "The same picture twice, one flat and one finished, with a hard edge sweeping between them. It stops in the middle long enough to compare, then commits and the graded look takes the frame. Both looks are real HyperFrames color grading run through the WebGL shader, so the preview and the render match.",
+      "name": "grade-split-reveal",
+      "tags": [
+        "color-grading",
+        "media",
+        "compare",
+        "reveal",
+        "motion-primitive",
+        "grade"
+      ],
+      "title": "Grade Split Reveal",
+      "type": "component"
+    },
+    {
+      "description": "A clearly visible accent-tinted dot field drifts over a subtle luminance gradient in an exact ambient loop.",
+      "name": "grain-field",
+      "tags": [
+        "motion-primitive",
+        "background",
+        "grain",
+        "dots",
+        "texture",
+        "ambient",
+        "loopable"
+      ],
+      "title": "Grain Field",
+      "type": "component"
+    },
+    {
+      "description": "Animated film grain texture overlay using CSS keyframes — adds warmth and analog character to any composition",
+      "name": "grain-overlay",
+      "tags": [
+        "texture",
+        "grain",
+        "overlay",
+        "film"
+      ],
+      "title": "Grain Overlay",
+      "type": "component"
+    },
+    {
+      "description": "Shader transition with gravitational lensing distortion",
+      "dimensions": {
+        "height": 1080,
+        "width": 1920
+      },
+      "duration": 4,
+      "name": "gravitational-lens",
+      "tags": [
+        "transition",
+        "shader"
+      ],
+      "title": "Gravitational Lens",
+      "type": "block"
+    },
+    {
+      "description": "N capability cards (thin-line icon that draws on, mono label, optional muted body) stagger-assemble into a grid or vertical list with a fade plus short slide into slot, then hold perfectly still.",
+      "name": "grid-card-assemble",
+      "tags": [
+        "motion-primitive",
+        "layout",
+        "grid",
+        "list",
+        "stagger",
+        "assemble",
+        "feature-tour"
+      ],
+      "title": "Grid Card Assemble",
+      "type": "component"
+    },
+    {
+      "description": "Transition effect where the screen dissolves into a grid of squares that fade out with staggered timing — use between scenes",
+      "name": "grid-pixelate-wipe",
+      "tags": [
+        "transition",
+        "wipe",
+        "grid",
+        "pixelate"
+      ],
+      "title": "Grid Pixelate Wipe",
+      "type": "component"
+    },
+    {
+      "description": "Scene A dissolves into scene B through a growing halftone dot field: accent ink dots pop onto a fixed grid smallest-first, each opens into a window onto B, until the windows merge and B fully replaces A.",
+      "name": "halftone-dissolve",
+      "tags": [
+        "motion-primitive",
+        "transition",
+        "texture",
+        "halftone",
+        "dissolve"
+      ],
+      "title": "Halftone Dissolve",
+      "type": "component"
+    },
+    {
+      "description": "A full-bleed halftone light field: a grid of dots whose size and colour track a slow flowing simplex-noise field, so broad bands of light sweep across a mostly-black frame like a giant LED wall showing a plasma. Built to run under type.",
+      "dimensions": {
+        "height": 1080,
+        "width": 1920
+      },
+      "duration": 10,
+      "name": "halftone-field",
+      "tags": [
+        "webgl",
+        "shader",
+        "background",
+        "texture",
+        "halftone"
+      ],
+      "title": "Halftone Field",
+      "type": "block"
+    },
+    {
+      "description": "A heavyweight headline scales down into frame, lands with a deterministic three-frame shake, holds with subtle drift, and whips upward on exit.",
+      "name": "headline-slam",
+      "tags": [
+        "motion-primitive",
+        "typography",
+        "headline",
+        "slam",
+        "impact",
+        "exit"
+      ],
+      "title": "Headline Slam",
+      "type": "component"
+    },
+    {
+      "description": "A portrait HeyGen offer card pairs a moving avatar mosaic with bold promotional typography and a branded callout",
+      "dimensions": {
+        "height": 1920,
+        "width": 1080
+      },
+      "duration": 10,
+      "name": "heygen-avatar-promo-card",
+      "tags": [
+        "showcase",
+        "avatar",
+        "promotion",
+        "vertical"
+      ],
+      "title": "HeyGen Avatar Promo Card",
+      "type": "block"
+    },
+    {
+      "description": "Wobbled draw-on arrow with straight, gentle, and swoop curve poses, a four-way stroke texture matrix (plain/soft/sharp/spray), and a travel-aligned head-arrival stretch pulse with spring recovery; boils while on screen",
+      "name": "hw-arrow",
+      "tags": [
+        "handwritten",
+        "annotation",
+        "arrow",
+        "overlay"
+      ],
+      "title": "Hand-Drawn Arrow",
+      "type": "component"
+    },
+    {
+      "description": "Hand-drawn jitter that re-poses every N frames, as seek-safe helpers: pose derives from quantized timeline time through a seeded hash; includes the shared onUpdate dispatcher, a wobbled-ellipse path generator, the boil pose control (off/calm/lively over the family-locked frameDrop), a curvature-adaptive pen-velocity ease, and the completed stroke matrix (plain/soft/sharp/spray — spray is index-seeded deterministic dots, no turbulence) with texture-safe draw-on",
+      "name": "hw-boil",
+      "tags": [
+        "handwritten",
+        "effect",
+        "annotation"
+      ],
+      "title": "Hand-Drawn Boil",
+      "type": "component"
+    },
+    {
+      "description": "Wobbled rounded rectangle draws on — across the authored stroke matrix (plain/soft/sharp/spray) — or drops in and lands with a volume-true contact squash and bouncy spring recovery, with a handwritten label above or centered; boils",
+      "name": "hw-box-label",
+      "tags": [
+        "handwritten",
+        "annotation",
+        "overlay"
+      ],
+      "title": "Hand-Drawn Box Label",
+      "type": "component"
+    },
+    {
+      "description": "Wobbled ellipse draws around a target with optional scribble fill and curved connector; the handwritten label pops in WITH momentum and the drawn shapes absorb the arrival with a volume-preserving contact squash; outline and connector take the family stroke matrix (plain/soft/sharp/spray); boils",
+      "name": "hw-callout-circle",
+      "tags": [
+        "handwritten",
+        "annotation",
+        "callout",
+        "overlay"
+      ],
+      "title": "Scribble Callout Circle",
+      "type": "component"
+    },
+    {
+      "description": "Media in a hand-drawn border with corner doodles and a handwritten caption; the unit tilts slightly and boils (images inside the block; keep live footage in the host)",
+      "dimensions": {
+        "height": 1080,
+        "width": 1920
+      },
+      "duration": 8,
+      "name": "hw-frame",
+      "tags": [
+        "handwritten",
+        "frame",
+        "media"
+      ],
+      "title": "Sketched Frame",
+      "type": "block"
+    },
+    {
+      "description": "Handwriting flowing along any SVG path with a per-character reveal; the path is the only geometry input",
+      "dimensions": {
+        "height": 1080,
+        "width": 1920
+      },
+      "duration": 6,
+      "name": "hw-path-text",
+      "tags": [
+        "handwritten",
+        "typography",
+        "path",
+        "overlay"
+      ],
+      "title": "Text Along a Path",
+      "type": "block"
+    },
+    {
+      "description": "Wobbled boxes with handwritten labels joined by curved connectors, drawing on in sequence from a node list",
+      "dimensions": {
+        "height": 1080,
+        "width": 1920
+      },
+      "duration": 7,
+      "name": "hw-pipeline",
+      "tags": [
+        "handwritten",
+        "diagram",
+        "data-viz",
+        "overlay"
+      ],
+      "title": "Hand-Drawn Flowchart",
+      "type": "block"
+    },
+    {
+      "description": "Overlay transition: scribble bands accumulate to cover the frame with a solid backstop, the host cuts beneath, and the scribble clears",
+      "dimensions": {
+        "height": 1080,
+        "width": 1920
+      },
+      "duration": 2.2,
+      "name": "hw-scribble-transition",
+      "tags": [
+        "handwritten",
+        "transition",
+        "wipe"
+      ],
+      "title": "Scribble Transition",
+      "type": "block"
+    },
+    {
+      "description": "Hand-drawn speech bubble with a positionable tail: outline draws on, paper fill fades in, handwritten text types per character; boils",
+      "dimensions": {
+        "height": 1080,
+        "width": 1920
+      },
+      "duration": 6,
+      "name": "hw-text-cloud",
+      "tags": [
+        "handwritten",
+        "speech-bubble",
+        "overlay"
+      ],
+      "title": "Speech Bubble",
+      "type": "block"
+    },
+    {
+      "description": "Handwritten display text with a scalar-driven word-by-word highlight sweep and a seeded squiggle underline sized to the text; boils",
+      "dimensions": {
+        "height": 1080,
+        "width": 1920
+      },
+      "duration": 6,
+      "name": "hw-title",
+      "tags": [
+        "handwritten",
+        "typography",
+        "title-card",
+        "overlay"
+      ],
+      "title": "Handwritten Title",
+      "type": "block"
+    },
+    {
+      "description": "Hand-drawn squiggle underline, double-pass strikethrough, and bracket marks that draw on",
+      "name": "hw-underline",
+      "tags": [
+        "handwritten",
+        "annotation",
+        "text-treatment"
+      ],
+      "title": "Squiggle Marks",
+      "type": "component"
+    },
+    {
+      "description": "True glyph write-on: filled Caveat letterforms revealed by baked per-glyph centerline strokes traced in real stroke order with a curvature-adaptive pen-velocity ease (fast on straights, slow into curves, inter-stroke pen lifts); optional squiggle underline; boils",
+      "dimensions": {
+        "height": 1080,
+        "width": 1920
+      },
+      "duration": 6,
+      "name": "hw-write-title",
+      "tags": [
+        "handwritten",
+        "typography",
+        "title-card",
+        "write-on",
+        "overlay"
+      ],
+      "title": "Handwritten Write-On Title",
+      "type": "block"
+    },
+    {
+      "description": "An icon morphs between authored state silhouettes, shifts to an accent color, and marks completion with one restrained pulse.",
+      "name": "icon-morph-beat",
+      "tags": [
+        "motion-primitive",
+        "product-demo",
+        "icon",
+        "morph",
+        "state-change",
+        "completion"
+      ],
+      "title": "Icon Morph Beat",
+      "type": "component"
+    },
+    {
+      "description": "A scale-and-blur icon swap primitive for toolbar and action state changes",
+      "name": "icon-swap",
+      "tags": [
+        "video-primitive",
+        "transition-primitive",
+        "transitions-dev-port",
+        "icon",
+        "swap"
+      ],
+      "title": "Icon Swap",
+      "type": "component"
+    },
+    {
+      "description": "Liquid ink blooms through paper under a gooey blur-plus-threshold filter, merges, then contracts as a crisp slotted mark resolves beneath it, with static seeded paper grain riding the result.",
+      "name": "ink-bleed-reveal",
+      "tags": [
+        "motion-primitive",
+        "texture",
+        "reveal",
+        "gooey",
+        "svg-filter",
+        "deterministic",
+        "experiment"
+      ],
+      "title": "Ink Bleed Reveal",
+      "type": "component"
+    },
+    {
+      "description": "A clean marker-style inline highlight that animates behind text using a CSS scale variable",
+      "name": "inline-highlight",
+      "tags": [
+        "motion-primitive",
+        "text",
+        "highlight",
+        "caption"
+      ],
+      "title": "Inline Highlight",
+      "type": "component"
+    },
+    {
+      "description": "A transitions.dev-inspired input feedback primitive with shake, clear affordance, and success state",
+      "name": "input-feedback",
+      "tags": [
+        "transition-primitive",
+        "transitions-dev-port",
+        "input",
+        "feedback"
+      ],
+      "title": "Input Feedback",
+      "type": "component"
+    },
+    {
+      "description": "Animated Instagram follow overlay with profile card and follow button",
+      "dimensions": {
+        "height": 1920,
+        "width": 1080
+      },
+      "duration": 4.5,
+      "name": "instagram-follow",
+      "tags": [
+        "social",
+        "overlay",
+        "instagram"
+      ],
+      "title": "Instagram Follow",
+      "type": "block"
+    },
+    {
+      "description": "3D iPhone with a normal iOS 26 home screen, liquid glass app icons, shader wallpaper, dock, and fluid glass notifications that drop from the status area onto a GLTF device model.",
+      "dimensions": {
+        "height": 1080,
+        "width": 1920
+      },
+      "duration": 15,
+      "name": "ios26-liquid-glass",
+      "tags": [
+        "liquid-glass-html-in-canvas",
+        "webgpu",
+        "3d",
+        "iphone",
+        "ios26",
+        "notifications",
+        "gltf",
+        "html-in-canvas"
+      ],
+      "title": "iOS 26 Liquid Glass Home Screen",
+      "type": "block"
+    },
+    {
+      "description": "A circle clip-path opens from an authored origin revealing state B over state A in one confident pass, then holds on B. Classic register dims and desaturates the before state so the after state lands in full color; a thin accent rim rides the iris edge. Callers fill the named before/after slot panels; token-styled defaults render when a slot is left empty.",
+      "name": "iris-reveal",
+      "tags": [
+        "transition",
+        "iris",
+        "circle-reveal",
+        "clip-path",
+        "bridge",
+        "slots"
+      ],
+      "title": "Iris Reveal",
+      "type": "component"
+    },
+    {
+      "description": "A keyframe-sequenced stack of cards with offset timing and easing presets.",
+      "name": "keyframe-scrub-stack",
+      "tags": [
+        "advanced-motion",
+        "anime-inspired",
+        "hyperframes-native"
+      ],
+      "title": "Keyframe Scrub Stack",
+      "type": "component"
+    },
+    {
+      "description": "Words enter from the right and push the growing phrase left until the final line locks centered.",
+      "name": "kinetic-center-build",
+      "tags": [
+        "motion-primitive",
+        "text-effects",
+        "kinetic-type",
+        "reveal",
+        "remocn-port"
+      ],
+      "title": "Kinetic Center Build",
+      "type": "component"
+    },
+    {
+      "description": "A held sentence keeps its fixed text in place while one widest-word masked slot rolls through alternatives and settles on the final option.",
+      "name": "kinetic-type-swap",
+      "tags": [
+        "motion-primitive",
+        "text-effects",
+        "kinetic-type",
+        "word-swap",
+        "reveal"
+      ],
+      "title": "Kinetic Type Swap",
+      "type": "component"
+    },
+    {
+      "description": "Shader transition with cinematic light leak overlay",
+      "dimensions": {
+        "height": 1080,
+        "width": 1920
+      },
+      "duration": 4,
+      "name": "light-leak",
+      "tags": [
+        "transition",
+        "shader"
+      ],
+      "title": "Light Leak",
+      "type": "block"
+    },
+    {
+      "description": "A traveling key light re-shades a slotted scene: a soft diagonal gradient band crosses the frame once while every per-element highlight and shadow shifts in lockstep (all driven by one --light-x property), then the light settles into a resting key. Quiet, expensive-feeling; the scene itself never moves. Callers fill the named scene slot; a token hero-and-cards default renders when it is left empty.",
+      "name": "light-sweep-pass",
+      "tags": [
+        "motion-primitive",
+        "overlay",
+        "light",
+        "sweep",
+        "slots",
+        "deterministic"
+      ],
+      "title": "Light Sweep Pass",
+      "type": "component"
+    },
+    {
+      "description": "Each line enters from the left with staggered slide and exits to the right.",
+      "name": "line-by-line-slide",
+      "tags": [
+        "motion-primitive",
+        "typography"
+      ],
+      "title": "Line-by-Line Slide",
+      "type": "component"
+    },
+    {
+      "description": "A masked full-line beat replacement: line A holds center then exits up through an overflow-hidden mask as line B enters bottom-up on the same beat, with an optional accent underline drawing beneath one word of line B.",
+      "name": "line-swap",
+      "tags": [
+        "motion-primitive",
+        "text-effects",
+        "swap",
+        "beat",
+        "deterministic"
+      ],
+      "title": "Line Swap",
+      "type": "component"
+    },
+    {
+      "description": "Frosted glass notification cards floating over an aurora shader background",
+      "dimensions": {
+        "height": 1080,
+        "width": 1920
+      },
+      "duration": 8,
+      "name": "liquid-glass-notification",
+      "tags": [
+        "html-in-canvas",
+        "liquid-glass-html-in-canvas",
+        "webgpu"
+      ],
+      "title": "Liquid Glass Notification",
+      "type": "block"
+    },
+    {
+      "description": "Frosted glass stat cards, showcase panel and pill chips over an aurora shader background",
+      "dimensions": {
+        "height": 1080,
+        "width": 1920
+      },
+      "duration": 8,
+      "name": "liquid-glass-widgets",
+      "tags": [
+        "html-in-canvas",
+        "liquid-glass-html-in-canvas",
+        "webgpu"
+      ],
+      "title": "Liquid Glass Widgets",
+      "type": "block"
+    },
+    {
+      "description": "A fixed center nucleus anchors deterministic satellite orbits that settle into a composed lockup.",
+      "name": "locked-nucleus-orbit",
+      "tags": [
+        "motion-primitive",
+        "intro",
+        "reveal",
+        "orbit",
+        "lockup",
+        "deterministic"
+      ],
+      "title": "Locked Nucleus Orbit",
+      "type": "component"
+    },
+    {
+      "description": "A display-scale wordmark cascades letter by letter into a centered lockup, the accent brand period lands last, an optional tagline and wide-tracked mono URL settle beneath, and the finished identity holds dead still to the end of the film.",
+      "name": "logo-brand-close",
+      "tags": [
+        "motion-primitive",
+        "typography",
+        "brand",
+        "logo",
+        "end-card",
+        "close"
+      ],
+      "title": "Logo Brand Close",
+      "type": "component"
+    },
+    {
+      "description": "Cinematic logo reveal with piece-by-piece assembly, glow bloom, tagline fade-in, and URL pill",
+      "dimensions": {
+        "height": 1080,
+        "width": 1920
+      },
+      "duration": 6,
+      "name": "logo-outro",
+      "tags": [
+        "branding",
+        "outro",
+        "logo"
+      ],
+      "title": "Logo Outro",
+      "type": "block"
+    },
+    {
+      "description": "A wordmark slams into its final scale, fires one accent ring and one white impact frame, then holds completely still.",
+      "name": "logo-sting",
+      "tags": [
+        "motion-primitive",
+        "brand",
+        "logo",
+        "sting",
+        "impact",
+        "reveal"
+      ],
+      "title": "Logo Sting",
+      "type": "component"
+    },
+    {
+      "description": "A trusted-by wall of placeholder lettermark logos that fades and scales into place with a deterministic per-cell stagger.",
+      "name": "logo-wall",
+      "tags": [
+        "data",
+        "logos",
+        "social-proof",
+        "stagger",
+        "prove"
+      ],
+      "title": "Logo Wall",
+      "type": "component"
+    },
+    {
+      "description": "A jointed flat character walks in on planted feet, stops and points at a card; the body acting is a Lottie file and the stage is GSAP.",
+      "dimensions": {
+        "height": 1080,
+        "width": 1920
+      },
+      "duration": 7.5,
+      "name": "lottie-character-walk",
+      "tags": [
+        "character",
+        "character-animation",
+        "mascot",
+        "walk-cycle",
+        "gesture",
+        "pointing",
+        "puppet",
+        "lottie",
+        "explainer"
+      ],
+      "title": "Lottie Character Walk",
+      "type": "block"
+    },
+    {
+      "description": "News-style lower third with tight-fit text boxes: white headline bar with red drop-shadow, red sub-line with white drop-shadow.",
+      "dimensions": {
+        "height": 1080,
+        "width": 1920
+      },
+      "duration": 8,
+      "name": "lower-third-bild",
+      "tags": [
+        "broadcast",
+        "lower-third",
+        "news",
+        "overlay"
+      ],
+      "title": "Lower Third — BILD Style",
+      "type": "block"
+    },
+    {
+      "description": "Cardless lower third for footage overlay: name rises, an accent rule draws left-to-right, role fades in; text-shadowed for legibility",
+      "dimensions": {
+        "height": 1080,
+        "width": 1920
+      },
+      "duration": 4.8,
+      "name": "lt-accent-underline",
+      "tags": [
+        "lower-third",
+        "overlay",
+        "podcast",
+        "interview",
+        "minimal"
+      ],
+      "title": "Lower Third — Accent Underline",
+      "type": "block"
+    },
+    {
+      "description": "High-energy podcast lower third: solid dark block wipes in, uppercase name slams up, accent tag pops",
+      "dimensions": {
+        "height": 1080,
+        "width": 1920
+      },
+      "duration": 4.8,
+      "name": "lt-bold-block",
+      "tags": [
+        "lower-third",
+        "overlay",
+        "podcast",
+        "interview",
+        "bold"
+      ],
+      "title": "Lower Third — Bold Block",
+      "type": "block"
+    },
+    {
+      "description": "Minimal white-card lower third for podcasts/interviews: accent tab, name + role, clip-wipe entrance",
+      "dimensions": {
+        "height": 1080,
+        "width": 1920
+      },
+      "duration": 4.8,
+      "name": "lt-clean-bar",
+      "tags": [
+        "lower-third",
+        "overlay",
+        "podcast",
+        "interview"
+      ],
+      "title": "Lower Third — Clean Bar",
+      "type": "block"
+    },
+    {
+      "description": "High-energy lower third: bold accent-color block slides in with overshoot, condensed name + mono role",
+      "dimensions": {
+        "height": 1080,
+        "width": 1920
+      },
+      "duration": 4.8,
+      "name": "lt-color-block",
+      "tags": [
+        "lower-third",
+        "overlay",
+        "podcast",
+        "interview",
+        "bold"
+      ],
+      "title": "Lower Third — Color Block",
+      "type": "block"
+    },
+    {
+      "description": "Charcoal card lower third for bright footage: name, drawn accent underline, role; slide-up entrance",
+      "dimensions": {
+        "height": 1080,
+        "width": 1920
+      },
+      "duration": 4.8,
+      "name": "lt-dark-card",
+      "tags": [
+        "lower-third",
+        "overlay",
+        "podcast",
+        "interview",
+        "dark"
+      ],
+      "title": "Lower Third — Dark Card",
+      "type": "block"
+    },
+    {
+      "description": "Cardless lower third with an accent eyebrow/kicker tag, heavy name, and a drawn baseline; for footage",
+      "dimensions": {
+        "height": 1080,
+        "width": 1920
+      },
+      "duration": 4.8,
+      "name": "lt-kicker-name",
+      "tags": [
+        "lower-third",
+        "overlay",
+        "podcast",
+        "interview",
+        "bold"
+      ],
+      "title": "Lower Third — Kicker Name",
+      "type": "block"
+    },
+    {
+      "description": "Cardless lower third: an accent sweep crosses and clip-path-reveals a heavy name, role fades up; for footage",
+      "dimensions": {
+        "height": 1080,
+        "width": 1920
+      },
+      "duration": 4.8,
+      "name": "lt-mask-reveal",
+      "tags": [
+        "lower-third",
+        "overlay",
+        "podcast",
+        "interview",
+        "bold"
+      ],
+      "title": "Lower Third — Mask Reveal",
+      "type": "block"
+    },
+    {
+      "description": "Two arcs of light travel the edge of a rounded panel and snap corner to corner, trailing a soft three-layer bloom. A lower third for a name and role.",
+      "dimensions": {
+        "height": 1080,
+        "width": 1920
+      },
+      "duration": 4.8,
+      "name": "lt-neon-border",
+      "tags": [
+        "lower-third",
+        "glow",
+        "loop",
+        "video-primitive"
+      ],
+      "title": "Neon Border",
+      "type": "block"
+    },
+    {
+      "description": "Cardless lower third with a vertical accent bar; condensed display name + mono role, text-shadowed for footage",
+      "dimensions": {
+        "height": 1080,
+        "width": 1920
+      },
+      "duration": 4.8,
+      "name": "lt-side-rule",
+      "tags": [
+        "lower-third",
+        "overlay",
+        "podcast",
+        "interview",
+        "minimal"
+      ],
+      "title": "Lower Third — Side Rule",
+      "type": "block"
+    },
+    {
+      "description": "Rounded white pill lower third for podcasts/interviews: status dot, name + role, scale-pop entrance",
+      "dimensions": {
+        "height": 1080,
+        "width": 1920
+      },
+      "duration": 4.8,
+      "name": "lt-soft-pill",
+      "tags": [
+        "lower-third",
+        "overlay",
+        "podcast",
+        "interview",
+        "minimal"
+      ],
+      "title": "Lower Third — Soft Pill",
+      "type": "block"
+    },
+    {
+      "description": "Two stacked bars: a dark name bar wipes from the left, an accent role bar wipes from the right",
+      "dimensions": {
+        "height": 1080,
+        "width": 1920
+      },
+      "duration": 4.8,
+      "name": "lt-stack-bars",
+      "tags": [
+        "lower-third",
+        "overlay",
+        "podcast",
+        "interview",
+        "bold"
+      ],
+      "title": "Lower Third — Stack Bars",
+      "type": "block"
+    },
+    {
+      "description": "Animated macOS-style notification banner with app icon and message",
+      "dimensions": {
+        "height": 1080,
+        "width": 1920
+      },
+      "duration": 5,
+      "name": "macos-notification",
+      "tags": [
+        "social",
+        "overlay",
+        "notification"
+      ],
+      "title": "macOS Notification",
+      "type": "block"
+    },
+    {
+      "description": "3D MacBook with a macOS Tahoe-style desktop, glass menu bar, Finder window, dock, and cinematic device camera move.",
+      "dimensions": {
+        "height": 1080,
+        "width": 1920
+      },
+      "duration": 15,
+      "name": "macos-tahoe-liquid-glass",
+      "tags": [
+        "html-in-canvas",
+        "3d",
+        "macos",
+        "tahoe",
+        "gltf"
+      ],
+      "title": "macOS Tahoe Liquid Glass Desktop",
+      "type": "block"
+    },
+    {
+      "description": "A hand-lettered paper card: marker headline with an underline and a drawn ellipse around one word, then three checklist rows whose checks draw themselves on - typewriter labels, marker values. The paper-and-marker sibling of mk-specs-list's clean professional rows",
+      "name": "marker-checklist-card",
+      "tags": [
+        "motion-primitive",
+        "handwritten",
+        "checklist",
+        "paper",
+        "marker"
+      ],
+      "title": "Marker Checklist Card",
+      "type": "component"
+    },
+    {
+      "description": "Display text settles in, then one hand-drawn marker stroke (highlight, circle, underline, or scribble) draws over the emphasized word on cue.",
+      "name": "marker-highlight",
+      "tags": [
+        "motion-primitive",
+        "typography",
+        "emphasis",
+        "marker",
+        "deterministic"
+      ],
+      "title": "Marker Highlight",
+      "type": "component"
+    },
+    {
+      "description": "A circle accelerates into a hard single-frame scene swap, matches the incoming circle exactly, and continues into a smaller resting pose.",
+      "name": "match-cut",
+      "tags": [
+        "motion-primitive",
+        "transition",
+        "match-cut",
+        "hard-cut",
+        "continuity"
+      ],
+      "title": "Match Cut",
+      "type": "component"
+    },
+    {
+      "description": "Random scramble resolves left-to-right into the target text.",
+      "name": "matrix-decode",
+      "tags": [
+        "motion-primitive",
+        "typography"
+      ],
+      "title": "Matrix Decode",
+      "type": "component"
+    },
+    {
+      "description": "A transitions.dev-inspired hamburger and plus-menu morph primitive for compact action menus",
+      "name": "menu-morph",
+      "tags": [
+        "video-primitive",
+        "transition-primitive",
+        "transitions-dev-port",
+        "menu",
+        "morph"
+      ],
+      "title": "Menu Morph",
+      "type": "component"
+    },
+    {
+      "description": "A render-safe mesh gradient using animated radial layers.",
+      "name": "mesh-gradient-bg",
+      "tags": [
+        "effect"
+      ],
+      "title": "Mesh Gradient Background",
+      "type": "component"
+    },
+    {
+      "description": "A full text conversation plays out on a phone - bubbles popping in, typing indicators, a shared link card, emoji, delivered receipts - with the whole thread scrolling up beat by beat until a closing card lands. The complete chat ad-template, measured message by message",
+      "dimensions": {
+        "height": 1920,
+        "width": 1080
+      },
+      "duration": 25.7667,
+      "name": "message-thread-reveal",
+      "tags": [
+        "showcase",
+        "mock-ui",
+        "chat",
+        "vertical",
+        "ad-template"
+      ],
+      "title": "Message Thread Reveal",
+      "type": "block"
+    },
+    {
+      "description": "A transitions.dev-inspired pack of badge, dropdown, modal, tabs, tooltip, and success-check micro transitions",
+      "name": "micro-transitions",
+      "tags": [
+        "transition-primitive",
+        "motion-primitive",
+        "transitions-dev-port",
+        "ui",
+        "transition",
+        "microinteraction"
+      ],
+      "title": "Micro Transitions",
+      "type": "component"
+    },
+    {
+      "description": "Procedural soft-blob gradient backdrop in a minimalist presentation style: two radial blobs drifting over a base color, with an animatable rounded-card bar mask and optional frosted-glass mode",
+      "dimensions": {
+        "height": 1080,
+        "width": 1920
+      },
+      "duration": 10,
+      "name": "mk-background",
+      "tags": [
+        "background",
+        "gradient",
+        "minimal",
+        "professional",
+        "presentation"
+      ],
+      "title": "Minimal Gradient Background",
+      "type": "block"
+    },
+    {
+      "description": "A sentence whose word-by-word emphasis is driven by a single scalar — tween it to sync the highlight with a voiceover",
+      "dimensions": {
+        "height": 1080,
+        "width": 1920
+      },
+      "duration": 8,
+      "name": "mk-callout-highlight",
+      "tags": [
+        "typography",
+        "karaoke",
+        "captions",
+        "minimal"
+      ],
+      "title": "Word-Sweep Highlight",
+      "type": "block"
+    },
+    {
+      "description": "Overlay transition: a tiled word wall covers the frame, inverts via difference blending, and clears — hard-cut the content beneath while covered",
+      "dimensions": {
+        "height": 1080,
+        "width": 1920
+      },
+      "duration": 2.4,
+      "name": "mk-clone-wall-transition",
+      "tags": [
+        "transition",
+        "typography",
+        "wipe"
+      ],
+      "title": "Text Clone Wall Transition",
+      "type": "block"
+    },
+    {
+      "description": "Oversized low-contrast background word drifting slowly behind the subject — typography as texture",
+      "name": "mk-emphasis-type",
+      "tags": [
+        "typography",
+        "text-treatment",
+        "minimal"
+      ],
+      "title": "Background Emphasis Type",
+      "type": "component"
+    },
+    {
+      "description": "One or two SVG series draw on with dots popping and value labels riding the draw front; dim baseline axis, x-labels, color-dot legend",
+      "dimensions": {
+        "height": 1080,
+        "width": 1920
+      },
+      "duration": 7,
+      "name": "mk-line-graph",
+      "tags": [
+        "data-viz",
+        "chart",
+        "graph",
+        "minimal"
+      ],
+      "title": "Minimal Line Graph",
+      "type": "block"
+    },
+    {
+      "description": "N-up rounded-corner media grid (2-up, 3-up, 4-up, 3x2, hero plus two): per-cell inside-scale framing, staggered box-in entrance, slow settle",
+      "dimensions": {
+        "height": 1080,
+        "width": 1920
+      },
+      "duration": 8,
+      "name": "mk-placeholder-grid",
+      "tags": [
+        "placeholder",
+        "media",
+        "grid",
+        "minimal"
+      ],
+      "title": "Rounded Media Grid",
+      "type": "block"
+    },
+    {
+      "description": "Big-numeral statistic with count-up, label, thin progress track filling to value/max, and caption; light and dark schemes",
+      "dimensions": {
+        "height": 1080,
+        "width": 1920
+      },
+      "duration": 7,
+      "name": "mk-progress-stat",
+      "tags": [
+        "data-viz",
+        "stat",
+        "minimal"
+      ],
+      "title": "Count-Up Stat Card",
+      "type": "block"
+    },
+    {
+      "description": "Left-aligned specs/traits checklist over footage or a board: rows slide in staggered with an accent underline sweep; light and dark schemes",
+      "dimensions": {
+        "height": 1080,
+        "width": 1920
+      },
+      "duration": 8,
+      "name": "mk-specs-list",
+      "tags": [
+        "data-viz",
+        "list",
+        "minimal",
+        "professional"
+      ],
+      "title": "Specs Checklist",
+      "type": "block"
+    },
+    {
+      "description": "Thin circular gauge that draws on while its percentage counts up; one helper call drives both",
+      "name": "mk-usage-arc",
+      "tags": [
+        "data-viz",
+        "gauge",
+        "minimal"
+      ],
+      "title": "Hairline Arc Gauge",
+      "type": "component"
+    },
+    {
+      "description": "A small card expands into a full panel, shared-element style: both layouts measured once at mount, the container morphs by transform only (never width/height tweens) while keyed children counter-scale and re-flow onto their own measured targets as pure functions of time.",
+      "name": "modal-morph",
+      "tags": [
+        "motion-primitive",
+        "structure",
+        "flip",
+        "shared-element",
+        "modal",
+        "deterministic",
+        "experiment"
+      ],
+      "title": "Modal Morph",
+      "type": "component"
+    },
+    {
+      "description": "Two slotted siblings stacked at one shared center: A holds, then condenses or reshapes into B on a shared 50% 50% transform origin. Condense shrink-fades A exactly as B scales up; reshape morphs the silhouette on scaleX/scaleY, never width or height tweens. Token card defaults render when a slot is left empty.",
+      "name": "morph-swap",
+      "tags": [
+        "transition",
+        "morph",
+        "swap",
+        "condense",
+        "reshape",
+        "holdable",
+        "slots"
+      ],
+      "title": "Morph Swap",
+      "type": "component"
+    },
+    {
+      "description": "Gooey text morph — cycles through an editable word list using SVG threshold + GSAP-driven blur for a fluid, satisfying transition effect",
+      "name": "morph-text",
+      "tags": [
+        "text",
+        "text-effect",
+        "typography",
+        "morph",
+        "gooey",
+        "kinetic",
+        "animation"
+      ],
+      "title": "Morph Text",
+      "type": "component"
+    },
+    {
+      "description": "After Effects-style motion blur — integrates each element over a shutter window (shutter angle, phase, samples per frame) by sampling the GSAP timeline at sub-frame times and averaging equal-weight additive copies of the element along its real trajectory, so translation, scale, rotation, 3D rotation and skew all drive the smear",
+      "name": "motion-blur",
+      "tags": [
+        "effect",
+        "motion-blur",
+        "shutter",
+        "after-effects",
+        "velocity",
+        "animation"
+      ],
+      "title": "Motion Blur",
+      "type": "component"
+    },
+    {
+      "description": "Phone, tablet, and desktop product mockups fan from a centered stack into a proud splayed arrangement with a subtle idle float.",
+      "name": "multi-device-splay",
+      "tags": [
+        "motion-primitive",
+        "device",
+        "phone",
+        "tablet",
+        "desktop",
+        "splay"
+      ],
+      "title": "Multi Device Splay",
+      "type": "component"
+    },
+    {
+      "description": "Labeled collaborator cursors with token-derived colors and soft glows drift from spread positions into a shared center zone, proving live multiplayer presence.",
+      "name": "multiplayer-cursors",
+      "tags": [
+        "cursor",
+        "pointer",
+        "multiplayer",
+        "collaboration",
+        "presence",
+        "loop",
+        "prove"
+      ],
+      "title": "Multiplayer Cursors",
+      "type": "component"
+    },
+    {
+      "description": "One system-faithful notification banner (iOS or macOS) drops in over any scene on an accurate interruptible spring: fast arrival, soft overshoot, settled mass, backdrop blur, app dot, title, one body line. Holds; tucks away only via exit.",
+      "name": "native-notification-pop",
+      "tags": [
+        "motion-primitive",
+        "product-demo",
+        "overlay",
+        "notification",
+        "spring"
+      ],
+      "title": "Native Notification Pop",
+      "type": "component"
+    },
+    {
+      "description": "Premium broadcast-style lower-third ticker with live label, headline ribbon, and scrolling news crawl.",
+      "dimensions": {
+        "height": 1080,
+        "width": 1920
+      },
+      "duration": 7,
+      "name": "news-ticker",
+      "tags": [
+        "lower-third",
+        "overlay",
+        "news",
+        "ticker"
+      ],
+      "title": "News Ticker",
+      "type": "block"
+    },
+    {
+      "description": "Realistic map zoom into North Korea with a red scribble circle, locked-down pop-up label, and reddish editorial wash.",
+      "dimensions": {
+        "height": 1080,
+        "width": 1920
+      },
+      "duration": 7,
+      "name": "north-korea-locked-down",
+      "tags": [
+        "showcase",
+        "map",
+        "annotation",
+        "youtube",
+        "kinetic"
+      ],
+      "title": "North Korea Locked Down",
+      "type": "block"
+    },
+    {
+      "description": "A personal note is typed character by character in a notes app - caret riding every letter, the page scrolling up on measured settle curves as each line lands - then cuts to a hand-lettered paper card with a marker headline and a ticked checklist",
+      "dimensions": {
+        "height": 1920,
+        "width": 1080
+      },
+      "duration": 24.85,
+      "name": "notes-reveal",
+      "tags": [
+        "showcase",
+        "mock-ui",
+        "notes",
+        "typing",
+        "vertical",
+        "ad-template"
+      ],
+      "title": "Notes Reveal",
+      "type": "block"
+    },
+    {
+      "description": "The notes-app confession as a mountable scene: a bold title, then body lines typed character by character on the measured human keystroke rhythm, the caret riding every landed character and jumping down at each paragraph. For a bare prompt line use typed-prompt; for an even mechanical reveal use typewriter",
+      "name": "notes-typing",
+      "tags": [
+        "motion-primitive",
+        "notes",
+        "typing",
+        "mock-ui",
+        "vertical"
+      ],
+      "title": "Notes Typing",
+      "type": "component"
+    },
+    {
+      "description": "Phone notifications land one after another and stack up the screen, each banner pushing the pile down as it arrives, before the whole stack lifts away into a closing card",
+      "dimensions": {
+        "height": 1920,
+        "width": 1080
+      },
+      "duration": 14,
+      "name": "notification-cascade",
+      "tags": [
+        "showcase",
+        "mock-ui",
+        "notification",
+        "vertical",
+        "ad-template"
+      ],
+      "title": "Notification Cascade",
+      "type": "block"
+    },
+    {
+      "description": "Mobile notification cards arrive faster and faster, each new alert pushing the existing stack downward into a dense, anxious tower.",
+      "name": "notification-pileup",
+      "tags": [
+        "notification",
+        "mobile",
+        "ui-props",
+        "overload",
+        "pileup",
+        "loop",
+        "agitate"
+      ],
+      "title": "Notification Pileup",
+      "type": "component"
+    },
+    {
+      "description": "1 to 5 token notification cards slide-settle into a vertical stack on cues, newest on top; one card grows slightly and brightens as the focus while the rest dim by position.",
+      "name": "notification-stack",
+      "tags": [
+        "motion-primitive",
+        "product-demo",
+        "notification",
+        "stack",
+        "stagger"
+      ],
+      "title": "Notification Stack",
+      "type": "component"
+    },
+    {
+      "description": "A transitions.dev-inspired digit pop-in with blur, lift, and staggered value reveal",
+      "name": "number-pop-in",
+      "tags": [
+        "video-primitive",
+        "transition-primitive",
+        "transitions-dev-port",
+        "number",
+        "pop"
+      ],
+      "title": "Number Pop In",
+      "type": "component"
+    },
+    {
+      "description": "A rolling digit counter primitive for metrics, prices, counts, and scoreboards",
+      "name": "number-wheel",
+      "tags": [
+        "video-primitive",
+        "motion-primitive",
+        "number",
+        "counter",
+        "data"
+      ],
+      "title": "Number Wheel",
+      "type": "component"
+    },
+    {
+      "description": "Apple-style realistic map animation with a plane flying from New York to Paris, marker circle, landing pop, and sound effects.",
+      "dimensions": {
+        "height": 1080,
+        "width": 1920
+      },
+      "duration": 6,
+      "name": "nyc-paris-flight",
+      "tags": [
+        "showcase",
+        "travel",
+        "map",
+        "youtube",
+        "sfx"
+      ],
+      "title": "NYC Paris Flight",
+      "type": "block"
+    },
+    {
+      "description": "A slotted traveler follows an authored path with tangent rotation, curved entry, and curved exit.",
+      "name": "offset-path-traveler",
+      "tags": [
+        "motion-primitive",
+        "product-demo",
+        "path",
+        "traveler",
+        "auto-rotate"
+      ],
+      "title": "Offset Path Traveler",
+      "type": "component"
+    },
+    {
+      "description": "A composed onboarding flow with milestone rail, active step card, and next-action button",
+      "name": "onboarding-stepper-flow",
+      "tags": [
+        "ui-flow",
+        "onboarding",
+        "stepper"
+      ],
+      "title": "Onboarding Stepper Flow",
+      "type": "component"
+    },
+    {
+      "description": "A single feature card orbits a dot sphere on approved Blender camera motion.",
+      "dimensions": {
+        "height": 1080,
+        "width": 1920
+      },
+      "duration": 10,
+      "name": "orbit-card",
+      "tags": [
+        "3d-motion",
+        "cards",
+        "feature-reveal",
+        "dots",
+        "orbit",
+        "blender-motion",
+        "sphere"
+      ],
+      "title": "Orbit Card",
+      "type": "block"
+    },
+    {
+      "description": "Bayer-matrix ordered dithering quantizes a slotted scene (rasterized once at mount): the image emerges from pure 2-tone noise to clean, or dissolves the reverse. Stateless per frame, never error diffusion.",
+      "name": "ordered-dither-pass",
+      "tags": [
+        "motion-primitive",
+        "experiment",
+        "texture",
+        "dither",
+        "transition",
+        "quantize"
+      ],
+      "title": "Ordered Dither Pass",
+      "type": "component"
+    },
+    {
+      "description": "Finite CSS light-leak overlay for memory beats and motivated transitions",
+      "dimensions": {
+        "height": 1080,
+        "width": 1920
+      },
+      "duration": 4,
+      "name": "organic-light-leak-overlay",
+      "tags": [
+        "light-leak",
+        "film",
+        "memory",
+        "transition",
+        "overlay",
+        "media-treatment-overlay"
+      ],
+      "title": "Organic Light Leak Overlay",
+      "type": "block"
+    },
+    {
+      "description": "CRT oscilloscope beam sweeping a waveform across a 10x8 graticule, with closed-form phosphor persistence: the tail decays as exp(-age/tau) and brightens where the beam slows",
+      "dimensions": {
+        "height": 1080,
+        "width": 1920
+      },
+      "duration": 6,
+      "name": "oscilloscope-trace",
+      "tags": [
+        "instrument",
+        "data",
+        "showcase",
+        "retro"
+      ],
+      "title": "Oscilloscope Trace",
+      "type": "block"
+    },
+    {
+      "description": "A rounded outline that proves a callout by drawing clockwise as a hollow conic-gradient border with a clean closure.",
+      "name": "outline-draw",
+      "tags": [
+        "motion-primitive",
+        "effects",
+        "outline",
+        "border",
+        "mask",
+        "proof"
+      ],
+      "title": "Outline Draw",
+      "type": "component"
+    },
+    {
+      "description": "The look-here pointer for a video: the macOS arrow at 3.5x its normal size lands its tip on one control, clicks it on, settles just below it so the result stays in view, then exits off-screen",
+      "name": "oversized-cursor",
+      "tags": [
+        "cursor",
+        "motion-primitive",
+        "actor",
+        "pointer",
+        "interaction"
+      ],
+      "title": "Oversized Cursor",
+      "type": "component"
+    },
+    {
+      "description": "Tasks, tabs, pings, and notification bubbles accelerate inward around a calm central subject, turning overload into visible spatial pressure.",
+      "name": "overwhelm-surround",
+      "tags": [
+        "effects",
+        "agitate",
+        "overwhelm",
+        "pressure",
+        "notifications"
+      ],
+      "title": "Overwhelm Surround",
+      "type": "component"
+    },
+    {
+      "description": "A transitions.dev-inspired page slide primitive with outgoing and incoming panels",
+      "name": "page-slide",
+      "tags": [
+        "video-primitive",
+        "transition-primitive",
+        "transitions-dev-port",
+        "page",
+        "slide"
+      ],
+      "title": "Page Slide",
+      "type": "component"
+    },
+    {
+      "description": "A lateral camera move across a continuous row of labeled feature stations, with a steady dwell at each stop before the next pan.",
+      "name": "pan-stations",
+      "tags": [
+        "camera",
+        "pan",
+        "stations",
+        "features",
+        "exhibit",
+        "agitate",
+        "cross-shelved"
+      ],
+      "title": "Pan Stations",
+      "type": "component"
+    },
+    {
+      "description": "A panel reveal primitive with height expansion and content fade",
+      "name": "panel-reveal",
+      "tags": [
+        "transition-primitive",
+        "transitions-dev-port",
+        "panel",
+        "reveal"
+      ],
+      "title": "Panel Reveal",
+      "type": "component"
+    },
+    {
+      "description": "A canonical phone rises into view before the camera pushes through its screen and layered app UI expands to fill the frame.",
+      "name": "parallax-device-dive",
+      "tags": [
+        "motion-primitive",
+        "camera",
+        "device",
+        "phone",
+        "parallax",
+        "transition"
+      ],
+      "title": "Parallax Device Dive",
+      "type": "component"
+    },
+    {
+      "description": "Reveal transition — focus card scales down from full frame as siblings parallax in to form a grid (reverse of parallax-zoom)",
+      "name": "parallax-unzoom",
+      "tags": [
+        "transition",
+        "reveal",
+        "unzoom",
+        "parallax",
+        "grid",
+        "hero"
+      ],
+      "title": "Parallax Unzoom",
+      "type": "component"
+    },
+    {
+      "description": "Center card scales up to fill the frame while siblings parallax outward — inspired by the eBay Playbook hero transition",
+      "name": "parallax-zoom",
+      "tags": [
+        "transition",
+        "zoom",
+        "parallax",
+        "grid",
+        "hero"
+      ],
+      "title": "Parallax Zoom",
+      "type": "component"
+    },
+    {
+      "description": "A seeded deterministic particle field converges and settles while a slotted image reveals beneath it, the trail thinning until the image holds clean.",
+      "name": "particle-image-reveal",
+      "tags": [
+        "motion-primitive",
+        "intros-reveals",
+        "particles",
+        "reveal",
+        "canvas",
+        "deterministic"
+      ],
+      "title": "Particle Image Reveal",
+      "type": "component"
+    },
+    {
+      "description": "Text assembles from a seeded particle cloud (or dissolves into it): per-particle targets sampled once from the rendered text bitmap at mount, table-driven particles, zero per-particle tweens, one onUpdate painter.",
+      "name": "particle-text-dissolve",
+      "tags": [
+        "motion-primitive",
+        "text-effects",
+        "particles",
+        "canvas",
+        "deterministic",
+        "experiment"
+      ],
+      "title": "Particle Text Dissolve",
+      "type": "component"
+    },
+    {
+      "description": "Words gently fade into place with a short vertical drift for calm keynote rhythm.",
+      "name": "per-word-crossfade",
+      "tags": [
+        "motion-primitive",
+        "typography"
+      ],
+      "title": "Per-Word Crossfade",
+      "type": "component"
+    },
+    {
+      "description": "Words or characters rise into place in a controlled blur-to-sharp cascade, settle softly on landing, and hold still until the cut (optional fade or up exit).",
+      "name": "per-word-rise",
+      "tags": [
+        "motion-primitive",
+        "text-effects",
+        "typography",
+        "stagger",
+        "reveal"
+      ],
+      "title": "Per Word Rise",
+      "type": "component"
+    },
+    {
+      "description": "A 3D tilted marquee with depth feel as items roll toward the horizon.",
+      "name": "perspective-marquee",
+      "tags": [
+        "motion-primitive",
+        "typography"
+      ],
+      "title": "Perspective Marquee",
+      "type": "component"
+    },
+    {
+      "description": "A card exits with physical momentum in toss, drop, or slide mode, carrying acceleration and rotation through the final offscreen pose without fading.",
+      "name": "physical-exit",
+      "tags": [
+        "motion-primitive",
+        "exit",
+        "momentum",
+        "toss",
+        "drop",
+        "slide"
+      ],
+      "title": "Physical Exit",
+      "type": "component"
+    },
+    {
+      "description": "A cursor decel-arrives from off-stage, lands slightly off-center on a caller-positioned target, compresses with it in lockstep, releases with two small click rings while the label swaps to a check, then exits off-stage while the confirmed state holds.",
+      "name": "press-ripple",
+      "tags": [
+        "cursor",
+        "motion-primitive",
+        "product-demo",
+        "press",
+        "ripple",
+        "payoff"
+      ],
+      "title": "Press Ripple",
+      "type": "component"
+    },
+    {
+      "description": "A tight stat detail holds, then one decelerating camera pull-back reveals the headline and supporting cards that recontextualize it.",
+      "name": "pull-back-reveal",
+      "tags": [
+        "motion-primitive",
+        "camera",
+        "pull-back",
+        "reveal",
+        "recontextualize"
+      ],
+      "title": "Pull Back Reveal",
+      "type": "component"
+    },
+    {
+      "description": "A mobile list pulls through nonlinear rubber-band resistance, arms at a threshold, commits to a bounded loading indicator, then snaps exactly back to rest.",
+      "name": "pull-to-refresh",
+      "tags": [
+        "pointer",
+        "pointers",
+        "mobile",
+        "gesture",
+        "interaction",
+        "refresh",
+        "demonstrate"
+      ],
+      "title": "Pull to Refresh",
+      "type": "component"
+    },
+    {
+      "description": "A centered headline gains focus through one slow, continuous camera push and a gentle fade out.",
+      "name": "push-in",
+      "tags": [
+        "motion-primitive",
+        "camera",
+        "push-in",
+        "focus",
+        "emphasize",
+        "holdable"
+      ],
+      "title": "Push In",
+      "type": "component"
+    },
+    {
+      "description": "A focus pull with real aperture bokeh: the focal plane travels from a near subject to a far one, so one resolves as the other blows into hard-edged polygon discs that clip to a cat's eye toward the corners. A focus pull only reads against content at two clearly separated depths, so this block carries its own depth-layered night exterior and puts both subject depths on variables.",
+      "dimensions": {
+        "height": 1080,
+        "width": 1920
+      },
+      "duration": 6,
+      "name": "rack-focus",
+      "tags": [
+        "webgl",
+        "shader",
+        "camera",
+        "depth",
+        "cinematic",
+        "showcase"
+      ],
+      "title": "Rack Focus",
+      "type": "block"
+    },
+    {
+      "description": "Labeled hairline chips assemble around a centered subject on an elliptical ring, then optionally converge inward with a subtle edge dim. The center never moves: surrounded, not zoomed.",
+      "name": "radial-surround",
+      "tags": [
+        "motion-primitive",
+        "problem-setup",
+        "radial",
+        "ring",
+        "surround",
+        "converge"
+      ],
+      "title": "Radial Surround",
+      "type": "component"
+    },
+    {
+      "description": "Animated Reddit post card overlay with upvotes and comments",
+      "dimensions": {
+        "height": 1080,
+        "width": 1920
+      },
+      "duration": 5,
+      "name": "reddit-post",
+      "tags": [
+        "social",
+        "overlay",
+        "reddit"
+      ],
+      "title": "Reddit Post Card",
+      "type": "block"
+    },
+    {
+      "description": "RGB-offset text copies jitter briefly for a controlled glitch window.",
+      "name": "rgb-glitch-text",
+      "tags": [
+        "motion-primitive",
+        "typography"
+      ],
+      "title": "RGB Glitch Text",
+      "type": "component"
+    },
+    {
+      "description": "Shader transition with ridged turbulence burn effect",
+      "dimensions": {
+        "height": 1080,
+        "width": 1920
+      },
+      "duration": 4,
+      "name": "ridged-burn",
+      "tags": [
+        "transition",
+        "shader"
+      ],
+      "title": "Ridged Burn",
+      "type": "block"
+    },
+    {
+      "description": "Shader transition with concentric ripple wave distortion",
+      "dimensions": {
+        "height": 1080,
+        "width": 1920
+      },
+      "duration": 4,
+      "name": "ripple-waves",
+      "tags": [
+        "transition",
+        "shader"
+      ],
+      "title": "Ripple Waves",
+      "type": "block"
+    },
+    {
+      "description": "An outgoing panel pulls against increasing resistance, holds at tension, then snaps past an edge with overshoot as the incoming panel settles behind it.",
+      "name": "rubber-band-bumper",
+      "tags": [
+        "motion-primitive",
+        "transition",
+        "rubber-band",
+        "resistance",
+        "overshoot"
+      ],
+      "title": "Rubber Band Bumper",
+      "type": "component"
+    },
+    {
+      "description": "A diagonal distortion band sweeps once across a clean wordmark, revealing clipped red and cyan offsets only inside the moving band.",
+      "name": "scan-band",
+      "tags": [
+        "motion-primitive",
+        "typography",
+        "scan",
+        "chromatic",
+        "distortion",
+        "wordmark"
+      ],
+      "title": "Scan Band",
+      "type": "component"
+    },
+    {
+      "description": "A deterministic hacker-style text reveal that cycles fixed glyph rows and locks the target string from left to right.",
+      "name": "scramble-reveal",
+      "tags": [
+        "motion-primitive",
+        "text-effects",
+        "scramble",
+        "reveal",
+        "deterministic"
+      ],
+      "title": "Scramble Reveal",
+      "type": "component"
+    },
+    {
+      "description": "Two to five app screens ride a horizontal rail: one primary at center, neighbors receded, advancing on cues with a velocity-matched throw and a smooth long-tail catch while a mono caption swaps with each advance. Screens are slots with token skeleton defaults.",
+      "name": "screen-flow-carousel",
+      "tags": [
+        "product-demo",
+        "feature-tour",
+        "carousel",
+        "rail",
+        "slot",
+        "screens"
+      ],
+      "title": "Screen Flow Carousel",
+      "type": "component"
+    },
+    {
+      "description": "A compressed forced-scroll cinematic pass: a tall scene of slotted sections travels past the camera top to bottom, depth layers parallax at different rates, each section rises as the camera reaches it, and the pass decelerates into a held final section.",
+      "name": "scroll-camera-story",
+      "tags": [
+        "camera",
+        "scroll",
+        "parallax",
+        "story",
+        "sections",
+        "slot",
+        "servo"
+      ],
+      "title": "Scroll Camera Story",
+      "type": "component"
+    },
+    {
+      "description": "A loop-friendly column of varied skeleton post cards scrolls upward with subtle motion trails and an agitated pace.",
+      "name": "scroll-feed",
+      "tags": [
+        "motion-primitive",
+        "effects",
+        "scroll",
+        "feed",
+        "loop",
+        "agitation"
+      ],
+      "title": "Scroll Feed",
+      "type": "component"
+    },
+    {
+      "description": "Shader transition with signed distance field iris reveal",
+      "dimensions": {
+        "height": 1080,
+        "width": 1920
+      },
+      "duration": 4,
+      "name": "sdf-iris",
+      "tags": [
+        "transition",
+        "shader"
+      ],
+      "title": "SDF Iris",
+      "type": "block"
+    },
+    {
+      "description": "Machine-vision read of a slotted subject: translucent accent segmentation masks flood on in quantized scanline steps, each region gets a thin bracket and mono label chip, a deterministic 2-frame HUD flicker rides the pass, then the labeled read settles clean.",
+      "name": "segmentation-flood",
+      "tags": [
+        "motion-primitive",
+        "product-demo",
+        "ai",
+        "hud",
+        "canvas",
+        "deterministic",
+        "experiment"
+      ],
+      "title": "Segmentation Flood",
+      "type": "component"
+    },
+    {
+      "description": "A one-pixel structural separator with horizontal and vertical variants plus a seek-safe progress reveal",
+      "name": "separator",
+      "tags": [
+        "video-primitive",
+        "separator",
+        "layout"
+      ],
+      "title": "Separator",
+      "type": "component"
+    },
+    {
+      "description": "A composed settings flow with preference rows, toggle switches, and active-state feedback",
+      "name": "settings-toggle-flow",
+      "tags": [
+        "ui-flow",
+        "settings",
+        "toggle"
+      ],
+      "title": "Settings Toggle Flow",
+      "type": "component"
+    },
+    {
+      "description": "A share sheet springs up from the bottom of the phone and cycles previews inside its card on a fast cut rhythm while the blurred ground swaps behind it, ending on an accept tap",
+      "dimensions": {
+        "height": 1920,
+        "width": 1080
+      },
+      "duration": 7.2333,
+      "name": "share-sheet-carousel",
+      "tags": [
+        "showcase",
+        "mock-ui",
+        "share-sheet",
+        "vertical",
+        "ad-template"
+      ],
+      "title": "Share-Sheet Carousel",
+      "type": "block"
+    },
+    {
+      "description": "Per-word vertical shared-axis transition for sharp editorial swaps.",
+      "name": "shared-axis-y",
+      "tags": [
+        "motion-primitive",
+        "typography"
+      ],
+      "title": "Shared Axis Y",
+      "type": "component"
+    },
+    {
+      "description": "Scale-based shared-axis transition for focus shifts and context depth.",
+      "name": "shared-axis-z",
+      "tags": [
+        "motion-primitive",
+        "typography"
+      ],
+      "title": "Shared Axis Z",
+      "type": "component"
+    },
+    {
+      "description": "A bottom sheet rushes up from below the frame on a real spring sampled frame by frame from reference footage, overshooting its resting place and settling back without an approximated ease",
+      "name": "sheet-spring-up",
+      "tags": [
+        "video-primitive",
+        "sheet",
+        "spring",
+        "mock-ui",
+        "overlay"
+      ],
+      "title": "Sheet Spring-Up",
+      "type": "component"
+    },
+    {
+      "description": "Animated light sweep across text or elements using a CSS gradient mask — ideal for AI accents and premium reveals",
+      "name": "shimmer-sweep",
+      "tags": [
+        "text",
+        "shimmer",
+        "highlight",
+        "effect"
+      ],
+      "title": "Shimmer Sweep",
+      "type": "component"
+    },
+    {
+      "description": "One word thrown through six single-property beats under integrated shutter blur — two translate slams, a scale punch, then a full turn about each axis — on the measured easing of the After Effects export the shutter model was fitted to",
+      "name": "shutter-slam",
+      "tags": [
+        "effect",
+        "motion-blur",
+        "shutter",
+        "after-effects",
+        "slam",
+        "animation"
+      ],
+      "title": "Shutter Slam",
+      "type": "component"
+    },
+    {
+      "description": "A composed signup flow with social action, email field, password field, and submit button",
+      "name": "signup-flow",
+      "tags": [
+        "ui-flow",
+        "signup",
+        "form"
+      ],
+      "title": "Signup Flow",
+      "type": "component"
+    },
+    {
+      "description": "A skeleton loader transition that pulses, then cross-fades into content",
+      "name": "skeleton-reveal",
+      "tags": [
+        "video-primitive",
+        "transition-primitive",
+        "transitions-dev-port",
+        "skeleton",
+        "reveal"
+      ],
+      "title": "Skeleton Reveal",
+      "type": "component"
+    },
+    {
+      "description": "A portrait lock screen fills with escalating Slack video requests before HeyGen delivers the payoff",
+      "dimensions": {
+        "height": 1920,
+        "width": 1080
+      },
+      "duration": 12,
+      "name": "slack-notification-ad",
+      "tags": [
+        "showcase",
+        "mock-ui",
+        "notification",
+        "vertical",
+        "ad-template"
+      ],
+      "title": "Slack Notification Ad",
+      "type": "block"
+    },
+    {
+      "description": "The frame's rows sample an authored subject at offset times: a canvas painter draws row slices of one pure position function evaluated at t minus offset(row), smearing arrival through time until the offsets collapse to zero and the mark holds coherent.",
+      "name": "slit-scan-reveal",
+      "tags": [
+        "motion-primitive",
+        "time",
+        "slit-scan",
+        "canvas",
+        "deterministic",
+        "experiment"
+      ],
+      "title": "Slit Scan Reveal",
+      "type": "component"
+    },
+    {
+      "description": "A vertical reel scrolls characters from one value to another.",
+      "name": "slot-machine-roll",
+      "tags": [
+        "video-primitive",
+        "motion-primitive",
+        "typography"
+      ],
+      "title": "Slot Machine Roll",
+      "type": "component"
+    },
+    {
+      "description": "The app-store close as one mountable scene: wordmark, five stars, a proof line, three feature icons and a CTA capsule build in a quiet stagger and hold - measured from reference ad footage. For an animated star sweep use star-rating-fill; for a quote card use testimonial-proof-card; for a bare lockup use cta-lockup",
+      "name": "social-proof-card",
+      "tags": [
+        "motion-primitive",
+        "social-proof",
+        "end-card",
+        "cta",
+        "vertical"
+      ],
+      "title": "Social Proof Card",
+      "type": "component"
+    },
+    {
+      "description": "A granular soft blob idles with slow internal drift; a scripted touch dot decel-arrives, the blob deforms toward it with an attraction bulge, then recovers with a velocity-preserving spring. No hard edges anywhere.",
+      "name": "soft-blob-touch",
+      "tags": [
+        "motion-primitive",
+        "product-demo",
+        "material",
+        "blob",
+        "touch",
+        "grain"
+      ],
+      "title": "Soft Blob Touch",
+      "type": "component"
+    },
+    {
+      "description": "A soft opacity, blur, and lift reveal for headlines, captions, and product UI callouts",
+      "name": "soft-blur-in",
+      "tags": [
+        "motion-primitive",
+        "text",
+        "reveal",
+        "blur"
+      ],
+      "title": "Soft Blur In",
+      "type": "component"
+    },
+    {
+      "description": "Animated Spain choropleth by autonomous community with staggered reveals and gradient legend — D3 conic conformal projection",
+      "dimensions": {
+        "height": 1080,
+        "width": 1920
+      },
+      "duration": 12,
+      "name": "spain-map",
+      "tags": [
+        "data",
+        "map",
+        "geography",
+        "spain",
+        "europe",
+        "choropleth"
+      ],
+      "title": "Spain Map",
+      "type": "block"
+    },
+    {
+      "description": "A spiral galaxy seen from outside, turning with real differential rotation: inner stars orbit faster than outer ones, so the arms wind up over the shot instead of spinning rigidly. 20,000 additive GPU sprites, seeded once and solved directly from time, so any frame can be rendered on its own.",
+      "dimensions": {
+        "height": 1080,
+        "width": 1920
+      },
+      "duration": 10,
+      "name": "spiral-galaxy",
+      "tags": [
+        "hero",
+        "space",
+        "particles",
+        "webgl",
+        "background"
+      ],
+      "title": "Spiral Galaxy",
+      "type": "block"
+    },
+    {
+      "description": "Solari-style departure board: every cell walks its drum forward through the intervening characters of a fixed alphabet until it lands on its target, so the text resolves as a mechanical cascade instead of a fade.",
+      "dimensions": {
+        "height": 1080,
+        "width": 1920
+      },
+      "duration": 3.5,
+      "name": "split-flap-board",
+      "tags": [
+        "text",
+        "kinetic",
+        "mechanical",
+        "split-flap",
+        "solari",
+        "departure-board",
+        "reveal"
+      ],
+      "title": "Split-Flap Board",
+      "type": "block"
+    },
+    {
+      "description": "Two equal-weight cards arrive from opposite wings with mirrored rotateY book-open tilts under one shared perspective, pill badges spring-pop at each inner edge, and the pair holds with a barely-there phase-opposed idle float. Card bodies are content slots with token skeleton defaults.",
+      "name": "split-tilt-cards",
+      "tags": [
+        "motion-primitive",
+        "layout",
+        "compare",
+        "holdable",
+        "book-open",
+        "tilt",
+        "slots"
+      ],
+      "title": "Split Tilt Cards",
+      "type": "component"
+    },
+    {
+      "description": "Animated Spotify now-playing card with album art and progress bar",
+      "dimensions": {
+        "height": 1920,
+        "width": 1080
+      },
+      "duration": 5,
+      "name": "spotify-card",
+      "tags": [
+        "social",
+        "overlay",
+        "spotify"
+      ],
+      "title": "Spotify Now Playing",
+      "type": "block"
+    },
+    {
+      "description": "A card with a scripted cursor spotlight and lit border.",
+      "name": "spotlight-card",
+      "tags": [
+        "effect"
+      ],
+      "title": "Spotlight Card",
+      "type": "component"
+    },
+    {
+      "description": "A badge pops in from a visible near-rest scale, overshoots full size once, and settles cleanly.",
+      "name": "spring-pop",
+      "tags": [
+        "motion-primitive",
+        "effects",
+        "spring",
+        "overshoot",
+        "pop",
+        "reveal"
+      ],
+      "title": "Spring Pop",
+      "type": "component"
+    },
+    {
+      "description": "A stack of 3 to 5 slotted cards reshuffles on cues: the back card throws over the top and lands at the front with real mass, the rest compress and resettle; cues that land mid-flight redirect the moving cards with velocity preserved.",
+      "name": "spring-stack-shuffle",
+      "tags": [
+        "motion-primitive",
+        "product-demo",
+        "physics",
+        "stack",
+        "interruptible-spring"
+      ],
+      "title": "Spring Stack Shuffle",
+      "type": "component"
+    },
+    {
+      "description": "A responsive grid of tile cards that fades and travels into place with an evenly spaced per-item GSAP stagger. The ordered cascade is the only visual mechanic.",
+      "name": "stagger-cascade",
+      "tags": [
+        "effects",
+        "grid",
+        "stagger",
+        "entrance",
+        "exhibit"
+      ],
+      "title": "Stagger Cascade",
+      "type": "component"
+    },
+    {
+      "description": "A staggered grid reveal inspired by Anime.js v4 stagger utilities, implemented with GSAP for HyperFrames.",
+      "name": "stagger-lattice",
+      "tags": [
+        "advanced-motion",
+        "anime-inspired",
+        "hyperframes-native"
+      ],
+      "title": "Stagger Lattice",
+      "type": "component"
+    },
+    {
+      "description": "Words fade in and slide up one after another with configurable delay.",
+      "name": "staggered-fade-up",
+      "tags": [
+        "video-primitive",
+        "motion-primitive",
+        "typography"
+      ],
+      "title": "Staggered Fade Up",
+      "type": "component"
+    },
+    {
+      "description": "A token-driven star row whose colored layer sweeps to a rating, preserves the fractional final star, and can count the value in sync.",
+      "name": "star-rating-fill",
+      "tags": [
+        "data",
+        "rating",
+        "stars",
+        "fractional",
+        "fill",
+        "prove"
+      ],
+      "title": "Star Rating Fill",
+      "type": "component"
+    },
+    {
+      "description": "A rail of mono status chips advances a seek-safe data-state snap machine on a cue schedule: active chip ink on surface, done chips dim, pending chips hollow, optional badges pop beside one state.",
+      "name": "state-chip-rail",
+      "tags": [
+        "motion-primitive",
+        "product-demo",
+        "state-machine",
+        "status",
+        "chips",
+        "rail"
+      ],
+      "title": "State Chip Rail",
+      "type": "component"
+    },
+    {
+      "description": "A pinned product mock cross-fades through accent-tinted feature states while matching captions rise, hold, and exit beside it.",
+      "name": "sticky-mock-swap",
+      "tags": [
+        "motion-primitive",
+        "product-demo",
+        "sticky",
+        "mock",
+        "crossfade",
+        "feature-tour"
+      ],
+      "title": "Sticky Mock Swap",
+      "type": "component"
+    },
+    {
+      "description": "Text drawn as thread stitches: a single-stroke display alphabet draws via attribute-driven dashoffset with stitch-tuned dash patterns, seeded angle jitter, needle-hole dots, a leading needle, and a thread-tail overshoot per letter.",
+      "name": "stitched-text-draw",
+      "tags": [
+        "motion-primitive",
+        "experiment",
+        "type",
+        "craft",
+        "stitch",
+        "deterministic"
+      ],
+      "title": "Stitched Text Draw",
+      "type": "component"
+    },
+    {
+      "description": "The stepped-time law as a demo primitive: one driver quantizes timeline time to floor(t * fps) / fps and feeds ALL motion; four token paper-cut shapes throw-and-land with squash on hits, 2-frame boil jitter seeded per step, and sparkle accents living exactly 2 to 3 frames.",
+      "name": "stop-motion-cadence",
+      "tags": [
+        "motion-primitive",
+        "time-law",
+        "stop-motion",
+        "stepped",
+        "boil",
+        "deterministic",
+        "experiment"
+      ],
+      "title": "Stop Motion Cadence",
+      "type": "component"
+    },
+    {
+      "description": "Settles a short headline above equal-size App Store and Google Play badges as a token-driven mobile end-card call to action.",
+      "name": "store-badge-lockup",
+      "tags": [
+        "prop",
+        "ui-props",
+        "mobile",
+        "store-badges",
+        "cta",
+        "ask"
+      ],
+      "title": "Store Badge Lockup",
+      "type": "component"
+    },
+    {
+      "description": "Words arrive the way an AI answer streams - in uneven bursts on a measured token rhythm, each word landing grey and inking to full colour - rather than the even tick of a typewriter",
+      "name": "streaming-text",
+      "tags": [
+        "video-primitive",
+        "text-effect",
+        "ai",
+        "chat"
+      ],
+      "title": "Streaming Text",
+      "type": "component"
+    },
+    {
+      "description": "Draw a strike line across old text, then reveal the replacement.",
+      "name": "strikethrough-replace",
+      "tags": [
+        "motion-primitive",
+        "typography"
+      ],
+      "title": "Strikethrough Replace",
+      "type": "component"
+    },
+    {
+      "description": "A success check primitive with ring pop, path draw, and subtle rotate blur",
+      "name": "success-check",
+      "tags": [
+        "video-primitive",
+        "transition-primitive",
+        "transitions-dev-port",
+        "success",
+        "check"
+      ],
+      "title": "Success Check",
+      "type": "component"
+    },
+    {
+      "description": "An Anime.js-style path drawing loader implemented as a seekable GSAP stroke timeline.",
+      "name": "svg-line-draw-loader",
+      "tags": [
+        "video-primitive",
+        "advanced-motion",
+        "anime-inspired",
+        "hyperframes-native"
+      ],
+      "title": "SVG Line Draw Loader",
+      "type": "component"
+    },
+    {
+      "description": "A soft token-colored sweep reveals media only through an editable SVG wordmark mask.",
+      "name": "svg-mask-reveal",
+      "tags": [
+        "effect",
+        "svg",
+        "mask",
+        "wordmark",
+        "reveal",
+        "exhibit"
+      ],
+      "title": "SVG Mask Reveal",
+      "type": "component"
+    },
+    {
+      "description": "An authored SVG path draws from its measured length, holds with subtle drift, and optionally fills when the path is closed.",
+      "name": "svg-stroke-trace",
+      "tags": [
+        "motion-primitive",
+        "intro",
+        "reveal",
+        "svg",
+        "stroke",
+        "line-draw"
+      ],
+      "title": "SVG Stroke Trace",
+      "type": "component"
+    },
+    {
+      "description": "A contact circle leads a horizontal card rail through a fast drag, momentum carry, and settled snap to the next card.",
+      "name": "swipe-rail",
+      "tags": [
+        "motion-primitive",
+        "interaction",
+        "gesture",
+        "swipe",
+        "cards",
+        "rail"
+      ],
+      "title": "Swipe Rail",
+      "type": "component"
+    },
+    {
+      "description": "Shader transition with swirling vortex distortion",
+      "dimensions": {
+        "height": 1080,
+        "width": 1920
+      },
+      "duration": 4,
+      "name": "swirl-vortex",
+      "tags": [
+        "transition",
+        "shader"
+      ],
+      "title": "Swirl Vortex",
+      "type": "block"
+    },
+    {
+      "description": "A pill indicator transition that slides between active tabs",
+      "name": "tabs-slide-indicator",
+      "tags": [
+        "transition-primitive",
+        "transitions-dev-port",
+        "tabs",
+        "indicator"
+      ],
+      "title": "Tabs Slide Indicator",
+      "type": "component"
+    },
+    {
+      "description": "Quiet mono debug-HUD readouts frame a slotted subject: corner brackets draw on, label:value lines tick their values on cues, one readout emphasized in accent. The subject never moves; the HUD breathes zero.",
+      "name": "telemetry-hud",
+      "tags": [
+        "motion-primitive",
+        "product-demo",
+        "hud",
+        "telemetry",
+        "deterministic"
+      ],
+      "title": "Telemetry HUD",
+      "type": "component"
+    },
+    {
+      "description": "A terminal window types commands and streams log output.",
+      "name": "terminal-simulator",
+      "tags": [
+        "code-animation"
+      ],
+      "title": "Terminal Simulator",
+      "type": "component"
+    },
+    {
+      "description": "Reveals a customer quote at reading pace, then settles its avatar, author name, and handle beneath as a clean proof beat.",
+      "name": "testimonial-card",
+      "tags": [
+        "prop",
+        "ui-props",
+        "testimonial",
+        "social-proof",
+        "quote",
+        "prove"
+      ],
+      "title": "Testimonial Card",
+      "type": "component"
+    },
+    {
+      "description": "A quote card whose testimonial reveals per-line through a soft mask, with an avatar disc (initials default, image slot), mono name and role, an optional company text mark, and one emphasis substring underlined in accent ink after the quote lands.",
+      "name": "testimonial-proof-card",
+      "tags": [
+        "motion-primitive",
+        "proof",
+        "testimonial",
+        "quote",
+        "social-proof",
+        "deterministic"
+      ],
+      "title": "Testimonial Proof Card",
+      "type": "component"
+    },
+    {
+      "description": "One line of text becomes another mid-move: both ride a single 85 % easy-ease curve and hard-swap at the speed peak, as scale, tracking, or a same-direction slide.",
+      "name": "text-match-cut",
+      "tags": [
+        "motion-primitive",
+        "transition",
+        "typography",
+        "match-cut",
+        "hard-cut",
+        "continuity"
+      ],
+      "title": "Text Match Cut",
+      "type": "component"
+    },
+    {
+      "description": "A static headline receives one clean specular gradient sweep through its glyphs, then returns to its ordinary text color.",
+      "name": "text-shimmer",
+      "tags": [
+        "motion-primitive",
+        "text-effects",
+        "shimmer",
+        "specular",
+        "emphasis"
+      ],
+      "title": "Text Shimmer",
+      "type": "component"
+    },
+    {
+      "description": "A transitions.dev-inspired text stagger primitive with enter, shimmer, and exit-ready words",
+      "name": "text-stagger",
+      "tags": [
+        "video-primitive",
+        "transition-primitive",
+        "transitions-dev-port",
+        "text",
+        "stagger"
+      ],
+      "title": "Text Stagger",
+      "type": "component"
+    },
+    {
+      "description": "A text state swap primitive with outgoing blur and incoming lift",
+      "name": "text-state-swap",
+      "tags": [
+        "video-primitive",
+        "transition-primitive",
+        "transitions-dev-port",
+        "text",
+        "swap"
+      ],
+      "title": "Text State Swap",
+      "type": "component"
+    },
+    {
+      "description": "CSS luminance masks that cut holes through letterforms - 66 pre-built texture masks from ambientCG PBR color maps",
+      "name": "texture-mask-text",
+      "tags": [
+        "text",
+        "text-effect",
+        "effect",
+        "texture",
+        "mask"
+      ],
+      "title": "Texture Mask Text",
+      "type": "component"
+    },
+    {
+      "description": "Shader transition with heat haze thermal distortion",
+      "dimensions": {
+        "height": 1080,
+        "width": 1920
+      },
+      "duration": 4,
+      "name": "thermal-distortion",
+      "tags": [
+        "transition",
+        "shader"
+      ],
+      "title": "Thermal Distortion",
+      "type": "block"
+    },
+    {
+      "description": "A source-owned editable conversation stack with arbitrary incoming and outgoing messages",
+      "dimensions": {
+        "height": 1080,
+        "width": 1920
+      },
+      "duration": 8,
+      "name": "thread-message-stack",
+      "tags": [
+        "social",
+        "conversation",
+        "messages"
+      ],
+      "title": "Thread Message Stack",
+      "type": "block"
+    },
+    {
+      "description": "A Three.js-powered orbit scene driven by a paused GSAP timeline for deterministic renders.",
+      "name": "three-orbiting-cards",
+      "tags": [
+        "video-primitive",
+        "three-js",
+        "webgl",
+        "hyperframes-native"
+      ],
+      "title": "Three Orbiting Cards",
+      "type": "component"
+    },
+    {
+      "description": "A mono ticker rolls through options, locks on a final word with an accent flash, and promotes it into a full-frame headline.",
+      "name": "ticker-takeover",
+      "tags": [
+        "motion-primitive",
+        "typography",
+        "ticker",
+        "slot-machine",
+        "headline",
+        "reveal"
+      ],
+      "title": "Ticker Takeover",
+      "type": "component"
+    },
+    {
+      "description": "Animated TikTok follow overlay with profile card and follow button",
+      "dimensions": {
+        "height": 1920,
+        "width": 1080
+      },
+      "duration": 4.5,
+      "name": "tiktok-follow",
+      "tags": [
+        "social",
+        "overlay",
+        "tiktok"
+      ],
+      "title": "TikTok Follow",
+      "type": "block"
+    },
+    {
+      "description": "A transitions.dev-inspired tilt card primitive with depth layers and hover-style parallax",
+      "name": "tilt-card",
+      "tags": [
+        "video-primitive",
+        "transition-primitive",
+        "transitions-dev-port",
+        "card",
+        "tilt"
+      ],
+      "title": "Tilt Card",
+      "type": "component"
+    },
+    {
+      "description": "A restrained title card where a mono kicker and generous grotesque headline fade upward, drift almost imperceptibly, and exit cleanly.",
+      "name": "titlecard-calm",
+      "tags": [
+        "motion-primitive",
+        "typography",
+        "title-card",
+        "calm",
+        "orient"
+      ],
+      "title": "Titlecard Calm",
+      "type": "component"
+    },
+    {
+      "description": "The calm breather titlecard: an optional mono kicker fades up, the wordmark settles dead-center with one restrained move, a hairline rule draws left to right, a mono label fades beneath, and the lockup holds truly still.",
+      "name": "titlecard-lockup",
+      "tags": [
+        "motion-primitive",
+        "typography",
+        "title-card",
+        "lockup",
+        "breather",
+        "orient"
+      ],
+      "title": "Titlecard Lockup",
+      "type": "component"
+    },
+    {
+      "description": "An oversized UI toggle switch that flips with real physicality: thumb overshoot, track color crossfade, and a soft press-compress before release. The reference prop of the ui-props family.",
+      "name": "toggle-flip",
+      "tags": [
+        "prop",
+        "ui-props",
+        "toggle",
+        "interaction",
+        "reference-prop",
+        "demonstrate"
+      ],
+      "title": "Toggle Flip",
+      "type": "component"
+    },
+    {
+      "description": "Letters descend from above in a pronounced staircase with zero blur.",
+      "name": "top-down-letters",
+      "tags": [
+        "video-primitive",
+        "motion-primitive",
+        "typography"
+      ],
+      "title": "Top-Down Letters",
+      "type": "component"
+    },
+    {
+      "description": "A translucent contact-circle gesture actor for mobile UI scenes: it touches the glass on the frame the host target responds, then lifts. Tap or swipe, picked by variable.",
+      "name": "touch-indicator",
+      "tags": [
+        "cursor",
+        "motion-primitive",
+        "mobile",
+        "gesture",
+        "touch",
+        "pointer"
+      ],
+      "title": "Touch Indicator",
+      "type": "component"
+    },
+    {
+      "description": "A glowing dash follows one SVG path through three UI elements, lifting and brightening each element in sequence.",
+      "name": "tracing-beam",
+      "tags": [
+        "motion-primitive",
+        "product-demo",
+        "attention",
+        "beam",
+        "path",
+        "spotlight"
+      ],
+      "title": "Tracing Beam",
+      "type": "component"
+    },
+    {
+      "description": "A precise letter-spacing reveal for premium headings and interface labels",
+      "name": "tracking-in",
+      "tags": [
+        "motion-primitive",
+        "text",
+        "reveal",
+        "typography"
+      ],
+      "title": "Tracking In",
+      "type": "component"
+    },
+    {
+      "description": "Showcase of 3D perspective flip and rotate transitions",
+      "dimensions": {
+        "height": 1080,
+        "width": 1920
+      },
+      "duration": 11,
+      "name": "transitions-3d",
+      "tags": [
+        "transition",
+        "showcase"
+      ],
+      "title": "3D Transitions",
+      "type": "block"
+    },
+    {
+      "description": "Showcase of blur-based transitions between scenes",
+      "dimensions": {
+        "height": 1080,
+        "width": 1920
+      },
+      "duration": 20,
+      "name": "transitions-blur",
+      "tags": [
+        "transition",
+        "showcase"
+      ],
+      "title": "Blur Transitions",
+      "type": "block"
+    },
+    {
+      "description": "Showcase of cover/uncover slide transitions",
+      "dimensions": {
+        "height": 1080,
+        "width": 1920
+      },
+      "duration": 21,
+      "name": "transitions-cover",
+      "tags": [
+        "transition",
+        "showcase"
+      ],
+      "title": "Cover Transitions",
+      "type": "block"
+    },
+    {
+      "description": "Showcase of destructive break-apart transitions",
+      "dimensions": {
+        "height": 1080,
+        "width": 1920
+      },
+      "duration": 14,
+      "name": "transitions-destruction",
+      "tags": [
+        "transition",
+        "showcase"
+      ],
+      "title": "Destruction Transitions",
+      "type": "block"
+    },
+    {
+      "description": "Showcase of dissolve and fade transitions",
+      "dimensions": {
+        "height": 1080,
+        "width": 1920
+      },
+      "duration": 24,
+      "name": "transitions-dissolve",
+      "tags": [
+        "transition",
+        "showcase",
+        "crossfade"
+      ],
+      "title": "Dissolve Transitions",
+      "type": "block"
+    },
+    {
+      "description": "Showcase of warp and distortion transitions",
+      "dimensions": {
+        "height": 1080,
+        "width": 1920
+      },
+      "duration": 21,
+      "name": "transitions-distortion",
+      "tags": [
+        "transition",
+        "showcase"
+      ],
+      "title": "Distortion Transitions",
+      "type": "block"
+    },
+    {
+      "description": "Showcase of grid-based tile transitions",
+      "dimensions": {
+        "height": 1080,
+        "width": 1920
+      },
+      "duration": 11,
+      "name": "transitions-grid",
+      "tags": [
+        "transition",
+        "showcase"
+      ],
+      "title": "Grid Transitions",
+      "type": "block"
+    },
+    {
+      "description": "Showcase of light-based glow and flash transitions",
+      "dimensions": {
+        "height": 1080,
+        "width": 1920
+      },
+      "duration": 21,
+      "name": "transitions-light",
+      "tags": [
+        "transition",
+        "showcase"
+      ],
+      "title": "Light Transitions",
+      "type": "block"
+    },
+    {
+      "description": "Showcase of mechanical shutter and iris transitions",
+      "dimensions": {
+        "height": 1080,
+        "width": 1920
+      },
+      "duration": 15,
+      "name": "transitions-mechanical",
+      "tags": [
+        "transition",
+        "showcase"
+      ],
+      "title": "Mechanical Transitions",
+      "type": "block"
+    },
+    {
+      "description": "Showcase of miscellaneous creative transitions",
+      "dimensions": {
+        "height": 1080,
+        "width": 1920
+      },
+      "duration": 20,
+      "name": "transitions-other",
+      "tags": [
+        "transition",
+        "showcase"
+      ],
+      "title": "Other Transitions",
+      "type": "block"
+    },
+    {
+      "description": "Showcase of push and slide transitions",
+      "dimensions": {
+        "height": 1080,
+        "width": 1920
+      },
+      "duration": 24,
+      "name": "transitions-push",
+      "tags": [
+        "transition",
+        "showcase"
+      ],
+      "title": "Push Transitions",
+      "type": "block"
+    },
+    {
+      "description": "Showcase of radial wipe and reveal transitions",
+      "dimensions": {
+        "height": 1080,
+        "width": 1920
+      },
+      "duration": 20,
+      "name": "transitions-radial",
+      "tags": [
+        "transition",
+        "showcase"
+      ],
+      "title": "Radial Transitions",
+      "type": "block"
+    },
+    {
+      "description": "Showcase of scale and zoom transitions",
+      "dimensions": {
+        "height": 1080,
+        "width": 1920
+      },
+      "duration": 15,
+      "name": "transitions-scale",
+      "tags": [
+        "transition",
+        "showcase"
+      ],
+      "title": "Scale Transitions",
+      "type": "block"
+    },
+    {
+      "description": "A monochrome trust row of wide-tracked mono wordmarks that fade in with an opacity-only left-to-right stagger, then hold dead still.",
+      "name": "trust-strip",
+      "tags": [
+        "motion-primitive",
+        "proof",
+        "trust",
+        "logo-strip",
+        "wordmarks"
+      ],
+      "title": "Trust Strip",
+      "type": "component"
+    },
+    {
+      "description": "A headline splits vertically around an incoming panel, which grows from the negative space and takes the frame as the words exit through opposite edges.",
+      "name": "type-match-cut",
+      "tags": [
+        "motion-primitive",
+        "transition",
+        "typography",
+        "match-cut",
+        "continuity"
+      ],
+      "title": "Type Match Cut",
+      "type": "component"
+    },
+    {
+      "description": "A prompt line types itself in chunked human cadence behind a deterministic blinking caret, with optional backspace-and-retype correction of the final word.",
+      "name": "typed-prompt",
+      "tags": [
+        "motion-primitive",
+        "product-demo",
+        "typing",
+        "prompt",
+        "deterministic"
+      ],
+      "title": "Typed Prompt",
+      "type": "component"
+    },
+    {
+      "description": "Character-by-character text reveal with a deterministic blinking cursor.",
+      "name": "typewriter",
+      "tags": [
+        "video-primitive",
+        "motion-primitive",
+        "typography"
+      ],
+      "title": "Typewriter",
+      "type": "component"
+    },
+    {
+      "description": "The three-dot chat bubble that says someone is writing: it pops in at the thread's edge exactly as messaging apps do, holds while the reply is coming, and vanishes when the message lands",
+      "name": "typing-indicator",
+      "tags": [
+        "video-primitive",
+        "chat",
+        "mock-ui",
+        "overlay"
+      ],
+      "title": "Typing Indicator",
+      "type": "component"
+    },
+    {
+      "description": "Perspective 3D reveal animation for UI elements",
+      "dimensions": {
+        "height": 1080,
+        "width": 1920
+      },
+      "duration": 13,
+      "name": "ui-3d-reveal",
+      "tags": [
+        "showcase",
+        "3d",
+        "reveal"
+      ],
+      "title": "3D UI Reveal",
+      "type": "block"
+    },
+    {
+      "description": "A full app surface establishes with one settle, then the camera zooms and pans to an anchored region on its cue and holds the zoomed state, with an optional soft focus halo at the anchor. The surface is a slot with a token-styled skeleton default.",
+      "name": "ui-focus-zoom",
+      "tags": [
+        "camera",
+        "product-demo",
+        "zoom",
+        "focus",
+        "pan",
+        "slot",
+        "servo"
+      ],
+      "title": "UI Focus Zoom",
+      "type": "component"
+    },
+    {
+      "description": "Animated US choropleth map with staggered state reveals, value labels, and gradient legend — pure inline SVG with GSAP",
+      "dimensions": {
+        "height": 1080,
+        "width": 1920
+      },
+      "duration": 12,
+      "name": "us-map",
+      "tags": [
+        "data",
+        "map",
+        "geography",
+        "usa",
+        "choropleth"
+      ],
+      "title": "US Map",
+      "type": "block"
+    },
+    {
+      "description": "Animated US bubble map with proportional city markers, value callouts, and connection lines — composable with us-map",
+      "dimensions": {
+        "height": 1080,
+        "width": 1920
+      },
+      "duration": 12,
+      "name": "us-map-bubble",
+      "tags": [
+        "data",
+        "map",
+        "geography",
+        "usa",
+        "bubble",
+        "cities"
+      ],
+      "title": "US Bubble Map",
+      "type": "block"
+    },
+    {
+      "description": "Animated connection arcs between US cities over a base map — composable origin-destination flow visualization",
+      "dimensions": {
+        "height": 1080,
+        "width": 1920
+      },
+      "duration": 12,
+      "name": "us-map-flow",
+      "tags": [
+        "data",
+        "map",
+        "geography",
+        "usa",
+        "flow",
+        "connections",
+        "arcs"
+      ],
+      "title": "US Flow Map",
+      "type": "block"
+    },
+    {
+      "description": "Animated hexagonal tile grid map — each state as an equal-weight hex with data fill and abbreviation label",
+      "dimensions": {
+        "height": 1080,
+        "width": 1920
+      },
+      "duration": 10,
+      "name": "us-map-hex",
+      "tags": [
+        "data",
+        "map",
+        "geography",
+        "usa",
+        "hexgrid",
+        "tilegrid"
+      ],
+      "title": "US Hex Grid Map",
+      "type": "block"
+    },
+    {
+      "description": "A locked one-line headline whose weight or width axis morphs into a decisive emphasis beat.",
+      "name": "variable-axis-type",
+      "tags": [
+        "typography",
+        "variable-font",
+        "kinetic-type",
+        "axis",
+        "emphasize"
+      ],
+      "title": "Variable Axis Type",
+      "type": "component"
+    },
+    {
+      "description": "A word lands while its variable-font weight and width axes flex from hairline-condensed to black-wide with per-character stagger; font-size eases inversely so the letterforms gain mass while the box holds.",
+      "name": "variable-font-flex",
+      "tags": [
+        "motion-primitive",
+        "experiment",
+        "type",
+        "variable-font",
+        "deterministic"
+      ],
+      "title": "Variable Font Flex",
+      "type": "component"
+    },
+    {
+      "description": "A dark design-tool app chrome with a live vector pen path, sequential anchor points, bezier handles, a selection frame, and theme-driven blue accents.",
+      "name": "vector-editor-rig",
+      "tags": [
+        "prop",
+        "ui-props",
+        "demonstrate",
+        "vector",
+        "design-tool",
+        "pen-tool",
+        "bezier",
+        "app-chrome"
+      ],
+      "title": "Vector Editor Rig",
+      "type": "component"
+    },
+    {
+      "description": "A five-shot rail whips past on a fast decaying curve, then overshoots and snaps the selected hero shot exactly to center.",
+      "name": "velocity-throw-snap",
+      "tags": [
+        "motion-primitive",
+        "feature-tour",
+        "rail",
+        "velocity",
+        "throw",
+        "snap",
+        "physics"
+      ],
+      "title": "Velocity Throw Snap",
+      "type": "component"
+    },
+    {
+      "description": "A drifting field of bright points, each one throwing the long horizontal blue-violet streak a real anamorphic cinema lens produces. Built from the measured filter constants: a 0.3 high-pass, 80 horizontal taps at quarter resolution, a samples/3 gain and a 0x7a8aff tint.",
+      "dimensions": {
+        "height": 1080,
+        "width": 1920
+      },
+      "duration": 10,
+      "name": "vfx-anamorphic-flare",
+      "tags": [
+        "vfx",
+        "background",
+        "showcase",
+        "optical",
+        "canvas"
+      ],
+      "title": "Anamorphic Streak Flare",
+      "type": "block"
+    },
+    {
+      "description": "Real GLTF iPhone 15 Pro Max and MacBook Pro models with live HTML-in-Canvas screen content, morphing glass lens, product review camera choreography, and 360° turntable.",
+      "dimensions": {
+        "height": 1080,
+        "width": 1920
+      },
+      "duration": 15,
+      "name": "vfx-iphone-device",
+      "tags": [
+        "html-in-canvas",
+        "3d",
+        "device",
+        "iphone",
+        "macbook",
+        "gltf"
+      ],
+      "title": "iPhone & MacBook 3D Showcase",
+      "type": "block"
+    },
+    {
+      "description": "Organic liquid simulation with vertex displacement on a subdivided plane. HTML content floats above rippling fluid surface with real-time wave dynamics.",
+      "dimensions": {
+        "height": 1080,
+        "width": 1920
+      },
+      "duration": 12,
+      "name": "vfx-liquid-background",
+      "tags": [
+        "html-in-canvas",
+        "liquid",
+        "webgl",
+        "displacement",
+        "background"
+      ],
+      "title": "Liquid Background",
+      "type": "block"
+    },
+    {
+      "description": "VFX composition block",
+      "dimensions": {
+        "height": 1080,
+        "width": 1920
+      },
+      "duration": 20,
+      "name": "vfx-liquid-glass",
+      "tags": [
+        "html-in-canvas",
+        "webgl"
+      ],
+      "title": "Liquid Glass",
+      "type": "block"
+    },
+    {
+      "description": "VFX composition block",
+      "dimensions": {
+        "height": 1080,
+        "width": 1920
+      },
+      "duration": 15,
+      "name": "vfx-magnetic",
+      "tags": [
+        "html-in-canvas",
+        "webgl"
+      ],
+      "title": "Magnetic",
+      "type": "block"
+    },
+    {
+      "description": "VFX composition block",
+      "dimensions": {
+        "height": 1080,
+        "width": 1920
+      },
+      "duration": 10,
+      "name": "vfx-portal",
+      "tags": [
+        "html-in-canvas",
+        "webgl"
+      ],
+      "title": "Portal",
+      "type": "block"
+    },
+    {
+      "description": "VFX composition block",
+      "dimensions": {
+        "height": 1080,
+        "width": 1920
+      },
+      "duration": 12,
+      "name": "vfx-shatter",
+      "tags": [
+        "html-in-canvas",
+        "webgl"
+      ],
+      "title": "Shatter",
+      "type": "block"
+    },
+    {
+      "description": "Dramatic text reveal with cursor glow, chromatic shadow rays, and directional lighting on a black stage. Canvas-based shader post-processing with spectral color edges.",
+      "dimensions": {
+        "height": 1080,
+        "width": 1920
+      },
+      "duration": 8,
+      "name": "vfx-text-cursor",
+      "tags": [
+        "html-in-canvas",
+        "text",
+        "shader",
+        "cursor",
+        "chromatic"
+      ],
+      "title": "VFX Text Cursor",
+      "type": "block"
+    },
+    {
+      "description": "Cinematic radial vignette overlay using a pure-CSS gradient — darkens the edges to pull focus toward the center",
+      "name": "vignette",
+      "tags": [
+        "vignette",
+        "overlay",
+        "cinematic",
+        "effect"
+      ],
+      "title": "Vignette",
+      "type": "component"
+    },
+    {
+      "description": "The Vox-style annotate gesture: a keyword in a held sentence gets a hand-drawn marker while a thin connector draws up to a mono callout label, all as one choreographed beat on the cue.",
+      "name": "vox-annotate",
+      "tags": [
+        "motion-primitive",
+        "typography",
+        "annotation",
+        "marker",
+        "deterministic"
+      ],
+      "title": "Vox Annotate",
+      "type": "component"
+    },
+    {
+      "description": "Snappy Apple-style YouTube insert showing a phone finding and installing a friendly VPN app with sound effects.",
+      "dimensions": {
+        "height": 1080,
+        "width": 1920
+      },
+      "duration": 7,
+      "name": "vpn-youtube-spot",
+      "tags": [
+        "app",
+        "showcase",
+        "youtube",
+        "sfx"
+      ],
+      "title": "VPN YouTube Spot",
+      "type": "block"
+    },
+    {
+      "description": "A crest of thickness travels along a headline: each character swells from light to black and leans forward as the wave passes, driven by the wght and slnt variable-font axes rather than by transforms.",
+      "dimensions": {
+        "height": 1080,
+        "width": 1920
+      },
+      "duration": 6,
+      "name": "weight-wave",
+      "tags": [
+        "typography",
+        "kinetic-type",
+        "title",
+        "variable-font",
+        "text"
+      ],
+      "title": "Weight Wave",
+      "type": "block"
+    },
+    {
+      "description": "Shader transition simulating a fast camera whip pan",
+      "dimensions": {
+        "height": 1080,
+        "width": 1920
+      },
+      "duration": 4,
+      "name": "whip-pan",
+      "tags": [
+        "transition",
+        "shader"
+      ],
+      "title": "Whip Pan",
+      "type": "block"
+    },
+    {
+      "description": "A full-frame whip pan: scene A whips off laterally with capped directional motion blur while scene B enters in the same direction at matched velocity, on a speed-ramp profile with a decelerating catch. Both scenes ride one strip, so seam velocity is exact by construction. Callers fill the named before/after slot panels; token-styled defaults render when a slot is left empty.",
+      "name": "whip-pan-cut",
+      "tags": [
+        "transition",
+        "whip-pan",
+        "motion-blur",
+        "velocity-match",
+        "speed-ramp",
+        "bridge",
+        "slots"
+      ],
+      "title": "Whip Pan Cut",
+      "type": "component"
+    },
+    {
+      "description": "A whiteboard sketch draws one measured stroke at a time while a pen nib follows the active tip. Preset sketches (bulb, flow, rocket) or your own multi-stroke SVG paths via the strokes slot; a path marked data-ink=accent rides the accent token.",
+      "name": "whiteboard-ink",
+      "tags": [
+        "motion-primitive",
+        "intro",
+        "reveal",
+        "svg",
+        "whiteboard",
+        "line-draw",
+        "slot"
+      ],
+      "title": "Whiteboard Ink",
+      "type": "component"
+    },
+    {
+      "description": "A wireframe portal bursts open, the title comes through, then its letters swap into a second phrase.",
+      "dimensions": {
+        "height": 1080,
+        "width": 1920
+      },
+      "duration": 8,
+      "name": "wireframe-portal-title",
+      "tags": [
+        "3d-motion",
+        "title-card",
+        "wireframe",
+        "portal",
+        "burst",
+        "typography",
+        "post-processing",
+        "phrase-swap"
+      ],
+      "title": "Wireframe Portal Title",
+      "type": "block"
+    },
+    {
+      "description": "A wordmark resolves from deterministic color noise into correctly cropped glyph tiles through a spatially modulated GSAP wave.",
+      "name": "wordmark-tiles",
+      "tags": [
+        "typography",
+        "wordmark",
+        "tiles",
+        "raster",
+        "reveal"
+      ],
+      "title": "Wordmark Tiles",
+      "type": "component"
+    },
+    {
+      "description": "Animated world choropleth with country-by-country reveal, tooltip labels, and rotating globe inset — D3 Natural Earth projection",
+      "dimensions": {
+        "height": 1080,
+        "width": 1920
+      },
+      "duration": 14,
+      "name": "world-map",
+      "tags": [
+        "data",
+        "map",
+        "geography",
+        "world",
+        "choropleth"
+      ],
+      "title": "World Map",
+      "type": "block"
+    },
+    {
+      "description": "A social follow card with avatar, handle, and follower motion.",
+      "name": "x-follow-card",
+      "tags": [
+        "social-overlay"
+      ],
+      "title": "X Follow Card",
+      "type": "component"
+    },
+    {
+      "description": "Animated X/Twitter post card overlay with engagement metrics",
+      "dimensions": {
+        "height": 1080,
+        "width": 1920
+      },
+      "duration": 5,
+      "name": "x-post",
+      "tags": [
+        "social",
+        "overlay",
+        "twitter"
+      ],
+      "title": "X Post Card",
+      "type": "block"
+    },
+    {
+      "description": "Dynamic zoom, slide, and 3D tilt-pan helpers for any wrapper (video, include, card) with cubic-easing defaults and an edge-defocus pulse overlay",
+      "name": "yt-camera-move",
+      "tags": [
+        "camera",
+        "zoom",
+        "effect",
+        "creator"
+      ],
+      "title": "Camera Punch-In",
+      "type": "component"
+    },
+    {
+      "description": "Draw-on annotation ellipse around a target plus a countdown chip that pulses each tick",
+      "name": "yt-circle-pointer",
+      "tags": [
+        "annotation",
+        "countdown",
+        "overlay"
+      ],
+      "title": "Pointer Circle + Countdown",
+      "type": "component"
+    },
+    {
+      "description": "Social comments typing on over footage: avatar pop, username and time, per-character typewriter, likes row; image avatars or initials chips",
+      "dimensions": {
+        "height": 1080,
+        "width": 1920
+      },
+      "duration": 8,
+      "name": "yt-comment-card",
+      "tags": [
+        "social",
+        "comments",
+        "creator",
+        "overlay"
+      ],
+      "title": "Comment Cards",
+      "type": "block"
+    },
+    {
+      "description": "Dims the frame except a feathered ellipse; the hole's position and size are CSS variables, so helpers glide the spotlight between targets",
+      "name": "yt-feather-highlight",
+      "tags": [
+        "highlight",
+        "spotlight",
+        "effect",
+        "overlay"
+      ],
+      "title": "Feathered Spotlight",
+      "type": "component"
+    },
+    {
+      "description": "Textured paper board: scanlines with slow drift, optional pixel grid, static grain, and display text with a blur-focus entrance and chromatic-fringe title",
+      "dimensions": {
+        "height": 1080,
+        "width": 1920
+      },
+      "duration": 10,
+      "name": "yt-lcd-background",
+      "tags": [
+        "background",
+        "texture",
+        "creator"
+      ],
+      "title": "Scanline Board Background",
+      "type": "block"
+    },
+    {
+      "description": "Logo stamp pops on a lined board, a kicker line gives way to the title with an accent arrow chip; seeded line distortion",
+      "dimensions": {
+        "height": 1080,
+        "width": 1920
+      },
+      "duration": 6,
+      "name": "yt-logo-intro",
+      "tags": [
+        "logo",
+        "intro",
+        "creator"
+      ],
+      "title": "Logo Intro Sequence",
+      "type": "block"
+    },
+    {
+      "description": "Animated YouTube subscribe lower third with avatar and channel info",
+      "dimensions": {
+        "height": 1080,
+        "width": 1920
+      },
+      "duration": 4.5,
+      "name": "yt-lower-third",
+      "tags": [
+        "social",
+        "overlay",
+        "youtube"
+      ],
+      "title": "YouTube Lower Third",
+      "type": "block"
+    },
+    {
+      "description": "Display title on a transparent root: blur-focus entrance, red/blue fringe that settles then breathes, perspective bow, slow scale drift",
+      "dimensions": {
+        "height": 1080,
+        "width": 1920
+      },
+      "duration": 6,
+      "name": "yt-prism-title",
+      "tags": [
+        "typography",
+        "title-card",
+        "creator"
+      ],
+      "title": "Chromatic Fringe Title",
+      "type": "block"
+    },
+    {
+      "description": "Grid, scanline, vignette, and sheen overlay plus a 3D-warp wrapper class that makes footage read as if playing on a physical display",
+      "name": "yt-screen-warp",
+      "tags": [
+        "effect",
+        "overlay",
+        "texture"
+      ],
+      "title": "On-Screen Display Effect",
+      "type": "component"
+    },
+    {
+      "description": "Portrait media filling a widescreen frame via blurred-scale, mirror, or copy side fills; grid texture and foreground contrast lift (images inside the block; keep live footage in the host)",
+      "dimensions": {
+        "height": 1080,
+        "width": 1920
+      },
+      "duration": 8,
+      "name": "yt-vertical-fill",
+      "tags": [
+        "placeholder",
+        "vertical",
+        "media"
+      ],
+      "title": "Vertical Media Filler",
+      "type": "block"
+    },
+    {
+      "description": "A transition that zooms through a focal card into the next scene.",
+      "name": "zoom-through-transition",
+      "tags": [
+        "transition-primitive"
+      ],
+      "title": "Zoom Through Transition",
+      "type": "component"
+    }
+  ]
+}

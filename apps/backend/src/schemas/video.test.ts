@@ -5,7 +5,7 @@ const body = {
   idempotencyKey: "44444444-4444-4444-8444-444444444444",
   title: "Promo Kopi",
   videoType: "product_promo",
-  styleId: "bold_pop",
+  styleId: "creative-mode",
   settings: { durationSeconds: 6, aspectRatio: "9:16", resolution: "720p", language: "id", voiceOverEnabled: true, musicEnabled: true },
 };
 

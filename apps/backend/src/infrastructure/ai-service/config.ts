@@ -1,6 +1,7 @@
 import { z } from "zod";
 import type { AIConfigOptions, ConnectionProfile, TaskConfig } from "../../domain/ai-service/config";
 import { AIError } from "../../domain/ai-service/errors";
+import { AI_TASKS } from "../../domain/ai-service/types";
 
 export const OPENAI_RESPONSES_FORMAT = "openai-responses";
 
@@ -47,7 +48,7 @@ const profileSchema = z.object({
   pricing: pricingSchema.optional(),
 });
 const taskSchema = z.object({
-  task: z.enum(["connection_test", "interviewer", "planner", "product_analysis"]),
+  task: z.enum(AI_TASKS),
   profileId: z.string().trim().min(1),
   limits: z.object({
     maxInputCharacters: positiveInteger.optional(),

@@ -7,8 +7,8 @@ function turn(overrides: Record<string, unknown> = {}) {
   return {
     question: "Style visual mana yang paling sesuai?",
     control: "single_select",
-    options: [option("bold_pop"), option("clean_product")],
-    recommendedOptionId: "bold_pop",
+    options: [option("creative-mode"), option("creative-mode")],
+    recommendedOptionId: "creative-mode",
     recommendationReason: "Kontras tinggi tetap terbaca di layar ponsel.",
     targetFields: ["styleId"],
     briefComplete: false,
@@ -47,7 +47,7 @@ describe("interview turn", () => {
   });
 
   it("refuses a recommendation that is not one of the options", () => {
-    expect(findInterviewTurnProblems(interviewTurnSchema.parse(turn({ recommendedOptionId: "premium_dark" })))).toContain("recommendation_not_listed");
+    expect(findInterviewTurnProblems(interviewTurnSchema.parse(turn({ recommendedOptionId: "not-one-of-the-options" })))).toContain("recommendation_not_listed");
   });
 
   it("refuses a recommendation with no reason", () => {
