@@ -5,7 +5,7 @@ import type {
   ResolvedAIConfig,
 } from "../../domain/ai-service/config";
 import { AIError } from "../../domain/ai-service/errors";
-import type { AITask } from "../../domain/ai-service/types";
+import { AI_TASKS, type AITask } from "../../domain/ai-service/types";
 
 const DEFAULT_ATTEMPT_TIMEOUT_MS = 30_000;
 const DEFAULT_TOTAL_DEADLINE_MS = 65_000;
@@ -60,7 +60,7 @@ const profileSchema = z.object({
   pricing: pricingSchema.optional(),
 });
 const taskSchema = z.object({
-  task: z.enum(["connection_test", "interviewer", "planner", "product_analysis"]),
+  task: z.enum(AI_TASKS),
   profileId: z.string().trim().min(1),
   limits: taskLimitsSchema,
 });

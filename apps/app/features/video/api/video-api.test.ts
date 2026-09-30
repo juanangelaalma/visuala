@@ -26,7 +26,7 @@ describe("videoApi", () => {
     const input = {
       title: "Es Kopi",
       videoType: "product_promo" as const,
-      styleId: "bold_pop" as const,
+      styleId: "creative-mode" as const,
       settings: { durationSeconds: 10 as const, aspectRatio: "9:16" as const, resolution: "1080p" as const, language: "id", voiceOverEnabled: true, musicEnabled: false },
     };
 
@@ -41,7 +41,7 @@ describe("videoApi", () => {
     expect(mocks.fetch).toHaveBeenNthCalledWith(4, "/video-projects/project%2Fid", { method: "DELETE", signal: undefined });
   });
 
-  it("maps asset, message, approval, and render mutations", async () => {
+  it("maps asset, message, composition, and render mutations", async () => {
     mocks.fetch.mockResolvedValue({});
     mocks.upload.mockResolvedValue({ asset: { id: "asset-1" } });
     const file = new Uint8Array([1, 2]);
@@ -49,29 +49,33 @@ describe("videoApi", () => {
     await videoApi.uploadAsset("project-1", file, "image/webp");
     await videoApi.deleteAsset("project-1", "asset-1");
     await videoApi.sendMessage("project-1", "Halo", ["asset-1"]);
-    await videoApi.approveProject("project-1");
-    await videoApi.startRender("project-1", "3d594650-3436-4a12-9a64-6f8e5c2f5f04");
+    await videoApi.createComposition("project-1");
+    await videoApi.startRender("project-1", { idempotencyKey: "3d594650-3436-4a12-9a64-6f8e5c2f5f04", compositionRevisionId: "composition-1", kind: "preview" });
     await videoApi.cancelRender("project-1", "job-1");
 
     expect(mocks.upload).toHaveBeenCalledWith("/video-projects/project-1/assets", { body: file, contentType: "image/webp", signal: undefined });
     expect(mocks.fetch).toHaveBeenCalledWith("/video-projects/project-1/assets/asset-1", { method: "DELETE", signal: undefined });
     expect(mocks.fetch).toHaveBeenCalledWith("/video-projects/project-1/messages", { method: "POST", body: { content: "Halo", assetIds: ["asset-1"] }, signal: undefined });
-    expect(mocks.fetch).toHaveBeenCalledWith("/video-projects/project-1/approve", { method: "POST", signal: undefined });
-    expect(mocks.fetch).toHaveBeenCalledWith("/video-projects/project-1/render-jobs", { method: "POST", body: { idempotencyKey: "3d594650-3436-4a12-9a64-6f8e5c2f5f04" }, signal: undefined });
+    expect(mocks.fetch).toHaveBeenCalledWith("/video-projects/project-1/compositions", { method: "POST", signal: undefined });
+    expect(mocks.fetch).toHaveBeenCalledWith("/video-projects/project-1/render-jobs", {
+      method: "POST",
+      body: { idempotencyKey: "3d594650-3436-4a12-9a64-6f8e5c2f5f04", compositionRevisionId: "composition-1", kind: "preview" },
+      signal: undefined,
+    });
     expect(mocks.fetch).toHaveBeenCalledWith("/video-projects/project-1/render-jobs/job-1/cancel", { method: "POST", signal: undefined });
   });
 
-  it("reads render jobs and versions together for one poll", async () => {
+  it("reads the latest render job and the versions together for one poll", async () => {
     const controller = new AbortController();
-    mocks.fetch.mockResolvedValueOnce({ jobs: [{ id: "job-1" }] }).mockResolvedValueOnce({ versions: [{ id: "version-1" }] });
+    mocks.fetch.mockResolvedValueOnce({ job: { id: "job-1" } }).mockResolvedValueOnce({ versions: [{ id: "version-1" }] });
 
-    await expect(videoApi.getRenderStatus("project-1", controller.signal)).resolves.toEqual({ jobs: [{ id: "job-1" }], versions: [{ id: "version-1" }] });
-    expect(mocks.fetch).toHaveBeenNthCalledWith(1, "/video-projects/project-1/render-jobs", { signal: controller.signal });
+    await expect(videoApi.getRenderStatus("project-1", controller.signal)).resolves.toEqual({ job: { id: "job-1" }, versions: [{ id: "version-1" }] });
+    expect(mocks.fetch).toHaveBeenNthCalledWith(1, "/video-projects/project-1/render-jobs/latest", { signal: controller.signal });
     expect(mocks.fetch).toHaveBeenNthCalledWith(2, "/video-projects/project-1/versions", { signal: controller.signal });
   });
 
   it("rejects the whole poll when either render read fails", async () => {
-    mocks.fetch.mockResolvedValueOnce({ jobs: [] }).mockRejectedValueOnce(new Error("offline"));
+    mocks.fetch.mockResolvedValueOnce({ job: null }).mockRejectedValueOnce(new Error("offline"));
 
     await expect(videoApi.getRenderStatus("project-1")).rejects.toThrow("offline");
   });
@@ -82,10 +86,10 @@ describe("videoApi", () => {
     const assets = deferred<{ assets: { id: string }[] }>();
     const messages = deferred<{ messages: { id: string }[] }>();
     const brief = deferred<{ brief: { id: string } }>();
-    const storyboard = deferred<{ storyboard: { id: string } }>();
-    const renderJobs = deferred<{ jobs: { id: string }[] }>();
+    const composition = deferred<{ composition: { id: string } }>();
+    const renderJob = deferred<{ job: { id: string } }>();
     const versions = deferred<{ versions: { id: string }[] }>();
-    const responses = [project, assets, messages, brief, storyboard, renderJobs, versions];
+    const responses = [project, assets, messages, brief, composition, renderJob, versions];
     mocks.fetch.mockImplementation(() => responses.shift()!.promise);
 
     const workspace = videoApi.loadVideoWorkspace("project-1", controller.signal);
@@ -95,15 +99,15 @@ describe("videoApi", () => {
     expect(mocks.fetch).toHaveBeenCalledWith("/video-projects/project-1/assets", { signal: controller.signal });
     expect(mocks.fetch).toHaveBeenCalledWith("/video-projects/project-1/messages", { signal: controller.signal });
     expect(mocks.fetch).toHaveBeenCalledWith("/video-projects/project-1/brief", { signal: controller.signal });
-    expect(mocks.fetch).toHaveBeenCalledWith("/video-projects/project-1/storyboard", { signal: controller.signal });
-    expect(mocks.fetch).toHaveBeenCalledWith("/video-projects/project-1/render-jobs", { signal: controller.signal });
+    expect(mocks.fetch).toHaveBeenCalledWith("/video-projects/project-1/compositions/latest", { signal: controller.signal });
+    expect(mocks.fetch).toHaveBeenCalledWith("/video-projects/project-1/render-jobs/latest", { signal: controller.signal });
     expect(mocks.fetch).toHaveBeenCalledWith("/video-projects/project-1/versions", { signal: controller.signal });
     project.resolve({ project: { id: "project-1" } });
     assets.resolve({ assets: [{ id: "asset-1" }] });
     messages.resolve({ messages: [{ id: "message-1" }] });
     brief.resolve({ brief: { id: "brief-1" } });
-    storyboard.resolve({ storyboard: { id: "storyboard-1" } });
-    renderJobs.resolve({ jobs: [{ id: "job-1" }] });
+    composition.resolve({ composition: { id: "composition-1" } });
+    renderJob.resolve({ job: { id: "job-1" } });
     versions.resolve({ versions: [{ id: "version-1" }] });
 
     await expect(workspace).resolves.toEqual({
@@ -111,8 +115,8 @@ describe("videoApi", () => {
       assets: [{ id: "asset-1" }],
       messages: [{ id: "message-1" }],
       brief: { id: "brief-1" },
-      storyboard: { id: "storyboard-1" },
-      renderJobs: [{ id: "job-1" }],
+      composition: { id: "composition-1" },
+      renderJob: { id: "job-1" },
       versions: [{ id: "version-1" }],
     });
   });

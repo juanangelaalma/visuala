@@ -6,7 +6,6 @@ import type { VideoRenderJob, VideoVersion } from "@/domain/video/types";
 
 const mocks = vi.hoisted(() => ({
   getRenderStatus: vi.fn(),
-  startRender: vi.fn(),
   cancelRender: vi.fn(),
 }));
 
@@ -15,20 +14,18 @@ vi.mock("../api/video-api", () => ({ videoApi: mocks }));
 import { BrowserApiError } from "@/lib/api/browser-client";
 import { RenderStatusPanel } from "./RenderStatusPanel";
 
-const queuedJob: VideoRenderJob = { id: "job-1", status: "queued", isRevision: false, attempts: 0, queuedAt: "2026-09-22T00:00:00.000Z", createdAt: "2026-09-22T00:00:00.000Z" };
+const queuedJob: VideoRenderJob = { id: "job-1", kind: "preview", status: "queued", isRevision: false, attempts: 0, queuedAt: "2026-09-22T00:00:00.000Z" };
 const succeededJob: VideoRenderJob = { ...queuedJob, status: "succeeded" };
 const cancelledJob: VideoRenderJob = { ...queuedJob, status: "cancelled" };
-const version: VideoVersion = { id: "version-1", versionNumber: 1, durationSeconds: 10, aspectRatio: "9:16", resolution: "1080p", createdAt: "2026-09-22T00:00:00.000Z", playbackUrl: null };
-const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+const version: VideoVersion = { id: "version-1", versionNumber: 1, kind: "preview", durationSeconds: 10, aspectRatio: "9:16", resolution: "1080p", createdAt: "2026-09-22T00:00:00.000Z", playbackUrl: null };
 
-function renderPanel(overrides: { projectId?: string; initialJob?: VideoRenderJob | null; canRender?: boolean; quotaExhausted?: boolean; onVersionsChange?: (versions: VideoVersion[]) => void } = {}) {
+function renderPanel(overrides: { projectId?: string; initialJob?: VideoRenderJob | null; onVersionsChange?: (versions: VideoVersion[]) => void; onSettled?: () => void } = {}) {
   return render(
     <RenderStatusPanel
       projectId={overrides.projectId ?? "project-1"}
       initialJob={overrides.initialJob === undefined ? queuedJob : overrides.initialJob}
-      canRender={overrides.canRender ?? true}
-      quotaExhausted={overrides.quotaExhausted ?? false}
       onVersionsChange={overrides.onVersionsChange}
+      onSettled={overrides.onSettled}
     />,
   );
 }
@@ -39,7 +36,7 @@ afterEach(() => vi.useRealTimers());
 describe("RenderStatusPanel polling", () => {
   it("shows the initial job immediately and polls the status every three seconds", async () => {
     vi.useFakeTimers();
-    mocks.getRenderStatus.mockResolvedValue({ jobs: [queuedJob], versions: [] });
+    mocks.getRenderStatus.mockResolvedValue({ job: queuedJob, versions: [] });
     renderPanel();
 
     expect(screen.getByText("Dalam antrean")).toBeTruthy();
@@ -53,7 +50,7 @@ describe("RenderStatusPanel polling", () => {
   it("applies a terminal job and its versions together and then stops polling", async () => {
     vi.useFakeTimers();
     const onVersionsChange = vi.fn();
-    mocks.getRenderStatus.mockResolvedValue({ jobs: [succeededJob], versions: [version] });
+    mocks.getRenderStatus.mockResolvedValue({ job: succeededJob, versions: [version] });
     renderPanel({ onVersionsChange });
 
     await act(async () => { await vi.advanceTimersByTimeAsync(3000); });
@@ -83,7 +80,7 @@ describe("RenderStatusPanel polling", () => {
   it("applies neither result on a partial failure and retries after three seconds", async () => {
     vi.useFakeTimers();
     const onVersionsChange = vi.fn();
-    mocks.getRenderStatus.mockRejectedValueOnce(new Error("offline")).mockResolvedValue({ jobs: [queuedJob], versions: [version] });
+    mocks.getRenderStatus.mockRejectedValueOnce(new Error("offline")).mockResolvedValue({ job: queuedJob, versions: [version] });
     renderPanel({ onVersionsChange });
 
     await act(async () => { await vi.advanceTimersByTimeAsync(3000); });
@@ -127,39 +124,20 @@ describe("RenderStatusPanel polling", () => {
 
   it("aborts the old project's poll and stops applying its result when the project changes", async () => {
     vi.useFakeTimers();
-    mocks.getRenderStatus.mockResolvedValue({ jobs: [queuedJob], versions: [] });
+    mocks.getRenderStatus.mockResolvedValue({ job: queuedJob, versions: [] });
     const { rerender } = renderPanel();
 
     await act(async () => { await vi.advanceTimersByTimeAsync(3000); });
     const firstSignal = mocks.getRenderStatus.mock.calls[0]?.[1] as AbortSignal;
 
-    rerender(<RenderStatusPanel projectId="project-2" initialJob={queuedJob} canRender quotaExhausted={false} />);
+    rerender(<RenderStatusPanel projectId="project-2" initialJob={queuedJob} />);
     expect(firstSignal.aborted).toBe(true);
   });
 });
 
 describe("RenderStatusPanel mutations", () => {
-  it("dispatches one deliberate start with a fresh UUID, and does not repeat on rerender", async () => {
-    mocks.getRenderStatus.mockResolvedValue({ jobs: [], versions: [] });
-    mocks.startRender.mockResolvedValueOnce({ job: succeededJob }).mockResolvedValueOnce({ job: queuedJob });
-    const { rerender } = renderPanel({ initialJob: null });
-
-    fireEvent.click(screen.getByRole("button", { name: "Render video" }));
-    await vi.waitFor(() => expect(mocks.startRender).toHaveBeenCalledTimes(1));
-    const firstKey = mocks.startRender.mock.calls[0]?.[1];
-    expect(firstKey).toMatch(uuidPattern);
-
-    rerender(<RenderStatusPanel projectId="project-1" initialJob={null} canRender quotaExhausted={false} />);
-    expect(mocks.startRender).toHaveBeenCalledTimes(1);
-
-    fireEvent.click(await screen.findByRole("button", { name: "Render ulang" }));
-    await vi.waitFor(() => expect(mocks.startRender).toHaveBeenCalledTimes(2));
-    expect(mocks.startRender.mock.calls[1]?.[1]).toMatch(uuidPattern);
-    expect(mocks.startRender.mock.calls[1]?.[1]).not.toBe(firstKey);
-  });
-
   it("updates the job from a cancellation response", async () => {
-    mocks.getRenderStatus.mockResolvedValue({ jobs: [queuedJob], versions: [] });
+    mocks.getRenderStatus.mockResolvedValue({ job: queuedJob, versions: [] });
     mocks.cancelRender.mockResolvedValue({ job: cancelledJob });
     renderPanel();
 
@@ -168,17 +146,8 @@ describe("RenderStatusPanel mutations", () => {
     expect(await screen.findByText("Dibatalkan")).toBeTruthy();
   });
 
-  it("shows recoverable copy when a start fails", async () => {
-    mocks.getRenderStatus.mockResolvedValue({ jobs: [], versions: [] });
-    mocks.startRender.mockRejectedValue(new Error("offline"));
-    renderPanel({ initialJob: null });
-
-    fireEvent.click(screen.getByRole("button", { name: "Render video" }));
-    expect((await screen.findByRole("alert")).textContent).toContain("Tidak dapat memulai render. Coba lagi.");
-  });
-
   it("shows recoverable copy when a cancellation fails", async () => {
-    mocks.getRenderStatus.mockResolvedValue({ jobs: [queuedJob], versions: [] });
+    mocks.getRenderStatus.mockResolvedValue({ job: queuedJob, versions: [] });
     mocks.cancelRender.mockRejectedValue(new Error("offline"));
     renderPanel();
 

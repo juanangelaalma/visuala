@@ -16,6 +16,8 @@ export type CompositionReadDependencies = {
   artifacts: Pick<CompositionArtifactRepository, "findByCompositionRevision">;
   jobs: Pick<RenderJobRepository, "latestOwned" | "getOwned" | "cancel">;
   versions: Pick<VideoVersionRepository, "latestOwned">;
+  /** Mints the short-lived URL for the preview, which is the artefact the user approves. */
+  signedUrl: (objectKey: string) => Promise<string | null>;
 };
 
 /** `user_id`, the idempotency key, and any storage key never leave the backend. */
@@ -43,6 +45,8 @@ export type CompositionResponse = {
   createdAt: string;
   /** True once a preview of exactly these bytes succeeded, which is the same predicate approval uses. */
   previewReady: boolean;
+  /** The preview the user watches before approving. Null until one has rendered. */
+  previewUrl: string | null;
   latestJob: RenderJobResponse | null;
 };
 
@@ -134,9 +138,15 @@ async function toCompositionResponse(
     candidates: revision.candidates,
     spec: revision.spec,
     createdAt: revision.createdAt,
-    previewReady: artifact !== null && preview?.compositionHash === artifact.compositionHash,
+    previewReady: matchesComposition(preview, artifact?.compositionHash ?? null),
+    previewUrl: matchesComposition(preview, artifact?.compositionHash ?? null) ? await dependencies.signedUrl(preview!.outputObjectKey) : null,
     latestJob: latestJob ? toRenderJobResponse(latestJob) : null,
   };
+}
+
+/** A preview only counts for this composition when it rendered exactly these bytes. */
+function matchesComposition(preview: VideoVersion | null, compositionHash: string | null): boolean {
+  return preview !== null && compositionHash !== null && preview.compositionHash === compositionHash;
 }
 
 async function requireOwnedProject(

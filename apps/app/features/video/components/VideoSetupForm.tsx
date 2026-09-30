@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState, type ChangeEvent, type DragEvent, type FormEvent, type ReactNode } from "react";
 import {
   VIDEO_ASPECT_RATIOS,
-  VIDEO_DURATIONS_SECONDS,
+  VIDEO_DURATION_OPTIONS,
   VIDEO_LANGUAGES,
   VIDEO_LANGUAGE_LABELS,
   VIDEO_RESOLUTIONS,
@@ -92,7 +92,7 @@ export function VideoSetupForm({ api = videoApi }: { api?: VideoApiClient }) {
   const [title, setTitle] = useState("");
   const [videoType, setVideoType] = useState<VideoType>(VIDEO_TYPES[0]);
   const [styleId, setStyleId] = useState<VideoStyleId>(VIDEO_STYLE_PRESETS[0].id);
-  const [durationSeconds, setDurationSeconds] = useState<VideoDurationSeconds>(VIDEO_DURATIONS_SECONDS[1]);
+  const [durationSeconds, setDurationSeconds] = useState<VideoDurationSeconds>(VIDEO_DURATION_OPTIONS[1]);
   const [aspectRatio, setAspectRatio] = useState<VideoAspectRatio>(VIDEO_ASPECT_RATIOS[0]);
   const [resolution, setResolution] = useState<VideoResolution>(VIDEO_RESOLUTIONS[1]);
   const [language, setLanguage] = useState<string>(VIDEO_LANGUAGES[0]);
@@ -340,7 +340,7 @@ export function VideoSetupForm({ api = videoApi }: { api?: VideoApiClient }) {
             legend="Durasi"
             value={durationSeconds}
             onChange={setDurationSeconds}
-            options={VIDEO_DURATIONS_SECONDS.map((seconds) => ({ value: seconds, label: durationLabel(seconds) }))}
+            options={VIDEO_DURATION_OPTIONS.map((seconds) => ({ value: seconds, label: durationLabel(seconds) }))}
           />
           <OptionGroup
             legend="Rasio"

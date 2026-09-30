@@ -9,10 +9,9 @@ import { videoApi } from "../api/video-api";
 import { ProjectAssetGallery } from "./ProjectAssetGallery";
 import { ProjectStatusBadge } from "./ProjectStatusBadge";
 import { RenderStatusPanel } from "./RenderStatusPanel";
-import { VideoApprovalPanel } from "./VideoApprovalPanel";
 import { VideoBriefPanel } from "./VideoBriefPanel";
 import { VideoChat } from "./VideoChat";
-import { VideoStoryboardPanel } from "./VideoStoryboardPanel";
+import { VideoCompositionPanel } from "./VideoCompositionPanel";
 import { VideoVersionList } from "./VideoVersionList";
 
 type Workspace = Awaited<ReturnType<typeof videoApi.loadVideoWorkspace>>;
@@ -33,6 +32,8 @@ export function VideoWorkspace({ projectId }: { projectId: string }) {
   const [deleting, setDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState("");
   const [openingError, setOpeningError] = useState("");
+  const [previewing, setPreviewing] = useState(false);
+  const [approving, setApproving] = useState(false);
   const generation = useRef(0);
 
   const reload = useCallback(() => {
@@ -111,7 +112,7 @@ export function VideoWorkspace({ projectId }: { projectId: string }) {
     );
   }
 
-  const { project, assets, messages, brief, storyboard, renderJobs, versions } = workspace;
+  const { project, assets, messages, brief, composition, renderJob, versions } = workspace;
   const outputRows: [string, string][] = [
     ["Style", styleLabel(project)],
     ["Rasio", project.settings.aspectRatio],
@@ -121,7 +122,6 @@ export function VideoWorkspace({ projectId }: { projectId: string }) {
     ["Voice-over", project.settings.voiceOverEnabled ? "Aktif" : "Nonaktif"],
     ["Musik latar", project.settings.musicEnabled ? "Aktif" : "Nonaktif"],
   ];
-  const approved = project.status === "approved" || Boolean(storyboard?.approvedAt);
 
   async function removeProject() {
     setDeleteError("");
@@ -133,6 +133,34 @@ export function VideoWorkspace({ projectId }: { projectId: string }) {
     } catch (requestError) {
       setDeleteError(browserApiErrorMessage(requestError, "Proyek tidak dapat dihapus. Coba lagi."));
       setDeleting(false);
+    }
+  }
+
+  async function plan(mode: "preview" | "approve") {
+    if (mode === "preview") {
+      setPreviewing(true);
+      try {
+        await videoApi.createComposition(project.id);
+        reload();
+      } finally {
+        setPreviewing(false);
+      }
+      return;
+    }
+
+    if (!composition) return;
+    setApproving(true);
+    try {
+      await videoApi.startRender(project.id, {
+        idempotencyKey: crypto.randomUUID(),
+        compositionRevisionId: composition.id,
+        kind: "final",
+        // A rerender of a previous export is what the revision quota counts.
+        ...(versions[0] ? { parentVersionId: versions[0].id } : {}),
+      });
+      reload();
+    } finally {
+      setApproving(false);
     }
   }
 
@@ -171,11 +199,17 @@ export function VideoWorkspace({ projectId }: { projectId: string }) {
             reload();
             return result;
           }} />
-          <VideoStoryboardPanel revision={storyboard} />
+
         </div>
 
         <aside className="space-y-6">
-          <VideoApprovalPanel projectId={project.id} briefComplete={Boolean(brief?.isComplete)} hasStoryboard={storyboard !== null} approved={approved} onApprove={async () => { await videoApi.approveProject(project.id); reload(); }} />
+          <VideoCompositionPanel
+            composition={composition}
+            briefComplete={Boolean(brief?.isComplete)}
+            previewing={previewing}
+            approving={approving}
+            onPlan={plan}
+          />
           <VideoBriefPanel revision={brief} />
 
           <section className="rounded-3xl border border-white/10 bg-surface p-5 shadow-card-inner">
@@ -201,7 +235,7 @@ export function VideoWorkspace({ projectId }: { projectId: string }) {
             </div>
           </section>
 
-          <RenderStatusPanel key={renderJobs[0]?.id ?? "no-render"} projectId={project.id} initialJob={renderJobs[0] ?? null} canRender={project.status === "approved"} quotaExhausted={project.revisionRenderCount >= 3} onVersionsChange={applyPolledVersions} />
+          <RenderStatusPanel key={renderJob?.id ?? "no-render"} projectId={project.id} initialJob={renderJob} onVersionsChange={applyPolledVersions} onSettled={reload} />
           <VideoVersionList projectId={project.id} versions={versions} onDownloadVersion={(versionId) => videoApi.downloadVersion(project.id, versionId)} />
 
           <section className="rounded-3xl border border-white/10 bg-surface p-5 shadow-card-inner">

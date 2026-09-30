@@ -1,10 +1,11 @@
 import type {
   ProjectAsset,
   VideoBriefRevision,
+  VideoComposition,
   VideoMessage,
+  VideoOutputKind,
   VideoProject,
   VideoRenderJob,
-  VideoStoryboardRevision,
   VideoVersion,
 } from "@/domain/video/types";
 import { browserApiFetch, browserApiUpload } from "@/lib/api/browser-client";
@@ -15,6 +16,14 @@ type SignalOption = { signal?: AbortSignal };
 function projectPath(projectId: string) {
   return `/video-projects/${encodeURIComponent(projectId)}`;
 }
+
+/** The bodies the backend accepts, all of them strict: nothing client-owned may ride along. */
+export type StartRenderInput = {
+  idempotencyKey: string;
+  compositionRevisionId: string;
+  kind: VideoOutputKind;
+  parentVersionId?: string;
+};
 
 export const videoApi = {
   createProject(input: CreateVideoProjectInput, idempotencyKey: string, signal?: AbortSignal) {
@@ -54,21 +63,25 @@ export const videoApi = {
   getBrief(projectId: string, signal?: AbortSignal) {
     return browserApiFetch<{ brief: VideoBriefRevision | null }>(`${projectPath(projectId)}/brief`, { signal });
   },
-  getStoryboard(projectId: string, signal?: AbortSignal) {
-    return browserApiFetch<{ storyboard: VideoStoryboardRevision | null }>(`${projectPath(projectId)}/storyboard`, { signal });
+  /** Planning and compiling are one call: it returns the revision the user is asked to approve. */
+  createComposition(projectId: string, signal?: AbortSignal) {
+    return browserApiFetch<{ composition: { id: string; compositionHash: string; isFallback: boolean } }>(`${projectPath(projectId)}/compositions`, { method: "POST", signal });
   },
-  approveProject(projectId: string, signal?: AbortSignal) {
-    return browserApiFetch<{ project: VideoProject }>(`${projectPath(projectId)}/approve`, { method: "POST", signal });
+  listCompositions(projectId: string, signal?: AbortSignal) {
+    return browserApiFetch<{ compositions: VideoComposition[] }>(`${projectPath(projectId)}/compositions`, { signal });
   },
-  startRender(projectId: string, idempotencyKey: string, signal?: AbortSignal) {
-    return browserApiFetch<{ job: VideoRenderJob }>(`${projectPath(projectId)}/render-jobs`, { method: "POST", body: { idempotencyKey }, signal });
+  getLatestComposition(projectId: string, signal?: AbortSignal) {
+    return browserApiFetch<{ composition: VideoComposition | null }>(`${projectPath(projectId)}/compositions/latest`, { signal });
   },
-  listRenderJobs(projectId: string, signal?: AbortSignal) {
-    return browserApiFetch<{ jobs: VideoRenderJob[] }>(`${projectPath(projectId)}/render-jobs`, { signal });
+  startRender(projectId: string, input: StartRenderInput, signal?: AbortSignal) {
+    return browserApiFetch<{ job: VideoRenderJob }>(`${projectPath(projectId)}/render-jobs`, { method: "POST", body: input, signal });
   },
-  async getRenderStatus(projectId: string, signal?: AbortSignal): Promise<{ jobs: VideoRenderJob[]; versions: VideoVersion[] }> {
-    const [jobs, versions] = await Promise.all([videoApi.listRenderJobs(projectId, signal), videoApi.listVersions(projectId, signal)]);
-    return { jobs: jobs.jobs, versions: versions.versions };
+  getLatestRenderJob(projectId: string, signal?: AbortSignal) {
+    return browserApiFetch<{ job: VideoRenderJob | null }>(`${projectPath(projectId)}/render-jobs/latest`, { signal });
+  },
+  async getRenderStatus(projectId: string, signal?: AbortSignal): Promise<{ job: VideoRenderJob | null; versions: VideoVersion[] }> {
+    const [job, versions] = await Promise.all([videoApi.getLatestRenderJob(projectId, signal), videoApi.listVersions(projectId, signal)]);
+    return { job: job.job, versions: versions.versions };
   },
   cancelRender(projectId: string, jobId: string, signal?: AbortSignal) {
     return browserApiFetch<{ job: VideoRenderJob }>(`${projectPath(projectId)}/render-jobs/${encodeURIComponent(jobId)}/cancel`, { method: "POST", signal });
@@ -84,16 +97,24 @@ export const videoApi = {
   },
   async loadVideoWorkspace(projectId: string, signal?: AbortSignal) {
     const options: SignalOption = { signal };
-    const [project, assets, messages, brief, storyboard, renderJobs, versions] = await Promise.all([
+    const [project, assets, messages, brief, composition, renderJob, versions] = await Promise.all([
       videoApi.getProject(projectId, options.signal),
       videoApi.listAssets(projectId, options.signal),
       videoApi.listMessages(projectId, options.signal),
       videoApi.getBrief(projectId, options.signal),
-      videoApi.getStoryboard(projectId, options.signal),
-      videoApi.listRenderJobs(projectId, options.signal),
+      videoApi.getLatestComposition(projectId, options.signal),
+      videoApi.getLatestRenderJob(projectId, options.signal),
       videoApi.listVersions(projectId, options.signal),
     ]);
-    return { project: project.project, assets: assets.assets, messages: messages.messages, brief: brief.brief, storyboard: storyboard.storyboard, renderJobs: renderJobs.jobs, versions: versions.versions };
+    return {
+      project: project.project,
+      assets: assets.assets,
+      messages: messages.messages,
+      brief: brief.brief,
+      composition: composition.composition,
+      renderJob: renderJob.job,
+      versions: versions.versions,
+    };
   },
 };
 

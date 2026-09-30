@@ -5,7 +5,7 @@ function formValues(overrides: Record<string, unknown> = {}) {
   return {
     title: "Es Kopi Gula Aren",
     videoType: "product_promo",
-    styleId: "bold_pop",
+    styleId: "creative-mode",
     durationSeconds: "10",
     aspectRatio: "9:16",
     resolution: "1080p",
@@ -21,7 +21,7 @@ describe("createVideoProjectSchema", () => {
     const parsed = createVideoProjectSchema.parse({
       title: "Es Kopi Gula Aren",
       videoType: "product_promo",
-      styleId: "bold_pop",
+      styleId: "creative-mode",
       settings: { durationSeconds: 10, aspectRatio: "9:16", resolution: "1080p", language: "id", voiceOverEnabled: true, musicEnabled: false },
     });
     expect(parsed.settings.durationSeconds).toBe(10);
@@ -33,20 +33,26 @@ describe("createVideoProjectSchema", () => {
         id: "project-1",
         title: "Es Kopi",
         videoType: "product_promo",
-        styleId: "bold_pop",
+        styleId: "creative-mode",
         settings: { durationSeconds: 10, aspectRatio: "9:16", resolution: "1080p", language: "id", voiceOverEnabled: true, musicEnabled: false },
       }).success,
     ).toBe(false);
   });
 
-  it("rejects an unsupported duration", () => {
-    const result = createVideoProjectSchema.safeParse({
+  it("accepts any duration in the range and rejects one outside it", () => {
+    const at = (durationSeconds: number) => createVideoProjectSchema.safeParse({
       title: "Es Kopi",
       videoType: "product_promo",
-      styleId: "bold_pop",
-      settings: { durationSeconds: 30, aspectRatio: "9:16", resolution: "1080p", language: "id", voiceOverEnabled: true, musicEnabled: false },
+      styleId: "creative-mode",
+      settings: { durationSeconds, aspectRatio: "9:16", resolution: "1080p", language: "id", voiceOverEnabled: true, musicEnabled: false },
     });
-    expect(result.success).toBe(false);
+
+    expect(at(4).success).toBe(true);
+    expect(at(12).success).toBe(true);
+    expect(at(30).success).toBe(true);
+    expect(at(3).success).toBe(false);
+    expect(at(31).success).toBe(false);
+    expect(at(12.5).success).toBe(false);
   });
 });
 
@@ -56,7 +62,7 @@ describe("videoProjectFormSchema", () => {
     expect(parsed).toEqual({
       title: "Es Kopi Gula Aren",
       videoType: "product_promo",
-      styleId: "bold_pop",
+      styleId: "creative-mode",
       durationSeconds: 10,
       aspectRatio: "9:16",
       resolution: "1080p",

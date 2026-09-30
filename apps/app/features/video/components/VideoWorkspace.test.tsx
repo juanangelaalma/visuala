@@ -7,7 +7,8 @@ const mocks = vi.hoisted(() => ({
   loadVideoWorkspace: vi.fn(),
   sendMessage: vi.fn(),
   openInterview: vi.fn(),
-  approveProject: vi.fn(),
+  createComposition: vi.fn(),
+  startRender: vi.fn(),
   deleteAsset: vi.fn(),
   deleteProject: vi.fn(),
   downloadVersion: vi.fn(),
@@ -18,21 +19,40 @@ vi.mock("../api/video-api", () => ({ videoApi: mocks }));
 vi.mock("next/navigation", () => ({ useRouter: () => router }));
 vi.mock("./RenderStatusPanel", () => ({ RenderStatusPanel: () => null }));
 vi.mock("./VideoBriefPanel", () => ({ VideoBriefPanel: () => null }));
-vi.mock("./VideoStoryboardPanel", () => ({ VideoStoryboardPanel: () => null }));
+vi.mock("./VideoCompositionPanel", () => ({ VideoCompositionPanel: ({ onPlan }: { onPlan: (mode: "preview" | "approve") => Promise<void> }) => (
+  <>
+    <button type="button" onClick={() => void onPlan("preview")}>Susun preview</button>
+    <button type="button" onClick={() => void onPlan("approve")}>Setujui dan render</button>
+  </>
+) }));
 vi.mock("@visuala/ui", () => ({ Badge: ({ children }: { children: string }) => <span>{children}</span> }));
 
 import { VideoWorkspace } from "./VideoWorkspace";
 
 const workspace = {
-  project: { id: "project-1", title: "Es Kopi", videoType: "product_promo", styleId: "bold_pop", status: "draft", settings: { durationSeconds: 10, aspectRatio: "9:16", resolution: "1080p", language: "id", voiceOverEnabled: true, musicEnabled: false }, revisionRenderCount: 0 },
+  project: { id: "project-1", title: "Es Kopi", videoType: "product_promo", styleId: "creative-mode", status: "draft", settings: { durationSeconds: 10, aspectRatio: "9:16", resolution: "1080p", language: "id", voiceOverEnabled: true, musicEnabled: false }, revisionRenderCount: 0 },
   assets: [{ id: "asset-1", previewUrl: null, mimeType: "image/png", width: 10, height: 10, moderationStatus: "allowed" }],
   messages: [],
   brief: null,
-  storyboard: null,
-  renderJobs: [],
-  versions: [{ id: "version-1", versionNumber: 1, durationSeconds: 10, resolution: "1080p", aspectRatio: "9:16", playbackUrl: "https://example.test/video.mp4" }],
+  composition: null,
+  renderJob: null,
+  versions: [{ id: "version-1", versionNumber: 1, kind: "final", durationSeconds: 10, resolution: "1080p", aspectRatio: "9:16", playbackUrl: "https://example.test/video.mp4" }],
 };
-const approvableWorkspace = { ...workspace, brief: { isComplete: true }, storyboard: {} };
+const approvedComposition = {
+  id: "composition-1",
+  version: 1,
+  schemaVersion: "composition-spec@v1",
+  designPack: { id: "creative-mode", version: "1" },
+  isFallback: false,
+  validationIssues: [],
+  candidates: [],
+  spec: { schemaVersion: "composition-spec@v1", format: { aspectRatio: "9:16", fps: 30, durationSeconds: 10 }, style: { id: "creative-mode", version: "1" }, scenes: [] },
+  createdAt: "now",
+  previewReady: true,
+  previewUrl: "https://example.test/preview.mp4",
+  latestJob: null,
+};
+const approvableWorkspace = { ...workspace, brief: { isComplete: true }, composition: approvedComposition };
 
 beforeEach(() => {
   mocks.openInterview.mockResolvedValue({ messages: [{ id: "opening", role: "assistant", content: "Apa produknya?", controls: null, assetIds: [], createdAt: "now" }] });
@@ -122,7 +142,8 @@ describe("VideoWorkspace", () => {
   it("reloads after chat and approval, updates assets after deletion, and downloads through the API callback", async () => {
     mocks.loadVideoWorkspace.mockResolvedValue(approvableWorkspace);
     mocks.sendMessage.mockResolvedValue({ message: { id: "answer", role: "user", content: "Halo", controls: null, assetIds: [], createdAt: "now" }, reply: { id: "next", role: "assistant", content: "Siapa pembelinya?", controls: null, assetIds: [], createdAt: "now" }, project: workspace.project });
-    mocks.approveProject.mockResolvedValue({});
+    mocks.createComposition.mockResolvedValue({ composition: { id: "composition-1" } });
+    mocks.startRender.mockResolvedValue({ job: { id: "job-1" } });
     mocks.deleteAsset.mockResolvedValue({ deleted: true });
     mocks.downloadVersion.mockResolvedValue(undefined);
     render(<VideoWorkspace projectId="project-1" />);
@@ -132,8 +153,12 @@ describe("VideoWorkspace", () => {
     await act(async () => fireEvent.click(screen.getByRole("button", { name: "Kirim" })));
     await vi.waitFor(() => expect(mocks.loadVideoWorkspace).toHaveBeenCalledTimes(2));
 
-    await act(async () => fireEvent.click(screen.getByRole("button", { name: "Setujui brief dan storyboard" })));
+    await act(async () => fireEvent.click(screen.getByRole("button", { name: "Susun preview" })));
+    await vi.waitFor(() => expect(mocks.createComposition).toHaveBeenCalledWith("project-1"));
     await vi.waitFor(() => expect(mocks.loadVideoWorkspace).toHaveBeenCalledTimes(3));
+
+    await act(async () => fireEvent.click(screen.getByRole("button", { name: "Setujui dan render" })));
+    await vi.waitFor(() => expect(mocks.startRender).toHaveBeenCalledWith("project-1", expect.objectContaining({ compositionRevisionId: "composition-1", kind: "final" })));
 
     await act(async () => fireEvent.click(screen.getByRole("button", { name: "Hapus aset" })));
     await vi.waitFor(() => expect(screen.queryByRole("button", { name: "Hapus aset" })).toBeNull());

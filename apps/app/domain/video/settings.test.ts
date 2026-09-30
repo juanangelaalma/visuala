@@ -3,7 +3,7 @@ import {
   PROJECT_STATUS_LABELS,
   RENDER_JOB_STATUS_LABELS,
   VIDEO_ASPECT_RATIOS,
-  VIDEO_DURATIONS_SECONDS,
+  VIDEO_DURATION_OPTIONS,
   VIDEO_LANGUAGES,
   VIDEO_LANGUAGE_LABELS,
   VIDEO_RESOLUTIONS,
@@ -12,8 +12,7 @@ import {
   VIDEO_TYPES,
   VIDEO_TYPE_LABELS,
   durationLabel,
-  isRenderCombinationSupported,
-  languageLabel,
+    languageLabel,
   projectStatusLabel,
   videoTypeLabel,
 } from "./settings";
@@ -55,23 +54,5 @@ describe("video labels", () => {
   it("formats a duration in seconds", () => {
     expect(durationLabel(6)).toBe("6 detik");
     expect(durationLabel(15)).toBe("15 detik");
-  });
-});
-
-describe("isRenderCombinationSupported", () => {
-  it("accepts every duration, ratio, and resolution offered", () => {
-    for (const durationSeconds of VIDEO_DURATIONS_SECONDS) {
-      for (const aspectRatio of VIDEO_ASPECT_RATIOS) {
-        for (const resolution of VIDEO_RESOLUTIONS) {
-          expect(isRenderCombinationSupported({ durationSeconds, aspectRatio, resolution })).toBe(true);
-        }
-      }
-    }
-  });
-
-  it("rejects a combination outside the allowlist", () => {
-    expect(isRenderCombinationSupported({ durationSeconds: 6, aspectRatio: "4:3" as never, resolution: "720p" })).toBe(false);
-    expect(isRenderCombinationSupported({ durationSeconds: 30 as never, aspectRatio: "9:16", resolution: "720p" })).toBe(false);
-    expect(isRenderCombinationSupported({ durationSeconds: 6, aspectRatio: "9:16", resolution: "4k" as never })).toBe(false);
   });
 });

@@ -1,8 +1,10 @@
-export type VideoType = "product_promo" | "discount_promo" | "product_launch" | "menu_showcase";
-export type VideoDurationSeconds = 6 | 10 | 15;
+export type VideoType = "product_promo" | "discount_promo" | "product_launch" | "menu_showcase" | "storefront_showcase";
+/** Seconds of finished video, inside the 4..30 the backend accepts. */
+export type VideoDurationSeconds = number;
 export type VideoAspectRatio = "9:16" | "1:1" | "16:9";
 export type VideoResolution = "720p" | "1080p";
-export type VideoStyleId = "bold_pop" | "clean_product" | "warm_artisan" | "premium_dark";
+/** One Design Pack ships with the engine; a customer pack becomes another id here. */
+export type VideoStyleId = "creative-mode";
 export type VideoLanguage = string;
 
 export type VideoProjectStatus =
@@ -18,6 +20,7 @@ export type VideoProjectStatus =
   | "deleted";
 
 export type VideoRenderJobStatus = "queued" | "preparing" | "rendering" | "uploading" | "succeeded" | "failed" | "cancelled";
+export type VideoOutputKind = "preview" | "final";
 
 export type VideoOutputSettings = {
   durationSeconds: VideoDurationSeconds;
@@ -119,20 +122,32 @@ export type VideoBrief = {
   facts: VideoFact[];
 };
 
-export type StoryboardTransition = "cut" | "fade" | "slide" | "zoom";
+/** One module of a planned scene. The engine owns the full spec; the workspace only renders this. */
+export type CompositionModule = {
+  id: string;
+  kind: "internal" | "catalog";
+  content: Record<string, string>;
+};
 
-export type StoryboardScene = {
-  order: number;
-  startSeconds: number;
-  endSeconds: number;
-  visual: string;
-  onScreenTitle: string;
-  onScreenCopy: string;
-  voiceOver: string | null;
-  caption: string | null;
-  assetIds: string[];
-  audioCue: string | null;
-  transition: StoryboardTransition;
+export type CompositionScene = {
+  id: string;
+  durationFrames: number;
+  modules: CompositionModule[];
+};
+
+export type CompositionSpecView = {
+  schemaVersion: string;
+  format: { aspectRatio: string; fps: number; durationSeconds: number };
+  style: { id: string; version: string };
+  scenes: CompositionScene[];
+};
+
+/** One thing the validator refused. Empty on a plan that passed first try. */
+export type CompositionIssue = {
+  code: string;
+  message: string;
+  sceneId?: string;
+  moduleId?: string;
 };
 
 export type VideoBriefRevision = {
@@ -144,19 +159,29 @@ export type VideoBriefRevision = {
   createdAt: string;
 };
 
-export type VideoStoryboardRevision = {
+/**
+ * The plan the user approves. `previewReady` is true only once a preview of exactly these bytes has
+ * rendered, which is what the export requires; `latestJob` is the project's newest render job.
+ */
+export type VideoComposition = {
   id: string;
   version: number;
   schemaVersion: string;
-  briefRevisionId: string;
-  scenes: StoryboardScene[];
-  totalDurationSeconds: VideoDurationSeconds;
-  approvedAt?: string;
+  designPack: { id: string; version: string };
+  isFallback: boolean;
+  validationIssues: CompositionIssue[];
+  candidates: unknown;
+  spec: CompositionSpecView;
   createdAt: string;
+  previewReady: boolean;
+  /** The preview the user watches before approving; null until one has rendered. */
+  previewUrl: string | null;
+  latestJob: VideoRenderJob | null;
 };
 
 export type VideoRenderJob = {
   id: string;
+  kind: VideoOutputKind;
   status: VideoRenderJobStatus;
   isRevision: boolean;
   attempts: number;
@@ -164,17 +189,13 @@ export type VideoRenderJob = {
   startedAt?: string;
   finishedAt?: string;
   errorCode?: string;
-  createdAt: string;
 };
 
 export type VideoVersion = {
   id: string;
   versionNumber: number;
-  /**
-   * The probed duration of the rendered file, rounded to whole seconds. The engine refuses any render
-   * whose probed duration differs from the frozen settings, and the API only accepts 6, 10, or 15,
-   * so a published version is always one of those.
-   */
+  kind: VideoOutputKind;
+  /** The length the job was planned for; the engine refuses a render whose probe disagrees. */
   durationSeconds: VideoDurationSeconds;
   aspectRatio: string;
   resolution: string;

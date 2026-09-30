@@ -21,7 +21,7 @@
 - Once the foundation slice exists, prefers closing gaps for real — implementing the missing backend endpoints and calling the existing (AI) service as intended, then deleting the frontend mock seam and updating the gap notes — over extending the mocked fixtures. Confidence: 0.5
 - Expects the agent to read all named context artifacts first (AGENTS.md, design spec, plan, progress ledger, prior task reports) and explicitly not edit until it has done so. Confidence: 0.7
 - After each task/phase, expects a separate, explicit code review step (with re-review after fixes) before moving on, not an all-at-once review at the end. Confidence: 0.7
-- Uses a spec-driven development workflow: design specs and plans under `docs/superpowers/` and per-task briefs/reports plus a progress ledger under `.superpowers/sdd/`, and expects the agent to update those docs as it completes tasks. Confidence: 0.6
+- Uses a spec-driven development workflow: design specs and plans under `docs/superpowers/` and per-task briefs/reports plus a progress ledger under `.superpowers/sdd/`, and expects the agent to update those docs as it completes tasks; will ask where progress is recorded, so the location must be well-defined, discoverable, and kept current. Confidence: 0.65
 - Keeps a code knowledge graph and expects the agent to run `graphify update .` after making source changes. Confidence: 0.7
 - Works in a shared, often-dirty checkout and expects unrelated changes left untouched — no reverts and no edits to files not in scope — plus no commits unless explicitly asked and never editing `.env`. Confidence: 0.6
 - Standardises on pnpm for workspace tooling, driving per-package commands through `pnpm --filter <pkg> ...`. Confidence: 0.55
@@ -38,3 +38,5 @@
 - Prefers pinning a tool/CLI to the same version as the already-installed dependency it must match (e.g. CLI and producer both 0.8.59) over upgrading the dependency. Confidence: 0.5
 - Prefers generated build artifacts that a script derives from an external source (e.g. a component catalog written by a generator script) to be generated deliberately and committed to the repo, read offline at runtime, rather than fetched from the network on every run. Confidence: 0.55
 - When a plan still has remaining tasks, expects the agent to keep executing through them ("lanjutkan sampai selesai semua") rather than pausing to ask whether to proceed; do not stop for permission at each milestone boundary while planned work is outstanding. Confidence: 0.5
+inish all remaining planned work. Confidence: 0.6
+- Runs AI/model calls through a self-hosted 9router gateway, configured via the backend's `.env` (`AI_TASKS_JSON` task→profile map, local Supabase); expects the agent to use whatever provider the backend env already points at and just run against it rather than asking for keys or a different provider. Confidence: 0.5

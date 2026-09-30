@@ -21,7 +21,7 @@ const project = {
   id: "project-1",
   title: "Es Kopi Gula Aren",
   videoType: "product_promo" as const,
-  styleId: "bold_pop" as const,
+  styleId: "creative-mode" as const,
   status: "draft" as const,
   settings: { durationSeconds: 10 as const, aspectRatio: "9:16" as const, resolution: "1080p" as const, language: "id", voiceOverEnabled: true, musicEnabled: true },
   revisionRenderCount: 0,

@@ -2,6 +2,8 @@ import { z } from "zod";
 import {
   VIDEO_ASPECT_RATIOS,
   VIDEO_LANGUAGES,
+  VIDEO_MAX_DURATION_SECONDS,
+  VIDEO_MIN_DURATION_SECONDS,
   VIDEO_RESOLUTIONS,
   VIDEO_STYLE_IDS,
   VIDEO_TYPES,
@@ -22,7 +24,7 @@ export function isSupportedAssetMimeType(value: string): value is VideoAssetMime
 
 export const outputSettingsSchema = z
   .object({
-    durationSeconds: z.union([z.literal(6), z.literal(10), z.literal(15)]),
+    durationSeconds: z.number().int().min(VIDEO_MIN_DURATION_SECONDS).max(VIDEO_MAX_DURATION_SECONDS),
     aspectRatio: z.enum(VIDEO_ASPECT_RATIOS),
     resolution: z.enum(VIDEO_RESOLUTIONS),
     language: z.string().trim().min(2).max(12),
@@ -51,7 +53,7 @@ export const videoProjectFormSchema = z
     title: z.string().trim().min(1, "Judul video wajib diisi.").max(120, "Judul maksimal 120 karakter."),
     videoType: z.enum(VIDEO_TYPES, { message: "Pilih tipe video." }),
     styleId: z.enum(VIDEO_STYLE_IDS, { message: "Pilih style video." }),
-    durationSeconds: z.coerce.number().pipe(z.union([z.literal(6), z.literal(10), z.literal(15)])),
+    durationSeconds: z.coerce.number().int().min(VIDEO_MIN_DURATION_SECONDS, "Durasi minimal 4 detik.").max(VIDEO_MAX_DURATION_SECONDS, "Durasi maksimal 30 detik."),
     aspectRatio: z.enum(VIDEO_ASPECT_RATIOS),
     resolution: z.enum(VIDEO_RESOLUTIONS),
     language: z

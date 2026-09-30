@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import type { VideoRenderJob, VideoVersion } from "@/domain/video/types";
 import { BrowserApiError, browserApiErrorMessage } from "@/lib/api/browser-client";
 import { videoApi } from "../api/video-api";
-import { videoRenderJobListSchema, videoVersionListSchema } from "../schemas/render-schema";
+import { videoRenderJobResponseSchema, videoVersionListSchema } from "../schemas/render-schema";
 import { isJobActive, renderStatusPresentation } from "./render-status-presentation";
 
 const POLL_MS = 3000;
@@ -13,11 +13,10 @@ const focusRing = "focus-visible:outline-2 focus-visible:outline-offset-2 focus-
 type RenderStatusPanelProps = {
   projectId: string;
   initialJob: VideoRenderJob | null;
-  /** The backend's own intake condition: it refuses a render unless the project is `approved`. */
-  canRender: boolean;
-  quotaExhausted: boolean;
   /** Lets the workspace keep its version list in sync without polling the endpoints itself. */
   onVersionsChange?: (versions: VideoVersion[]) => void;
+  /** Fired once when a job reaches a terminal state, so the workspace can pick up a finished preview. */
+  onSettled?: () => void;
 };
 
 /** An auth or ownership failure will not clear on its own, so polling for it is wasted requests. */
@@ -30,7 +29,7 @@ function isFatalPollError(error: unknown): boolean {
  * the workspace remounts it when the render job identity changes, so its local job state is only
  * ever the current render's.
  */
-export function RenderStatusPanel({ projectId, initialJob, canRender, quotaExhausted, onVersionsChange }: RenderStatusPanelProps) {
+export function RenderStatusPanel({ projectId, initialJob, onVersionsChange, onSettled }: RenderStatusPanelProps) {
   const [job, setJob] = useState(initialJob);
   const [pollError, setPollError] = useState("");
   const [mutationError, setMutationError] = useState("");
@@ -62,14 +61,16 @@ export function RenderStatusPanel({ projectId, initialJob, canRender, quotaExhau
 
       void videoApi
         .getRenderStatus(projectId, controller.signal)
-        .then(({ jobs, versions }) => {
+        .then(({ job: polledJob, versions }) => {
           if (controller.signal.aborted) return;
           // A shape the panel cannot render is a failure, not blanks; both values land together.
-          const nextJob = videoRenderJobListSchema.parse({ jobs }).jobs[0] ?? null;
+          const nextJob = videoRenderJobResponseSchema.parse({ job: polledJob }).job;
           const nextVersions = videoVersionListSchema.parse({ versions }).versions;
           setPollError("");
           setJob(nextJob);
           onVersionsChange?.(nextVersions);
+          // A finished preview is not visible until the composition is re-read, so ask once it lands.
+          if (nextJob && !isJobActive(nextJob)) onSettled?.();
         })
         .catch((error: unknown) => {
           if (controller.signal.aborted) return;
@@ -85,25 +86,7 @@ export function RenderStatusPanel({ projectId, initialJob, canRender, quotaExhau
       controller.abort();
       clearInterval(timer);
     };
-  }, [stopped, job, projectId, onVersionsChange]);
-
-  async function startRender() {
-    setMutationError("");
-    setPending(true);
-
-    try {
-      // Minted per deliberate click, so two clicks carry two different keys; the backend's
-      // conditional transition plus active-job check is what makes a double submit safe.
-      const { job: nextJob } = await videoApi.startRender(projectId, crypto.randomUUID());
-      setStopped(false);
-      setPollError("");
-      setJob(nextJob);
-    } catch (error) {
-      setMutationError(browserApiErrorMessage(error, "Tidak dapat memulai render. Coba lagi."));
-    } finally {
-      setPending(false);
-    }
-  }
+  }, [stopped, job, projectId, onVersionsChange, onSettled]);
 
   async function cancelRender() {
     if (!job) return;
@@ -122,12 +105,6 @@ export function RenderStatusPanel({ projectId, initialJob, canRender, quotaExhau
 
   const presentation = job ? renderStatusPresentation(job) : null;
   const error = mutationError || pollError;
-  const renderable = canRender && !quotaExhausted && !pending;
-  const blockedReason = quotaExhausted
-    ? "Kuota revisi 3/3 sudah terpakai."
-    : !canRender
-      ? "Render tersedia setelah brief dan storyboard disetujui."
-      : null;
 
   return (
     <section className="rounded-3xl border border-white/10 bg-surface p-5 shadow-card-inner">
@@ -147,9 +124,7 @@ export function RenderStatusPanel({ projectId, initialJob, canRender, quotaExhau
           ) : null}
         </dl>
       ) : (
-        <p className="mt-3 text-sm leading-6 text-neutral-450">
-          {canRender ? "Video siap dirender." : "Render tersedia setelah brief dan storyboard disetujui."}
-        </p>
+        <p className="mt-3 text-sm leading-6 text-neutral-450">Belum ada render berjalan.</p>
       )}
 
       {presentation?.detail ? (
@@ -175,19 +150,7 @@ export function RenderStatusPanel({ projectId, initialJob, canRender, quotaExhau
         >
           {job.status === "queued" ? "Batalkan render" : "Render sedang berjalan"}
         </button>
-      ) : (
-        <button
-          type="button"
-          onClick={() => void startRender()}
-          disabled={!renderable}
-          aria-disabled={!renderable}
-          className={`mt-4 h-11 w-full rounded-full bg-primary px-5 text-sm font-semibold text-black disabled:cursor-not-allowed disabled:bg-white/10 disabled:text-neutral-400 ${focusRing}`}
-        >
-          {pending ? "Memulai…" : job?.status === "succeeded" ? "Render ulang" : "Render video"}
-        </button>
-      )}
-
-      {blockedReason ? <p className="mt-3 text-xs text-neutral-500">{blockedReason}</p> : null}
+      ) : null}
     </section>
   );
 }

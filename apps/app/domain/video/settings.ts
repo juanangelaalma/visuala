@@ -8,11 +8,15 @@ import type {
   VideoType,
 } from "./types";
 
-export const VIDEO_TYPES = ["product_promo", "discount_promo", "product_launch", "menu_showcase"] as const satisfies readonly VideoType[];
-export const VIDEO_DURATIONS_SECONDS = [6, 10, 15] as const satisfies readonly VideoDurationSeconds[];
+export const VIDEO_TYPES = ["product_promo", "discount_promo", "product_launch", "menu_showcase", "storefront_showcase"] as const satisfies readonly VideoType[];
+
+/** The backend accepts any whole number of seconds in this range. 4-30 are the offers the form shows. */
+export const VIDEO_MIN_DURATION_SECONDS = 4;
+export const VIDEO_MAX_DURATION_SECONDS = 30;
+export const VIDEO_DURATION_OPTIONS = [6, 10, 12, 15, 20, 30] as const;
 export const VIDEO_ASPECT_RATIOS = ["9:16", "1:1", "16:9"] as const satisfies readonly VideoAspectRatio[];
 export const VIDEO_RESOLUTIONS = ["720p", "1080p"] as const satisfies readonly VideoResolution[];
-export const VIDEO_STYLE_IDS = ["bold_pop", "clean_product", "warm_artisan", "premium_dark"] as const satisfies readonly VideoStyleId[];
+export const VIDEO_STYLE_IDS = ["creative-mode"] as const satisfies readonly VideoStyleId[];
 export const VIDEO_LANGUAGES = ["id", "en"] as const;
 
 export const VIDEO_TYPE_LABELS: Record<VideoType, string> = {
@@ -20,6 +24,7 @@ export const VIDEO_TYPE_LABELS: Record<VideoType, string> = {
   discount_promo: "Diskon dan promo harga",
   product_launch: "Peluncuran produk",
   menu_showcase: "Menu dan etalase",
+  storefront_showcase: "Tempat dan lokasi",
 };
 
 export const PROJECT_STATUS_LABELS: Record<VideoProjectStatus, string> = {
@@ -58,10 +63,7 @@ export type VideoStylePreset = {
 };
 
 export const VIDEO_STYLE_PRESETS: readonly VideoStylePreset[] = [
-  { id: "bold_pop", label: "Bold Pop", description: "Warna tebal, kontras tinggi, dan gerak cepat.", swatch: ["#EFF31B", "#050505"] },
-  { id: "clean_product", label: "Clean Product", description: "Latar bersih dengan fokus penuh pada produk.", swatch: ["#F3F3EF", "#B9C4CC"] },
-  { id: "warm_artisan", label: "Warm Artisan", description: "Nuansa hangat dan tekstur lembut.", swatch: ["#D99A62", "#5B2E1B"] },
-  { id: "premium_dark", label: "Premium Dark", description: "Latar gelap dan aksen elegan.", swatch: ["#D7C39A", "#171717"] },
+  { id: "creative-mode", label: "Creative Mode", description: "Poster editorial: warna blok tebal, huruf besar, garis tegas.", swatch: ["#EFE9D9", "#0F0F0F"] },
 ];
 
 export function durationLabel(seconds: VideoDurationSeconds): string {
@@ -78,22 +80,4 @@ export function projectStatusLabel(status: VideoProjectStatus): string {
 
 export function languageLabel(language: string): string {
   return VIDEO_LANGUAGE_LABELS[language] ?? language;
-}
-
-/**
- * The 18 duration x ratio x resolution combinations the renderer has actually produced. The
- * HyperFrames spike verified every one of them (docs/decisions/2026-09-21-hyperframes-render-engine.md),
- * so this offers exactly what the backend's `RENDER_SUPPORTED_COMBINATIONS` accepts and nothing more.
- * Trim it only against a new spike entry.
- */
-export function isRenderCombinationSupported(settings: {
-  durationSeconds: VideoDurationSeconds;
-  aspectRatio: VideoAspectRatio;
-  resolution: VideoResolution;
-}): boolean {
-  return (
-    (VIDEO_DURATIONS_SECONDS as readonly number[]).includes(settings.durationSeconds) &&
-    (VIDEO_ASPECT_RATIOS as readonly string[]).includes(settings.aspectRatio) &&
-    (VIDEO_RESOLUTIONS as readonly string[]).includes(settings.resolution)
-  );
 }
