@@ -8,6 +8,39 @@ Dokumen ini memuat apa yang **harus dikerjakan** agar pipeline composition bisa 
 
 ---
 
+## 0. Mulai dari sini (sesi berikutnya)
+
+**Status.** Kode Task 1–15 selesai, ter-commit, dan hijau di tingkat unit/komponen. Satu-satunya yang
+menghalangi acceptance penuh adalah **B-1** (Storage lokal). Satu flow sudah lulus end-to-end terhadap stack
+nyata; sisanya menunggu B-1.
+
+**Urutan kerja.**
+
+1. Perbaiki **B-1** (bagian 2): restart stack, lalu verifikasi dengan probe di bagian itu sampai keluar
+   `storage write ok`.
+2. Nyalakan tiga service (perintahnya di bagian 6). Proses dari sesi sebelumnya **tidak** terbawa.
+3. Buat user E2E sekali pakai (perintahnya di bagian 6). Password user lama tidak disimpan di dokumen ini
+   dengan sengaja.
+4. Jalankan flow penuh:
+   `PLAYWRIGHT_VIDEO_FLOW=1 PLAYWRIGHT_PORT=3000 NODE_ENV=test pnpm exec playwright test e2e/video-flow.spec.ts`
+5. Telusuri acceptance PRD §25 (bagian 5) satu per satu, perbarui tabelnya, dan catat hasilnya di ledger
+   `.superpowers/sdd/2026-09-29-modular-composition-engine/progress.md`.
+
+**Yang tidak terbawa antar sesi.** Isi scratchpad sesi (kredensial user E2E lama, backup `.env`), dan proses
+background. **Yang persisten.** Semua kode dan dokumen ini di git, plus ledger lokal di
+`.superpowers/sdd/2026-09-29-modular-composition-engine/progress.md` (gitignored oleh `.gitignore` direktori
+itu, tapi tetap ada di disk dan boleh dibaca).
+
+**Riwayat commit.** Pekerjaan engine ada di commit `4c6e812` (`--wip-- [skip ci]`, dibuat pemilik repo di
+tengah sesi, 196 file termasuk plan dan spec). Sisanya ada di `b1cf7ed` (frontend Task 14–15, spec Playwright
+beserta dua perbaikan config-nya, dua perbaikan bug, dan dokumen ini). `.env` **tidak** ikut ter-commit
+(gitignored), jadi environment baru harus menambahkan dua entri task di B-2.
+
+**Kalau environment baru dan `.env` belum punya task engine**, `compose` akan gagal dengan `AI_CONFIG_ERROR`
+sebelum memanggil model. Itu gejala B-2, bukan masalah provider.
+
+---
+
 ## 1. Status ringkas
 
 - Semua kode Task 1–15 ada, konsisten, dan hijau di tingkat unit/komponen: backend 913 test lulus, app 168 test lulus, `tsc` dan lint bersih di kedua sisi.
@@ -133,7 +166,7 @@ cd apps/app && pnpm dev --port 3000    # 3000, karena CORS_ORIGIN
 # 3. User test sekali pakai (jangan pakai akun pribadi)
 SUPA_URL=$(grep -E '^SUPABASE_URL=' apps/backend/.env | cut -d= -f2-)
 SRK=$(grep -E '^SUPABASE_SERVICE_ROLE_KEY=' apps/backend/.env | cut -d= -f2-)
-curl -s -X POST "$SUPA_URL/auth/v1/users" \
+curl -s -X POST "$SUPA_URL/auth/v1/admin/users" \
   -H "apikey: $SRK" -H "Authorization: Bearer $SRK" -H "content-type: application/json" \
   -d '{"email":"e2e-video@visuala.test","password":"<pilih>","email_confirm":true}'
 
@@ -154,6 +187,11 @@ Prasyarat yang mudah terlupa: `NODE_ENV=test` untuk suite app (kalau tidak, Reac
 
 ## 7. Catatan operasional
 
-- User E2E sekali pakai yang dibuat pada sesi ini ada di database lokal; boleh dihapus kapan saja. Jangan memakai akun pribadi untuk E2E.
+- **Yang masih hidup di akhir sesi terakhir:** backend (4000), render worker, dan app (3000). Ketiganya boleh
+  dipakai untuk mencoba flow manual, tapi tidak dijamin hidup setelah sesi ditutup. Menghentikannya:
+  `kill $(ss -ltnp | grep -E ':4000|:3000' | grep -oE 'pid=[0-9]+' | cut -d= -f2 | sort -u)` dan
+  `pkill -f "bun src/worker/index.ts"`. Mulai ulang dengan perintah di bagian 6.
+- User E2E sekali pakai yang dibuat pada sesi ini ada di database lokal; boleh dihapus kapan saja. Jangan
+  memakai akun pribadi untuk E2E.
 - Perintah di atas menulis data ke Supabase **lokal** saja.
 - Belum ada commit untuk pekerjaan composition engine sebelum dokumen ini; lihat riwayat git untuk commit terbaru.
