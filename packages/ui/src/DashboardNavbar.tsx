@@ -19,17 +19,17 @@ export type DashboardNavbarProps = {
 };
 
 const navbarClassNames = {
-    root: "flex h-21 w-full items-center justify-between rounded-2xl bg-dark-bg",
-    search: "flex h-13 w-125 items-center gap-4 rounded-full bg-pricing-bg px-3.5 text-white",
+    root: "flex min-h-21 w-full flex-wrap items-center justify-between gap-3 rounded-2xl bg-dark-bg py-3 lg:h-21 lg:flex-nowrap lg:py-0",
+    search: "flex h-13 w-full min-w-0 items-center gap-4 rounded-full bg-pricing-bg px-3.5 text-white lg:w-125 lg:max-w-125 lg:flex-1",
     searchText: "min-w-0 flex-1 bg-transparent font-sans-secondary text-base font-medium text-white outline-none placeholder:text-neutral-450",
     searchStaticText: "min-w-0 flex-1 truncate font-sans-secondary text-base font-medium text-neutral-450",
     icon: "inline-flex h-6 w-6 shrink-0 items-center justify-center",
-    actions: "flex h-13 items-center gap-3",
+    actions: "flex min-h-13 flex-wrap items-center gap-2 lg:shrink-0 lg:gap-3",
     iconButton: "inline-flex h-13 w-13 items-center justify-center rounded-full bg-pricing-bg text-white transition-colors hover:bg-surface-3",
-    iconDisplay: "inline-flex h-13 w-13 items-center justify-center rounded-full bg-pricing-bg text-white",
+    iconDisplay: "hidden h-13 w-13 items-center justify-center rounded-full bg-pricing-bg text-white lg:inline-flex",
     pricingButton: "h-13 gap-2 border border-primary/40 bg-primary/10 px-5 font-sans-secondary text-sm font-semibold text-white hover:border-primary hover:bg-primary/20",
     pricingButtonActive: "border-primary bg-primary text-black hover:bg-primary-dark",
-    createButton: "h-13 px-7 font-sans-secondary text-sm font-semibold",
+    createButton: "order-first h-13 px-7 font-sans-secondary text-sm font-semibold lg:order-none",
 } as const;
 
 function cx(...classNames: Array<string | undefined | false>) {
@@ -119,7 +119,7 @@ export default function DashboardNavbar({
 
     return (
         <header className={cx(navbarClassNames.root, className)}>
-            <div className={navbarClassNames.search} role={onSearchChange ? "search" : undefined}>
+            <div className={cx(navbarClassNames.search, !onSearchChange && "hidden lg:flex")} role={onSearchChange ? "search" : undefined}>
                 <span className={navbarClassNames.icon}>
                     <SearchIcon />
                 </span>

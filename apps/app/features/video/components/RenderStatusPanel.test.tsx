@@ -17,7 +17,7 @@ import { RenderStatusPanel } from "./RenderStatusPanel";
 const queuedJob: VideoRenderJob = { id: "job-1", kind: "preview", status: "queued", isRevision: false, attempts: 0, queuedAt: "2026-09-22T00:00:00.000Z" };
 const succeededJob: VideoRenderJob = { ...queuedJob, status: "succeeded" };
 const cancelledJob: VideoRenderJob = { ...queuedJob, status: "cancelled" };
-const version: VideoVersion = { id: "version-1", versionNumber: 1, kind: "preview", durationSeconds: 10, aspectRatio: "9:16", resolution: "1080p", createdAt: "2026-09-22T00:00:00.000Z", playbackUrl: null };
+const version: VideoVersion = { id: "version-1", versionNumber: 1, durationSeconds: 10, aspectRatio: "9:16", resolution: "1080p", createdAt: "2026-09-22T00:00:00.000Z", playbackUrl: null };
 
 function renderPanel(overrides: { projectId?: string; initialJob?: VideoRenderJob | null; onVersionsChange?: (versions: VideoVersion[]) => void; onSettled?: () => void } = {}) {
   return render(

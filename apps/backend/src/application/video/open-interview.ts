@@ -4,6 +4,7 @@ import type { VideoMessage } from "../../domain/video/types";
 import type { VideoProjectRepository } from "../../domain/video/contracts";
 import { VideoError } from "../../domain/video/errors";
 import { runInterviewer } from "./interviewer";
+import { throwIfInterviewAborted, type InterviewStreamOptions } from "./interview-stream";
 
 type OpeningDependencies = Omit<Pick<VideoConversationDependencies, "projects" | "messages" | "assets" | "ai" | "createId">, "projects"> & {
   projects: Pick<VideoProjectRepository, "getOwned">;
@@ -12,7 +13,9 @@ type OpeningDependencies = Omit<Pick<VideoConversationDependencies, "projects" |
 export async function openVideoInterview(
   command: { userId: string; projectId: string },
   dependencies: OpeningDependencies,
+  options?: InterviewStreamOptions,
 ): Promise<VideoMessage[]> {
+  throwIfInterviewAborted(options?.abortSignal);
   const project = await dependencies.projects.getOwned(command.projectId, command.userId);
   if (!project || project.status === "deleted") throw new VideoError("video_project_not_found", "The video project was not found.");
 
@@ -27,6 +30,7 @@ export async function openVideoInterview(
       controls: null, assetIds: [], createdAt: "",
     }], draft: null, assetCount: assets.length },
     { ai: dependencies.ai, createRequestId: dependencies.createId },
+    options,
   );
   if (!result.turn || result.turn.briefComplete) {
     throw new AIError({ code: "AI_INVALID_OUTPUT", safeMessage: "AI provider returned invalid output.", requestId: result.generatedBy.requestId, retryable: false });
@@ -36,6 +40,7 @@ export async function openVideoInterview(
   if (latest.length > 0) return latest;
 
   try {
+    throwIfInterviewAborted(options?.abortSignal);
     const opening = await dependencies.messages.append({
       id: project.id, projectId: project.id, userId: command.userId, role: "assistant",
       content: result.turn.question, controls: result.turn,

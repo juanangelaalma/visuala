@@ -152,6 +152,13 @@ describe("asset validator", () => {
 
     expect(codes(input({ spec: bad }))).toContain("asset_slot_missing");
   });
+
+  it("refuses to silently omit every uploaded asset", () => {
+    const bad = spec();
+    bad.scenes[0]!.modules = [{ id: "BrandMark", kind: "internal", content: { text: "Julumpia" } }];
+
+    expect(codes(input({ spec: bad }))).toContain("asset_unused");
+  });
 });
 
 describe("duration validator", () => {

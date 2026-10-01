@@ -69,9 +69,9 @@ two spikes did not run, so the following is still true:
   (`apps/backend/src/infrastructure/ai-service/config.ts`, `registeredApiFormats`). Profiles using
   another `apiFormat` fail configuration validation (`AI_CONFIG_ERROR`).
 - **There are no `AI_9ROUTER_*` variables to set.** The 9Router profile references
-  `AI_OPENAI_API_KEY` and `AI_OPENAI_MODEL` by name. The current adapter is non-streaming, and
-  model-specific text, vision, and native structured-output support remains controlled by profile
-  capability flags.
+  `AI_OPENAI_API_KEY` and `AI_OPENAI_MODEL` by name. Structured interview calls use Responses SSE;
+  other calls remain buffered. The gateway/model must support strict structured Responses streaming,
+  in addition to the configured text, vision and structured-output capabilities.
 - `docs/decisions/2026-09-21-9router-api-format.md` and
   `docs/decisions/2026-09-21-media-providers.md` still do not exist. They are pending their spikes.
 
@@ -128,7 +128,7 @@ its absence is a configuration error.
 | `SUPABASE_ASSET_BUCKET` | `assets` | Name of the private Storage bucket that holds both the AI-service image assets and the project image assets and rendered versions. Read by `readAssetBucket` in `apps/backend/src/infrastructure/ai-service/supabase-asset-object-store.ts`. |
 | `VIDEO_MAX_ASSETS_PER_PROJECT` | `8` | Maximum live image assets per project. Read by `readAssetLimits` in `apps/backend/src/domain/video/limits.ts`. |
 | `VIDEO_MAX_PROJECT_ASSET_BYTES` | `41943040` (40 MiB) | Maximum total bytes across a project's live assets. |
-| `VIDEO_MIN_IMAGE_DIMENSION` | `200` | Minimum width and height, in pixels, of an accepted image. |
+| `VIDEO_MIN_IMAGE_DIMENSION` | `1` | Minimum width and height, in pixels, of an accepted image. Raise this per environment if later vision and render benchmarks require a larger source image. |
 | `VIDEO_MAX_IMAGE_DIMENSION` | `8000` | Maximum width and height, in pixels, of an accepted image. |
 | `VIDEO_MAX_RENDER_OUTPUT_BYTES` | `524288000` (500 MB) | Ceiling for one rendered MP4. Read by the render worker config in `apps/backend/src/domain/video/render-config.ts`, and it must match the bucket's `file_size_limit`. An output over it fails the job with `render_output_too_large`. |
 | `RENDER_FPS` | `30` | Frame rate frozen into every new job snapshot and used by the engine. The intake and the worker read the same value, so a change cannot make a queued job claim one rate and render another. |
@@ -228,7 +228,8 @@ string.
 | `GET` | `/video-projects` | Bearer | — | `200 { projects: [project] }` | 401 |
 | `GET` | `/video-projects/:projectId` | Bearer | — | `200 { project }` | 401, 404 |
 | `DELETE` | `/video-projects/:projectId` | Bearer | — | `200 { pendingObjectDeletions }` | 401, 404 |
-| `POST` | `/video-projects/:projectId/messages` | Bearer | `{ content, assetIds? }` (strict) | `201 { message, project }` | 401, 404, 422 |
+| `POST` | `/video-projects/:projectId/messages` | Bearer | `{ content, assetIds? }` (strict) | `200` SSE (below) | HTTP before commitment; SSE `error` afterward |
+| `POST` | `/video-projects/:projectId/messages/opening` | Bearer | no body | `200` SSE (below) | HTTP before commitment; SSE `error` afterward |
 | `GET` | `/video-projects/:projectId/messages` | Bearer | — | `200 { messages: [message] }` | 401, 404 |
 | `POST` | `/video-projects/:projectId/approve` | Bearer | — (no body) | `200 { project, approval }` | 401, 404, 409 |
 | `POST` | `/video-projects/:projectId/assets` | Bearer | raw image bytes + headers (below) | `201 { asset }` | 401, 404, 409, 422 |
@@ -254,6 +255,7 @@ The routes are assembled in `apps/backend/src/routes/video.ts` and mounted in
 - **`POST …/messages`** body: `{ content: string, assetIds?: string[] }`. `role`, `user_id`, and
   `created_at` are server-owned and rejected by the strict schema. `message` response:
   `{ id, role, content, assetIds, controls, createdAt }`.
+
 - **`POST …/approve`** takes no body and returns `{ project, approval }`, where `approval` is the
   frozen `ApprovalSnapshot` (`video-approval@v1`): schema version, `approvedAt`, the brief and
   storyboard revision ids and versions, `videoType`, `styleId`, `settings`, and the provenance
@@ -270,6 +272,37 @@ The routes are assembled in `apps/backend/src/routes/video.ts` and mounted in
   An idempotent replay returns `200` with the job the first request created; a new job returns `201`.
 - **`GET …/versions`** returns each version with a `playbackUrl`; **`…/download`** returns
   `{ url }`. Both URLs are signed per request after an ownership check.
+
+### Streamed interview responses
+
+Deploy the first-party frontend and backend POST changes together. Both chat POST routes now return
+`text/event-stream; charset=utf-8`; no buffered JSON success endpoint or automatic POST replay remains.
+Transcript, project and brief GET routes remain JSON. Streams use `Cache-Control: no-cache, no-transform`
+and `X-Accel-Buffering: no`; reverse proxies must not buffer them.
+
+Each named event has JSON `data`:
+
+| Event | Payload | Meaning |
+|---|---|---|
+| `message` | `{ message, project }` | Send only: the user's answer is durably saved. |
+| `text-delta` | `{ delta: string }` | Decoded provisional question additions, opening or send. |
+| `completed` | Send: `{ message, reply, project }`; opening: `{ messages }` | Terminal success after validation and persistence. |
+| `error` | `{ status, error, code?, requestId?, retryable?, retryAfterMs? }` | Terminal safe failure after commitment. |
+
+Only persisted public DTOs leave the service. There are no event IDs, reconnect, extra done event,
+stored fragments, raw draft JSON or provider diagnostics. The first meaningful callback, completion
+or failure determines commitment: send commits at saved-user acknowledgement, new opening at its first
+question fragment, existing opening at transcript completion. Earlier failures retain HTTP JSON errors.
+
+Preview text can differ from the saved reply when fact-confirmation or brief-completion rules select
+another question. Draft fields precede `turn` in structured output, so first visible text can arrive
+later than the first provider token. A null turn has no preview and keeps the preparing status.
+Concurrent openings complete with the actual saved winner's transcript.
+
+On disconnect the client discards partial assistant text and reconciles GET state, never repeats the
+answer. Only a known pre-stream HTTP rejection restores the submitted draft. An ambiguous failure
+leaves the composer empty and offers `Muat ulang percakapan`; already completed writes are not rolled
+back. Request abort and response-reader cancellation propagate to generation and guard new writes.
 
 ## State machine
 
@@ -529,9 +562,9 @@ native render.
   `allowed`** in the same change that adds the moderation provider call.
 - **Multi-image analysis is not implemented.** An asset is resolved one at a time by `assetId`; the
   provider contracts cap `maxImages`, but the video flow does not build a multi-image request.
-- **The current `openai-responses` adapter is non-streaming.** Streaming is outside the AI service
-  contract. Text, vision, and native structured-output support remains controlled by profile
-  capability flags for the configured gateway and model.
+- **Live Responses streaming requires gateway verification.** Deterministic gated HTTP fixtures prove
+  progressive publication and accounting; they do not prove a configured gateway/model supports strict
+  structured Responses SSE. The service does not simulate typing or silently buffer incompatible output.
 - **The interviewer answer is generated, but not by this plan's work.** The interviewer and planner
   tasks run through the AI service inside `POST /video-projects/:projectId/messages`, and they need a
   working `AI_PROFILES_JSON` / `AI_TASKS_JSON` configuration. The moderation call is still absent.

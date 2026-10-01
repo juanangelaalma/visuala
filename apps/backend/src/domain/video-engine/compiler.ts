@@ -6,7 +6,7 @@ import { COMPOSITION_ID, sceneTimeline } from "./composition";
 import type { CompositionSpec, CompositionScene } from "./composition";
 import type { DesignPackManifest } from "./design-pack";
 
-export const COMPILER_VERSION = "1.0.0";
+export const COMPILER_VERSION = "1.0.1";
 
 export type CompileAsset = {
   id: string;
@@ -194,11 +194,11 @@ function referencedAssets(spec: CompositionSpec, assets: readonly CompileAsset[]
 
 function tokenCss(designPack: DesignPackManifest, frame: { width: number; height: number }): string {
   const lines = [":root {"];
-  for (const [name, value] of Object.entries(designPack.colors)) lines.push(`  --hf-${name}: ${value};`);
+  for (const [name, value] of Object.entries(designPack.colors)) lines.push(`  --hf-${cssTokenName(name)}: ${value};`);
   lines.push(`  --hf-display-family: "${designPack.typography.displayFamily}", system-ui, sans-serif;`);
   lines.push(`  --hf-mono-family: "${designPack.typography.monoFamily}", ui-monospace, monospace;`);
   lines.push(`  --hf-body-family: "${designPack.typography.bodyFamily}", system-ui, sans-serif;`);
-  for (const [name, value] of Object.entries(designPack.spacing)) lines.push(`  --hf-${name}: ${value};`);
+  for (const [name, value] of Object.entries(designPack.spacing)) lines.push(`  --hf-${cssTokenName(name)}: ${value};`);
   lines.push(`  --hf-border: ${designPack.rules.borderCqw}cqw;`);
   lines.push(`  --hf-rule: ${designPack.rules.ruleCqw}cqw;`);
   lines.push(`  --hf-hard-shadow: ${designPack.rules.hardShadow};`);
@@ -207,6 +207,10 @@ function tokenCss(designPack: DesignPackManifest, frame: { width: number; height
   lines.push(`  --hf-frame-height: ${frame.height}px;`);
   lines.push("}");
   return lines.join("\n");
+}
+
+function cssTokenName(name: string): string {
+  return name.replace(/[A-Z]/g, (letter) => `-${letter.toLowerCase()}`);
 }
 
 function baseCss(frame: { width: number; height: number }): string {

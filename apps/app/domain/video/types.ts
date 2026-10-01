@@ -194,7 +194,6 @@ export type VideoRenderJob = {
 export type VideoVersion = {
   id: string;
   versionNumber: number;
-  kind: VideoOutputKind;
   /** The length the job was planned for; the engine refuses a render whose probe disagrees. */
   durationSeconds: VideoDurationSeconds;
   aspectRatio: string;

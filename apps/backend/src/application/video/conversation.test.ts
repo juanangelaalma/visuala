@@ -1,6 +1,8 @@
-import { describe, expect, it, vi } from "vitest";
+import { describe, expect, it, vi, type Mock } from "vitest";
 import type { AIService } from "../../domain/ai-service/contracts";
 import { AIError } from "../../domain/ai-service/errors";
+import type { StructuredResult } from "../../domain/ai-service/types";
+import type { VideoMessageRepository } from "../../domain/video/contracts";
 import type { GeneratedBy, ProjectAsset, VideoDurationSeconds, VideoMessage, VideoOutputSettings, VideoProject } from "../../domain/video/types";
 import { runVideoInterviewTurn } from "./conversation";
 
@@ -66,20 +68,29 @@ function transcript(): VideoMessage[] {
   return [{ id: "m-1", projectId: PROJECT_ID, userId: USER_ID, role: "user", content: "buat video jualan kopi ini", controls: null, assetIds: [], createdAt: "created" }];
 }
 
+function structuredResult(data: unknown): StructuredResult<unknown> {
+  return {
+    requestId: "ai-request-1", profileId: "primary", provider: "google", model: "gemini-2.0",
+    providerRequestId: "provider-1", attemptCount: 1, finishReason: "stop",
+    usage: { inputTokens: 10, outputTokens: 5, totalTokens: 15 }, estimatedCost: null, latencyMs: 20, data,
+  };
+}
+
 function aiService(options: { responses?: Record<string, unknown>; failure?: AIError } = {}): AIService {
   const responses = options.responses ?? { interviewer: { draft: partialDraft, turn } };
   return {
     generateText: vi.fn(),
     generateStructured: vi.fn(async (request: { task: string }) => {
       if (options.failure) throw options.failure;
-      return {
-        requestId: "ai-request-1", profileId: "primary", provider: "google", model: "gemini-2.0",
-        providerRequestId: "provider-1", attemptCount: 1, finishReason: "stop" as const,
-        usage: { inputTokens: 10, outputTokens: 5, totalTokens: 15 }, estimatedCost: null, latencyMs: 20,
-        data: responses[request.task],
-      };
+      return structuredResult(responses[request.task]);
     }),
   } as unknown as AIService;
+}
+
+function deferred<T>() {
+  let resolve!: (value: T) => void;
+  const promise = new Promise<T>((done) => { resolve = done; });
+  return { promise, resolve };
 }
 
 function dependencies(options: {
@@ -114,6 +125,22 @@ function dependencies(options: {
   };
 }
 
+type MessageRepositoryMock = {
+  append: Mock<VideoMessageRepository["append"]>;
+  listOwned: Mock<VideoMessageRepository["listOwned"]>;
+};
+
+function storeMessages(messages: MessageRepositoryMock): VideoMessage[] {
+  const stored: VideoMessage[] = [];
+  messages.append.mockImplementation(async (input) => {
+    const message = { ...input, controls: input.controls ?? null, assetIds: input.assetIds ?? [], createdAt: "created" };
+    stored.push(message);
+    return message;
+  });
+  messages.listOwned.mockImplementation(async () => [...stored]);
+  return stored;
+}
+
 describe("runVideoInterviewTurn", () => {
   it("stores a draft revision and the next question while the brief is unfinished", async () => {
     const deps = dependencies();
@@ -129,28 +156,81 @@ describe("runVideoInterviewTurn", () => {
     expect(vi.mocked(deps.ai.generateStructured)).toHaveBeenCalledOnce();
   });
 
-  it("writes the user message before it asks the model", async () => {
-    const deps = dependencies();
+  it("acknowledges the user and streams a preview before saving an authoritative fallback", async () => {
+    const deps = dependencies({ project: project("draft") });
+    const stored = storeMessages(deps.messages);
+    const preview = deferred<void>();
+    const releaseGeneration = deferred<void>();
+    const savingReply = deferred<void>();
+    const releaseReply = deferred<void>();
+    const deltas: string[] = [];
+    const acknowledged: VideoMessage[] = [];
+    const modelTurn = { ...turn, question: "Bisa dijelaskan lagi dengan kalimat lain?", targetFields: ["keyMessage"] };
+    const append = deps.messages.append.getMockImplementation()!;
+    deps.messages.append.mockImplementation(async (input) => {
+      if (input.role === "assistant") {
+        savingReply.resolve();
+        await releaseReply.promise;
+      }
+      return append(input);
+    });
+    vi.mocked(deps.ai.generateStructured).mockImplementationOnce(async (request) => {
+      request.onTextDelta?.(JSON.stringify({ turn: { question: modelTurn.question } }));
+      await releaseGeneration.promise;
+      return structuredResult({ draft: { ...completeDraft, keyMessage: null }, turn: modelTurn });
+    });
+    let settled = false;
 
-    await runVideoInterviewTurn({ userId: USER_ID, projectId: PROJECT_ID, content: "buat video jualan kopi ini" }, deps);
+    const pending = runVideoInterviewTurn(
+      { userId: USER_ID, projectId: PROJECT_ID, content: "sudah" },
+      deps,
+      {
+        onMessagePersisted: ({ message, project }) => {
+          expect(project.status).toBe("interviewing");
+          acknowledged.push(message);
+        },
+        onQuestionDelta: (delta) => { deltas.push(delta); preview.resolve(); },
+      },
+    ).then((result) => { settled = true; return result; });
 
-    const userAppend = deps.messages.append.mock.invocationCallOrder[0];
-    const modelCall = vi.mocked(deps.ai.generateStructured).mock.invocationCallOrder[0];
-    expect(userAppend).toBeLessThan(modelCall ?? Number.POSITIVE_INFINITY);
+    await preview.promise;
+    expect(deltas.join("")).toBe(modelTurn.question);
+    expect(stored).toEqual(acknowledged);
+    expect(stored.map((message) => message.role)).toEqual(["user"]);
+    expect(settled).toBe(false);
+    releaseGeneration.resolve();
+    await savingReply.promise;
+    expect(stored.map((message) => message.role)).toEqual(["user"]);
+    expect(settled).toBe(false);
+    releaseReply.resolve();
+
+    const result = await pending;
+    expect(result.reply.content).not.toBe(modelTurn.question);
+    expect(result.reply.controls).toMatchObject({ control: "free_text", targetFields: ["keyMessage"] });
+    expect(stored).toEqual([result.message, result.reply]);
   });
 
   it("stores the finished brief and opens approval once the draft is complete", async () => {
-    const deps = dependencies({ responses: { interviewer: { draft: completeDraft, turn: null } } });
+    const deps = dependencies();
+    const deltas: string[] = [];
+    vi.mocked(deps.ai.generateStructured).mockImplementationOnce(async (request) => {
+      request.onTextDelta?.(JSON.stringify({ turn: { question: turn.question } }));
+      return structuredResult({ draft: completeDraft, turn });
+    });
 
-    const result = await runVideoInterviewTurn({ userId: USER_ID, projectId: PROJECT_ID, content: "sudah lengkap" }, deps);
+    const result = await runVideoInterviewTurn(
+      { userId: USER_ID, projectId: PROJECT_ID, content: "sudah lengkap" },
+      deps,
+      { onQuestionDelta: (delta) => deltas.push(delta) },
+    );
 
-    // The interview turn costs one model call: planning happens later, on demand.
-    expect(vi.mocked(deps.ai.generateStructured).mock.calls.map((call) => (call[0] as { task: string }).task)).toEqual(["interviewer"]);
     expect(deps.briefRevisions.create.mock.calls[0]?.[0]).toMatchObject({ schemaVersion: "v1", isComplete: true });
     expect(deps.briefRevisions.create).toHaveBeenCalledOnce();
     expect(deps.projects.transition).toHaveBeenCalledWith(PROJECT_ID, USER_ID, "interviewing", "awaiting_approval");
     expect(result.project.status).toBe("awaiting_approval");
     expect(result.reply.controls).toBeNull();
+    expect(deltas.join("")).toBe(turn.question);
+    expect(result.reply.content).not.toBe(turn.question);
   });
 
   it("finishes without an asset, because a composition can be built from internal modules alone", async () => {
@@ -224,7 +304,13 @@ describe("runVideoInterviewTurn", () => {
 
   it("names the unconfirmed menu price so a yes can finish the interview", async () => {
     const deps = dependencies({ project: { ...project(), videoType: "menu_showcase" }, responses: { interviewer: {
-      draft: { ...completeDraft, menuItems: [{ name: "Roti Abon", price: "Rp10.000" }, { name: "Roti Cokelat", price: null }] }, turn: null,
+      draft: {
+        ...completeDraft,
+        orderDestination: "WhatsApp",
+        menuItems: [{ name: "Roti Abon", price: "Rp10.000" }, { name: "Roti Cokelat", price: null }],
+        facts: [{ field: "orderDestination", value: "WhatsApp", source: "user_message" }],
+      },
+      turn: null,
     } } });
 
     const result = await runVideoInterviewTurn({ userId: USER_ID, projectId: PROJECT_ID, content: "sudah" }, deps);
@@ -271,14 +357,160 @@ describe("runVideoInterviewTurn", () => {
     expect(vi.mocked(deps.ai.generateStructured)).not.toHaveBeenCalled();
   });
 
-  it("keeps the user message but writes no revision when the provider fails", async () => {
-    const deps = dependencies({ failure: new AIError({ code: "AI_UNAVAILABLE", safeMessage: "AI service is unavailable.", requestId: "ai-request-1", retryable: true }) });
+  it("keeps the acknowledged user but saves no preview when generation fails", async () => {
+    const deps = dependencies();
+    const stored = storeMessages(deps.messages);
+    const acknowledged: VideoMessage[] = [];
+    const deltas: string[] = [];
+    vi.mocked(deps.ai.generateStructured).mockImplementationOnce(async (request) => {
+      request.onTextDelta?.('{"turn":{"question":"Siapa target ');
+      throw new AIError({ code: "AI_UNAVAILABLE", safeMessage: "AI service is unavailable.", requestId: "ai-request-1", retryable: true });
+    });
 
-    await expect(runVideoInterviewTurn({ userId: USER_ID, projectId: PROJECT_ID, content: "buat video jualan kopi ini" }, deps))
-      .rejects.toMatchObject({ code: "AI_UNAVAILABLE" });
+    await expect(runVideoInterviewTurn(
+      { userId: USER_ID, projectId: PROJECT_ID, content: "buat video jualan kopi ini" },
+      deps,
+      {
+        onMessagePersisted: ({ message }) => acknowledged.push(message),
+        onQuestionDelta: (delta) => deltas.push(delta),
+      },
+    )).rejects.toMatchObject({ code: "AI_UNAVAILABLE" });
 
-    expect(deps.messages.append).toHaveBeenCalledOnce();
+    expect(stored).toEqual(acknowledged);
+    expect(stored.map((message) => ({ role: message.role, content: message.content }))).toEqual([
+      { role: "user", content: "buat video jualan kopi ini" },
+    ]);
+    expect(deltas.join("")).toBe("Siapa target ");
     expect(deps.briefRevisions.create).not.toHaveBeenCalled();
+  });
+
+  it("does no work when the request is already cancelled", async () => {
+    const deps = dependencies();
+    const controller = new AbortController();
+    controller.abort();
+
+    await expect(runVideoInterviewTurn(
+      { userId: USER_ID, projectId: PROJECT_ID, content: "halo" },
+      deps,
+      { abortSignal: controller.signal },
+    )).rejects.toMatchObject({ code: "AI_CANCELLED" });
+    expect(deps.projects.getOwned).not.toHaveBeenCalled();
+    expect(deps.messages.append).not.toHaveBeenCalled();
+  });
+
+  it.each([1, 2])("does not save a user cancelled during ownership check %i", async (cancelAt) => {
+    const deps = dependencies();
+    const controller = new AbortController();
+    const acknowledged = vi.fn();
+    let reads = 0;
+    deps.projects.getOwned.mockImplementation(async () => {
+      if (++reads === cancelAt) controller.abort();
+      return project();
+    });
+
+    await expect(runVideoInterviewTurn(
+      { userId: USER_ID, projectId: PROJECT_ID, content: "halo" },
+      deps,
+      { abortSignal: controller.signal, onMessagePersisted: acknowledged },
+    )).rejects.toMatchObject({ code: "AI_CANCELLED" });
+    expect(deps.messages.append).not.toHaveBeenCalled();
+    expect(acknowledged).not.toHaveBeenCalled();
+  });
+
+  it("does not insert the user if cancellation arrives during the initial status transition", async () => {
+    const deps = dependencies({ project: project("draft") });
+    const controller = new AbortController();
+    deps.projects.transition.mockImplementation(async () => {
+      controller.abort();
+      return project("interviewing");
+    });
+
+    await expect(runVideoInterviewTurn(
+      { userId: USER_ID, projectId: PROJECT_ID, content: "halo" },
+      deps,
+      { abortSignal: controller.signal },
+    )).rejects.toMatchObject({ code: "AI_CANCELLED" });
+    expect(deps.messages.append).not.toHaveBeenCalled();
+    expect(deps.ai.generateStructured).not.toHaveBeenCalled();
+  });
+
+  it.each([
+    ["draft", partialDraft],
+    ["complete brief", completeDraft],
+  ])("does not write the %s if cancellation arrives during its ownership recheck", async (_label, draft) => {
+    const deps = dependencies({ responses: { interviewer: { draft, turn: null } } });
+    const stored = storeMessages(deps.messages);
+    const controller = new AbortController();
+    deps.projects.getOwned
+      .mockResolvedValueOnce(project())
+      .mockResolvedValueOnce(project())
+      .mockImplementationOnce(async () => { controller.abort(); return project(); });
+
+    await expect(runVideoInterviewTurn(
+      { userId: USER_ID, projectId: PROJECT_ID, content: "halo" },
+      deps,
+      { abortSignal: controller.signal },
+    )).rejects.toMatchObject({ code: "AI_CANCELLED" });
+    expect(stored.map((message) => message.role)).toEqual(["user"]);
+    expect(deps.briefRevisions.create).not.toHaveBeenCalled();
+    expect(deps.projects.transition).not.toHaveBeenCalled();
+  });
+
+  it.each([
+    ["draft", partialDraft],
+    ["complete brief", completeDraft],
+  ])("keeps a saved %s but starts no later write after cancellation", async (_label, draft) => {
+    const deps = dependencies({ responses: { interviewer: { draft, turn: null } } });
+    const stored = storeMessages(deps.messages);
+    const controller = new AbortController();
+    const create = deps.briefRevisions.create.getMockImplementation()!;
+    deps.briefRevisions.create.mockImplementation(async (input) => {
+      const revision = await create(input);
+      controller.abort();
+      return revision;
+    });
+
+    await expect(runVideoInterviewTurn(
+      { userId: USER_ID, projectId: PROJECT_ID, content: "halo" },
+      deps,
+      { abortSignal: controller.signal },
+    )).rejects.toMatchObject({ code: "AI_CANCELLED" });
+    expect(stored.map((message) => message.role)).toEqual(["user"]);
+    expect(deps.briefRevisions.create).toHaveBeenCalledOnce();
+    expect(deps.projects.transition).not.toHaveBeenCalled();
+  });
+
+  it("does not save an assistant after cancellation during the completion transition", async () => {
+    const deps = dependencies({ responses: { interviewer: { draft: completeDraft, turn: null } } });
+    const stored = storeMessages(deps.messages);
+    const controller = new AbortController();
+    deps.projects.transition.mockImplementation(async () => {
+      controller.abort();
+      return project("awaiting_approval");
+    });
+
+    await expect(runVideoInterviewTurn(
+      { userId: USER_ID, projectId: PROJECT_ID, content: "halo" },
+      deps,
+      { abortSignal: controller.signal },
+    )).rejects.toMatchObject({ code: "AI_CANCELLED" });
+    expect(stored.map((message) => message.role)).toEqual(["user"]);
+    expect(deps.briefRevisions.create).toHaveBeenCalledOnce();
+    expect(deps.projects.transition).toHaveBeenCalledOnce();
+  });
+
+  it("does not acknowledge a user message that failed to persist", async () => {
+    const deps = dependencies();
+    const acknowledged = vi.fn();
+    deps.messages.append.mockRejectedValue(new Error("write failed"));
+
+    await expect(runVideoInterviewTurn(
+      { userId: USER_ID, projectId: PROJECT_ID, content: "halo" },
+      deps,
+      { onMessagePersisted: acknowledged },
+    )).rejects.toThrow("write failed");
+    expect(acknowledged).not.toHaveBeenCalled();
+    expect(deps.ai.generateStructured).not.toHaveBeenCalled();
   });
 
   it("refuses a project that is not the caller's", async () => {

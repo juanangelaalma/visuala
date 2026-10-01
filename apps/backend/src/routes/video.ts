@@ -16,6 +16,7 @@ import { MAX_ASSET_BYTES } from "@/domain/ai-service/assets";
 import { VideoError } from "@/domain/video/errors";
 import { authPlugin } from "@/plugins/supabase";
 import { VIDEO_ASSET_MIME_TYPES, createVideoProjectBodySchema } from "@/schemas/video";
+import { videoChatStream } from "./video-chat-stream";
 
 const invalidRequest = { error: "Invalid request." } as const;
 const jsonBody = { body: t.Unknown() } as const;
@@ -79,29 +80,35 @@ export const videoProjectRoutes = new Elysia({ name: "video-project-routes" })
   )
   .post(
     "/video-projects/:projectId/messages/opening",
-    async ({ params, user }) => ({
+    async ({ params, user, request }) => videoChatStream(request, async ({ signal, emit }) => ({
       messages: (await openVideoInterview(
         { userId: user.id, projectId: params.projectId },
         createVideoConversationServices(),
+        { abortSignal: signal, onQuestionDelta: (delta) => emit("text-delta", { delta }) },
       )).map(toMessageResponse),
-    }),
+    })),
     { auth: true, detail: { tags: ["video"] } },
   )
   .post(
     "/video-projects/:projectId/messages",
-    async ({ body, params, set, status, user }) => {
+    async ({ body, params, request, status, user }) => {
       const parsed = appendMessageBodySchema.safeParse(body);
       if (!parsed.success) return status(422, invalidRequest);
 
-      // One turn: the user's message, the interviewer's next question, and, when the brief is finished,
-      // the stored brief that the composition pass will read.
-      const { message, reply, project } = await runVideoInterviewTurn(
-        { userId: user.id, projectId: params.projectId, ...parsed.data },
-        createVideoConversationServices(),
-      );
-
-      set.status = 201;
-      return { message: toMessageResponse(message), reply: toMessageResponse(reply), project: toProjectResponse(project) };
+      return videoChatStream(request, async ({ signal, emit }) => {
+        const { message, reply, project } = await runVideoInterviewTurn(
+          { userId: user.id, projectId: params.projectId, ...parsed.data },
+          createVideoConversationServices(),
+          {
+            abortSignal: signal,
+            onQuestionDelta: (delta) => emit("text-delta", { delta }),
+            onMessagePersisted: ({ message, project }) => emit("message", {
+              message: toMessageResponse(message), project: toProjectResponse(project),
+            }),
+          },
+        );
+        return { message: toMessageResponse(message), reply: toMessageResponse(reply), project: toProjectResponse(project) };
+      });
     },
     { auth: true, ...jsonBody, detail: { tags: ["video"] } },
   )

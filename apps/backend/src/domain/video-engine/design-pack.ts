@@ -135,7 +135,7 @@ export function localFontFaceCss(manifest: DesignPackManifest, baseDir = "fonts"
 export function designPackTokenSummary(manifest: DesignPackManifest): string {
   return [
     `style: ${manifest.styleId}@${manifest.version} (${manifest.motion.energy} motion, enter ${manifest.motion.enterSeconds}s, stagger ${manifest.motion.staggerSeconds}s)`,
-    `ground tones: ${Object.keys(GROUND_TONES).join(", ")}`,
+    `ground tones: ${GROUND_TONES.join(", ")}`,
     `colours: ${Object.entries(manifest.colors).map(([name, value]) => `${name}=${value}`).join(", ")}`,
     `type: display ${manifest.typography.displayFamily}, mono ${manifest.typography.monoFamily}, body ${manifest.typography.bodyFamily}`,
     `type ramp (cqw of frame width): ${Object.entries(manifest.typography.ramp)

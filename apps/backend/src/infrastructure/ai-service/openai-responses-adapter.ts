@@ -1,6 +1,8 @@
 import { z, type ZodType } from "zod";
 import type { ProviderAdapter } from "../../domain/ai-service/contracts";
 import { AIError, type AIErrorCode } from "../../domain/ai-service/errors";
+import { OutputValidationError } from "../../domain/ai-service/output-validation-error";
+import { readResponsesStream, type OpenAIResponse } from "./responses-stream";
 import type {
   AIMessage,
   AIUsage,
@@ -31,15 +33,6 @@ type OpenAIOutputContent =
   | { type: "refusal"; refusal?: unknown }
   | { type: string; [key: string]: unknown };
 
-type OpenAIResponse = {
-  id?: unknown;
-  status?: unknown;
-  model?: unknown;
-  output?: unknown;
-  incomplete_details?: { reason?: unknown } | null;
-  usage?: { input_tokens?: unknown; output_tokens?: unknown; total_tokens?: unknown } | null;
-};
-
 export class OpenAIResponsesAdapter implements ProviderAdapter {
   constructor(private readonly options: OpenAIResponsesAdapterOptions) {}
 
@@ -48,7 +41,7 @@ export class OpenAIResponsesAdapter implements ProviderAdapter {
   }
 
   async generateStructured(request: ProviderStructuredRequest): Promise<ProviderStructuredResult> {
-    const result = await this.generate(request, this.getResponseFormat(request));
+    const result = await this.generate(request, this.getResponseFormat(request), request.onTextDelta);
     return { ...result, json: result.text };
   }
 
@@ -70,23 +63,55 @@ export class OpenAIResponsesAdapter implements ProviderAdapter {
   private async generate(
     request: ProviderTextRequest,
     format: ResponseFormat | undefined,
+    onTextDelta?: (delta: string) => void,
   ): Promise<ProviderTextResult> {
     try {
+      if (request.attempt.signal.aborted) throw cancelledError(request.requestId);
       const response = await fetch(this.operationUrl(), {
         method: "POST",
         headers: {
           authorization: `Bearer ${this.options.apiKey}`,
           "content-type": "application/json",
         },
-        body: JSON.stringify(this.requestBody(request, format)),
+        body: JSON.stringify(this.requestBody(request, format, !!onTextDelta)),
         redirect: "manual",
         signal: request.attempt.signal,
       });
       if (!response.ok) throw await responseError(response, request.requestId);
+      if (onTextDelta) {
+        const terminal = await readResponsesStream(response, request.requestId, request.attempt.signal, onTextDelta);
+        try {
+          if (terminal.cancelled) throw cancelledResponseError(request.requestId, nonEmptyString(terminal.body.id));
+          if (terminal.invalidTerminal) throw invalidOutputError(request.requestId, nonEmptyString(terminal.body.id));
+          if (terminal.refused) throw refusedError(request.requestId, nonEmptyString(terminal.body.id));
+          return normalizeResponse(terminal.body, this.options.modelId, request.requestId);
+        } catch (error) {
+          if (!(error instanceof AIError)) throw error;
+          throw new OutputValidationError(new AIError({
+            code: error.code,
+            safeMessage: error.safeMessage,
+            requestId: error.requestId,
+            retryable: false,
+            dispatchOutcome: "ambiguous",
+            ...(error.providerRequestId ? { providerRequestId: error.providerRequestId } : {}),
+          }), {
+            providerRequestId: nonEmptyString(terminal.body.id),
+            model: nonEmptyString(terminal.body.model) ?? this.options.modelId,
+            usage: usage(terminal.body),
+            finishReason: terminal.cancelled ? "cancelled" : terminal.refused ? "refusal" : "unknown",
+          });
+        }
+      }
       return normalizeResponse(await parseBody(response, request.requestId), this.options.modelId, request.requestId);
     } catch (error) {
-      if (error instanceof AIError) throw error;
-      if (request.attempt.signal.aborted) throw cancelledError(request.requestId);
+      if (error instanceof AIError || error instanceof OutputValidationError) throw error;
+      if (request.attempt.signal.aborted) {
+        if (!onTextDelta) throw cancelledError(request.requestId);
+        throw new AIError({
+          code: "AI_CANCELLED", safeMessage: "AI request was cancelled.", requestId: request.requestId,
+          retryable: false, dispatchOutcome: "ambiguous",
+        });
+      }
       throw ambiguousUnavailableError(request.requestId);
     }
   }
@@ -95,16 +120,14 @@ export class OpenAIResponsesAdapter implements ProviderAdapter {
     return `${this.options.baseUrl.replace(/\/+$/, "")}/responses`;
   }
 
-  private requestBody(request: ProviderTextRequest, format: ResponseFormat | undefined): unknown {
+  private requestBody(request: ProviderTextRequest, format: ResponseFormat | undefined, stream: boolean): unknown {
     return {
       model: this.options.modelId,
       instructions: request.instructions,
       input: request.messages.map((message) => inputMessage(message, request.asset)),
       max_output_tokens: this.options.maxOutputTokens,
       store: false,
-      // Explicit, because a gateway that defaults to the streaming dialect would answer with SSE
-      // that this adapter does not read.
-      stream: false,
+      stream,
       ...(format ? { text: { format } } : {}),
     };
   }

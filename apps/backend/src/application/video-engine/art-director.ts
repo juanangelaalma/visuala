@@ -54,7 +54,7 @@ export async function runArtDirector(
       durationSeconds: command.durationSeconds,
       aspectRatio: command.aspectRatio,
     }),
-    messages: [],
+    messages: [{ role: "user", content: "Give the art direction for this video." }],
     promptVersion: ART_DIRECTOR_PROMPT_VERSION,
     schema: {
       name: ART_DIRECTION_SCHEMA_NAME,

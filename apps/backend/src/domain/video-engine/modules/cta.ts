@@ -7,7 +7,7 @@ const SLOTS = [{ name: "text", required: true, kind: "text", maxLength: 32 }] as
 /** Square-cornered ink plate. The pack allows one pill chip per frame; a call to action is not it. */
 export const cta: VideoModule = {
   id: "CTA",
-  version: "1.0.0",
+  version: "1.1.0",
   supportedRatios: ["9:16", "1:1", "16:9"],
   slots: SLOTS,
   build({ content }) {
@@ -34,6 +34,22 @@ export const cta: VideoModule = {
   font-size: 2.4cqw;
   line-height: 1;
   text-transform: uppercase;
+}
+
+@container (max-aspect-ratio: 4 / 5) {
+  .hf-CTA {
+    top: 50%;
+    bottom: auto;
+    transform: translateY(-50%);
+  }
+
+  .hf-CTA__plate {
+    display: block;
+    padding: 3cqw;
+    font-size: 5.5cqw;
+    line-height: 0.92;
+    text-align: center;
+  }
 }`,
     };
   },

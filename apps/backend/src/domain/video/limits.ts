@@ -11,7 +11,7 @@ export const MAX_RERENDERS_PER_PROJECT = 3;
 const limitsSchema = z.object({
   VIDEO_MAX_ASSETS_PER_PROJECT: z.coerce.number().int().positive().default(8),
   VIDEO_MAX_PROJECT_ASSET_BYTES: z.coerce.number().int().positive().default(40 * 1024 * 1024),
-  VIDEO_MIN_IMAGE_DIMENSION: z.coerce.number().int().positive().default(200),
+  VIDEO_MIN_IMAGE_DIMENSION: z.coerce.number().int().positive().default(1),
   VIDEO_MAX_IMAGE_DIMENSION: z.coerce.number().int().positive().default(8000),
 }).strict();
 

@@ -1,6 +1,6 @@
 import type { AIService } from "../../domain/ai-service/contracts";
 import type { AIResultMetadata } from "../../domain/ai-service/types";
-import { compositionSpecSchema, type CompositionFormat, type CompositionSpec } from "../../domain/video-engine/composition";
+import { compositionSpecFromWire, compositionSpecWireSchema, type CompositionFormat, type CompositionSpec } from "../../domain/video-engine/composition";
 import { designPackTokenSummary } from "../../domain/video-engine/design-pack";
 import { PlanningError } from "../../domain/video-engine/errors";
 import { buildFallbackSpec } from "../../domain/video-engine/fallback";
@@ -67,18 +67,19 @@ export async function runCompositionPlanner(
       durationSeconds: command.format.durationSeconds,
       aspectRatio: command.format.aspectRatio,
     }),
-    messages: [],
+    messages: [{ role: "user", content: "Write the composition spec for this video." }],
     promptVersion: COMPOSITION_PLANNER_PROMPT_VERSION,
     schema: {
       name: COMPOSITION_SPEC_SCHEMA_NAME,
       version: VIDEO_ENGINE_AI_SCHEMA_VERSION,
-      schema: compositionSpecSchema,
+      schema: compositionSpecWireSchema,
     },
   });
 
   const { data: _data, ...ai } = result;
+  const spec = compositionSpecFromWire(result.data);
   const report = validateComposition({
-    spec: result.data,
+    spec,
     catalog: dependencies.catalog,
     recipe: command.recipe,
     designPack: command.designPack.manifest,
@@ -89,7 +90,7 @@ export async function runCompositionPlanner(
 
   if (report.ok) {
     return {
-      spec: result.data,
+      spec,
       isFallback: false,
       issues: [],
       generatedBy: {

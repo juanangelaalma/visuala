@@ -2,7 +2,7 @@
 
 The AI provider service gives server code one interface for text, structured output, and image input. Import `createAIService` only from server code. Browser code must call an authenticated route or server action.
 
-The service currently has no production feature caller. The application-level analyze, storyboard, image/video generation, and worker routes have been removed. The scripts documented below remain available for configuration checks and explicitly authorized smoke tests.
+The video interviewer uses this service for opening questions and follow-up answers. Composition and other callers retain buffered results unless they supply the structured streaming callback.
 
 ## Configuration
 
@@ -57,7 +57,7 @@ Use this 9Router profile contract:
 
 The example profile reads its credentials and model from `AI_OPENAI_API_KEY` and `AI_OPENAI_MODEL`. Its operation URL is `http://127.0.0.1:20128/v1/responses`, and it authenticates with `Authorization: Bearer <AI_OPENAI_API_KEY>`. Set `AI_ALLOW_INSECURE_LOOPBACK=true` for this local HTTP URL.
 
-Set all three capability flags to `true` only when the gateway and model support Responses text, image data URLs, and strict `text.format` JSON schema. Calls are non-streaming; streaming is outside this service contract.
+Set all three capability flags to `true` only when the gateway and model support Responses text, image data URLs, and strict `text.format` JSON schema. Video interviews additionally require genuine Responses SSE with strict structured output. A gateway that returns buffered JSON for `stream: true` fails safely; there is no buffered fallback.
 
 The service also needs these server-side variables for persistence and private image reads:
 
@@ -124,6 +124,18 @@ const result = await service.generateStructured({
 
 const plan = result.data;
 ```
+
+Structured requests can supply `onTextDelta?: (delta: string) => void` and `abortSignal`.
+The callback receives raw structured JSON text deltas, not validated data. The video interviewer
+incrementally extracts only decoded `turn.question`; drafts and choices are not published.
+Terminal provider output is parsed and schema-validated before the Promise resolves.
+Calls without the callback and ordinary text calls stay buffered.
+
+An operation cannot retry after publishing any nonempty delta. Before publication, only the existing
+explicitly rejected transient failures qualify for retry. Cancellation, timeout or disconnect after
+dispatch without terminal usage records unknown usage/billing and null token counts/cost. Terminal
+usage remains available for accounting even if subsequent output validation fails.
+
 
 ## Image input
 

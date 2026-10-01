@@ -16,7 +16,7 @@ import {
 } from "@/domain/billing/errors";
 import { VideoError, type VideoErrorCode } from "@/domain/video/errors";
 
-type MappedError = { status: number; body: Record<string, unknown> };
+export type MappedError = { status: number; body: Record<string, unknown> };
 
 const authErrorStatus: Record<AuthErrorCode, number> = {
   invalid_credentials: 401,
@@ -54,7 +54,7 @@ const videoErrorStatus: Record<VideoErrorCode, number> = {
   video_revision_quota_exhausted: 409,
 };
 
-function mapDomainError(error: unknown): MappedError | null {
+export function mapDomainError(error: unknown): MappedError | null {
   if (error instanceof AuthDomainError) return { status: authErrorStatus[error.code], body: { error: error.message } };
 
   if (error instanceof AIError) {
@@ -131,6 +131,8 @@ export const errorPlugin = new Elysia({ name: "errors" }).onError({ as: "global"
       ? { error: "Asset storage is not configured correctly.", code: storageCode }
       : { error: "Asset storage is unavailable.", code: storageCode };
   }
+
+  console.log(error)
 
   console.error("Unhandled backend error");
   set.status = 500;

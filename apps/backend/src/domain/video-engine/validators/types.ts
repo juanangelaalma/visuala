@@ -26,6 +26,7 @@ export type ValidationCode =
   | "recipe_field_missing"
   | "asset_unknown"
   | "asset_slot_missing"
+  | "asset_unused"
   | "duration_exceeded"
   | "scene_too_short"
   | "ratio_unsupported"

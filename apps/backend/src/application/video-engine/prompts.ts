@@ -1,5 +1,5 @@
 import { COMPOSITION_SPEC_VERSION, MIN_SCENE_SECONDS } from "../../domain/video-engine/composition";
-import { INTERNAL_MODULE_IDS } from "../../domain/video-engine/modules/ids";
+import { INTERNAL_MODULES } from "../../domain/video-engine/modules/registry";
 import type { ArtDirection } from "../../domain/video-engine/art-direction";
 import type { VideoRecipe } from "../../domain/video-engine/recipes/types";
 import type { ValidationBrief } from "../../domain/video-engine/validators/types";
@@ -93,8 +93,14 @@ export function compositionPlannerInstructions(input: {
     "Art direction to realise:",
     JSON.stringify(input.artDirection),
     "",
-    "Internal modules. A module is `{ id, kind: \"internal\", content }`; content keys are that module's slots:",
-    ...INTERNAL_MODULE_IDS.map((id) => `- ${id}`),
+    "Internal modules. A module is `{ id, kind: \"internal\", content }`, where content is a list of `{ key, value }` pairs. Use these ids and slot keys exactly, case-sensitive:",
+    ...INTERNAL_MODULES.map((module) =>
+      `- ${module.id}: ${
+        module.slots.length === 0
+          ? "no slots"
+          : module.slots.map((slot) => `${slot.name} (${slot.kind}${slot.required ? ", required" : ", optional"}${slot.maxLength === undefined ? "" : `, max ${slot.maxLength}`})`).join(", ")
+      }`,
+    ),
     "",
     "Design tokens you may rely on (reach them through module slots, never as free text):",
     input.designPackTokens,
@@ -102,7 +108,7 @@ export function compositionPlannerInstructions(input: {
     input.candidates.length === 0
       ? "No catalog block matched this brief. Use internal modules only and name no catalog item."
       : [
-          "Catalog blocks you may name, and nothing else. A block is `{ id, kind: \"catalog\", content }`; content keys are its variables:",
+          "Catalog blocks you may name, and nothing else. A block is `{ id, kind: \"catalog\", content }`, where content is a list of `{ key, value }` pairs and each key is one of its variables:",
           ...input.candidates.map(
             (candidate) =>
               `- ${candidate.name} (${candidate.dimensions?.width}x${candidate.dimensions?.height}, ${candidate.duration}s, beats: ${candidate.beats.join("/")}) variables: ${
@@ -118,8 +124,11 @@ export function compositionPlannerInstructions(input: {
     "",
     "Rules:",
     "- Scene ids are unique snake_case, and each scene has at least one module; the first module is behind, the last in front.",
+    "- Module ids and slot keys are case-sensitive: copy them from the lists above exactly, never lowercase or rename them.",
+    "- `content` is always a list of `{ key, value }` pairs, and `[]` when a module has no values.",
     `- Every scene is at least ${shortestScene} frames and at most ${totalFrames} frames.`,
     "- Every content value is either text that already appears in the brief, an asset id from the list, or a ground tone. Never invent a price, discount, address, phone number, or claim.",
+    ...(input.assetIds.length === 0 ? [] : ["- At least one scene must use ProductHero with an assetId copied exactly from the asset list."]),
     "- A catalog block may only sit in a scene at least as long as its own duration.",
     "- Keep a Headline and a CTA module in the composition so it always reads without the catalog.",
     "- Return the JSON object only.",

@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 import type { AIService } from "../../domain/ai-service/contracts";
-import { COMPOSITION_SPEC_VERSION, type CompositionSpec } from "../../domain/video-engine/composition";
+import { COMPOSITION_SPEC_VERSION, compositionSpecFromWire, type CompositionSpec, type CompositionSpecWire } from "../../domain/video-engine/composition";
 import { buildCatalog } from "../../domain/video-engine/catalog";
 import type { Catalog, CatalogItem } from "../../domain/video-engine/catalog";
 import { PlanningError } from "../../domain/video-engine/errors";
@@ -65,17 +65,21 @@ function candidate(name: string): CatalogCandidate {
   };
 }
 
-/** hook 4s, message 4s, proof 2s, cta 2s at 30 fps. */
-function plannedSpec(overrides: Partial<CompositionSpec> = {}): CompositionSpec {
+function wireModule(id: string, kind: "internal" | "catalog", content: Record<string, string> = {}) {
+  return { id, kind, content: Object.entries(content).map(([key, value]) => ({ key, value })) };
+}
+
+/** The shape the provider returns: module content is a pair list, and no `version`/`transition` is offered. hook 4s, message 4s, proof 2s, cta 2s at 30 fps. */
+function plannedSpec(overrides: Partial<CompositionSpecWire> = {}): CompositionSpecWire {
   return {
     schemaVersion: COMPOSITION_SPEC_VERSION,
     format: { aspectRatio: "9:16", fps: 30, durationSeconds: 12 },
     style: { id: "creative-mode", version: "1" },
     scenes: [
-      { id: "hook", durationFrames: 120, transition: "cut", modules: [{ id: "ProductHero", kind: "internal", content: { assetId: ASSET_ID } }] },
-      { id: "message", durationFrames: 120, modules: [{ id: "Headline", kind: "internal", content: { text: "Julumpia" } }] },
-      { id: "proof", durationFrames: 60, modules: [{ id: "OfferBadge", kind: "internal", content: { text: "Diskon 20%" } }] },
-      { id: "cta", durationFrames: 60, modules: [{ id: "CTA", kind: "internal", content: { text: "Pesan sekarang" } }] },
+      { id: "hook", durationFrames: 120, modules: [wireModule("ProductHero", "internal", { assetId: ASSET_ID })] },
+      { id: "message", durationFrames: 120, modules: [wireModule("Headline", "internal", { text: "Julumpia" })] },
+      { id: "proof", durationFrames: 60, modules: [wireModule("OfferBadge", "internal", { text: "Diskon 20%" })] },
+      { id: "cta", durationFrames: 60, modules: [wireModule("CTA", "internal", { text: "Pesan sekarang" })] },
     ],
     ...overrides,
   };
@@ -124,7 +128,7 @@ describe("runCompositionPlanner", () => {
 
     expect(result.isFallback).toBe(false);
     expect(result.issues).toEqual([]);
-    expect(result.spec).toEqual(plannedSpec());
+    expect(result.spec).toEqual(compositionSpecFromWire(plannedSpec()));
     expect(result.generatedBy?.promptVersion).toBe("composition_planner@v1");
     expect(result.ai?.latencyMs).toBe(2500);
 
@@ -133,15 +137,16 @@ describe("runCompositionPlanner", () => {
     expect(request.schema.name).toBe("composition_spec");
     expect(request.instructions).toContain("product-reveal");
     expect(request.instructions).toContain("360 frames total");
+    expect(request.instructions).toContain("must use ProductHero");
   });
 
   it("falls back when the plan names a catalog id that was never offered", async () => {
     const spec = plannedSpec({
       scenes: [
-        { id: "hook", durationFrames: 120, transition: "cut", modules: [{ id: "surprise-block", kind: "catalog", content: {} }] },
-        { id: "message", durationFrames: 120, modules: [{ id: "Headline", kind: "internal", content: { text: "Julumpia" } }] },
-        { id: "proof", durationFrames: 60, modules: [{ id: "OfferBadge", kind: "internal", content: { text: "Diskon 20%" } }] },
-        { id: "cta", durationFrames: 60, modules: [{ id: "CTA", kind: "internal", content: { text: "Pesan sekarang" } }] },
+        { id: "hook", durationFrames: 120, modules: [wireModule("surprise-block", "catalog")] },
+        { id: "message", durationFrames: 120, modules: [wireModule("Headline", "internal", { text: "Julumpia" })] },
+        { id: "proof", durationFrames: 60, modules: [wireModule("OfferBadge", "internal", { text: "Diskon 20%" })] },
+        { id: "cta", durationFrames: 60, modules: [wireModule("CTA", "internal", { text: "Pesan sekarang" })] },
       ],
     });
     const known = { catalog: catalog(["surprise-block"]) };
@@ -157,10 +162,10 @@ describe("runCompositionPlanner", () => {
   it("falls back when the model invents a price the brief never stated", async () => {
     const spec = plannedSpec({
       scenes: [
-        { id: "hook", durationFrames: 120, transition: "cut", modules: [{ id: "ProductHero", kind: "internal", content: { assetId: ASSET_ID } }] },
-        { id: "message", durationFrames: 120, modules: [{ id: "Headline", kind: "internal", content: { text: "Harga Rp9.999" } }] },
-        { id: "proof", durationFrames: 60, modules: [{ id: "OfferBadge", kind: "internal", content: { text: "Diskon 20%" } }] },
-        { id: "cta", durationFrames: 60, modules: [{ id: "CTA", kind: "internal", content: { text: "Pesan sekarang" } }] },
+        { id: "hook", durationFrames: 120, modules: [wireModule("ProductHero", "internal", { assetId: ASSET_ID })] },
+        { id: "message", durationFrames: 120, modules: [wireModule("Headline", "internal", { text: "Harga Rp9.999" })] },
+        { id: "proof", durationFrames: 60, modules: [wireModule("OfferBadge", "internal", { text: "Diskon 20%" })] },
+        { id: "cta", durationFrames: 60, modules: [wireModule("CTA", "internal", { text: "Pesan sekarang" })] },
       ],
     });
 
@@ -173,10 +178,10 @@ describe("runCompositionPlanner", () => {
   it("uses internal modules only when no candidate matched, and still succeeds", async () => {
     const internalOnly = plannedSpec({
       scenes: [
-        { id: "hook", durationFrames: 90, transition: "cut", modules: [{ id: "ProductHero", kind: "internal", content: { assetId: ASSET_ID } }] },
-        { id: "message", durationFrames: 90, modules: [{ id: "Headline", kind: "internal", content: { text: "Julumpia" } }] },
-        { id: "proof", durationFrames: 90, modules: [{ id: "OfferBadge", kind: "internal", content: { text: "Diskon 20%" } }] },
-        { id: "cta", durationFrames: 90, modules: [{ id: "CTA", kind: "internal", content: { text: "Pesan sekarang" } }] },
+        { id: "hook", durationFrames: 90, modules: [wireModule("ProductHero", "internal", { assetId: ASSET_ID })] },
+        { id: "message", durationFrames: 90, modules: [wireModule("Headline", "internal", { text: "Julumpia" })] },
+        { id: "proof", durationFrames: 90, modules: [wireModule("OfferBadge", "internal", { text: "Diskon 20%" })] },
+        { id: "cta", durationFrames: 90, modules: [wireModule("CTA", "internal", { text: "Pesan sekarang" })] },
       ],
     });
     const ai = aiService(internalOnly);
@@ -203,10 +208,10 @@ describe("runCompositionPlanner", () => {
 describe("assertFallbackValid", () => {
   const unknownModule = plannedSpec({
     scenes: [
-      { id: "hook", durationFrames: 120, transition: "cut", modules: [{ id: "Nope", kind: "internal", content: {} }] },
-      { id: "message", durationFrames: 120, modules: [{ id: "Headline", kind: "internal", content: { text: "Julumpia" } }] },
-      { id: "proof", durationFrames: 60, modules: [{ id: "OfferBadge", kind: "internal", content: { text: "Diskon 20%" } }] },
-      { id: "cta", durationFrames: 60, modules: [{ id: "CTA", kind: "internal", content: { text: "Pesan sekarang" } }] },
+      { id: "hook", durationFrames: 120, modules: [wireModule("Nope", "internal")] },
+      { id: "message", durationFrames: 120, modules: [wireModule("Headline", "internal", { text: "Julumpia" })] },
+      { id: "proof", durationFrames: 60, modules: [wireModule("OfferBadge", "internal", { text: "Diskon 20%" })] },
+      { id: "cta", durationFrames: 60, modules: [wireModule("CTA", "internal", { text: "Pesan sekarang" })] },
     ],
   });
 
@@ -215,7 +220,7 @@ describe("assertFallbackValid", () => {
     const plan = await runCompositionPlanner(complete, { ai: aiService(unknownModule), createRequestId: () => "local-1", catalog: catalog([]) });
 
     expect(plan.isFallback).toBe(true);
-    expect(plan.issues.map((issue) => issue.code)).toEqual(["internal_module_unknown"]);
+    expect(plan.issues.map((issue) => issue.code)).toEqual(["internal_module_unknown", "asset_unused"]);
 
     const checked = assertFallbackValid(plan, complete, catalog([]));
     expect(checked).toBe(plan);

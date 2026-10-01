@@ -4,6 +4,7 @@ import type { VideoBriefDraft } from "../../domain/video/brief";
 import { findInterviewTurnProblems, type InterviewTurn } from "../../domain/video/interview";
 import type { GeneratedBy, VideoMessage, VideoProject } from "../../domain/video/types";
 import { INTERVIEW_RESULT_SCHEMA_NAME, VIDEO_AI_SCHEMA_VERSION, interviewResultSchema } from "./ai-schemas";
+import { createQuestionDeltaExtractor, throwIfInterviewAborted, type InterviewStreamOptions } from "./interview-stream";
 import { INTERVIEWER_PROMPT_VERSION, interviewerInstructions, transcriptMessages } from "./prompts";
 
 export type InterviewerDependencies = {
@@ -34,7 +35,9 @@ export type InterviewerResult = {
 export async function runInterviewer(
   command: InterviewerCommand,
   dependencies: InterviewerDependencies,
+  options?: InterviewStreamOptions,
 ): Promise<InterviewerResult> {
+  throwIfInterviewAborted(options?.abortSignal);
   const requestId = dependencies.createRequestId();
 
   const result = await dependencies.ai.generateStructured({
@@ -45,7 +48,10 @@ export async function runInterviewer(
     messages: transcriptMessages(command.transcript),
     promptVersion: INTERVIEWER_PROMPT_VERSION,
     schema: { name: INTERVIEW_RESULT_SCHEMA_NAME, version: VIDEO_AI_SCHEMA_VERSION, schema: interviewResultSchema },
+    ...(options?.abortSignal ? { abortSignal: options.abortSignal } : {}),
+    ...(options?.onQuestionDelta ? { onTextDelta: createQuestionDeltaExtractor(options.onQuestionDelta) } : {}),
   });
+  throwIfInterviewAborted(options?.abortSignal);
 
   const turn = result.data.turn;
   // The output parsed, but a select question with one option, or a recommendation of an option that

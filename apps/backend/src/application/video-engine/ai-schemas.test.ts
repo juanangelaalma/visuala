@@ -24,13 +24,12 @@ const validSpec = {
     {
       id: "scene_1",
       durationFrames: 180,
-      transition: "cut",
-      modules: [{ id: "Headline", kind: "internal", content: { text: "Julumpia" } }],
+      modules: [{ id: "Headline", kind: "internal", content: [{ key: "text", value: "Julumpia" }] }],
     },
     {
       id: "scene_2",
       durationFrames: 180,
-      modules: [{ id: "CTA", kind: "internal", content: { text: "Pesan sekarang" } }],
+      modules: [{ id: "CTA", kind: "internal", content: [{ key: "text", value: "Pesan sekarang" }] }],
     },
   ],
 };
@@ -60,4 +59,31 @@ describe("video engine ai schemas", () => {
     expect(schema.safeParse({ ...validSpec, scenes: [{ id: "scene_1", durationFrames: 180, modules: [] }] }).success).toBe(false);
     expect(schema.safeParse({ ...validSpec, schemaVersion: "composition-spec@v2" }).success).toBe(false);
   });
+
+  it("keeps every schema inside what strict structured output allows", () => {
+    for (const [key, schema] of Object.entries(VIDEO_ENGINE_AI_SCHEMAS)) {
+      const json = z.toJSONSchema(schema, { unrepresentable: "throw", target: "draft-7" });
+      expect(strictStructuredProblems(json), key).toEqual([]);
+    }
+  });
 });
+
+/**
+ * Strict structured output refuses a dynamic-key object (`propertyNames`) and any property missing from
+ * `required`. The planner schema broke both once and the provider answered 400 before any model call.
+ */
+function strictStructuredProblems(node: unknown, path = "(root)"): string[] {
+  if (Array.isArray(node)) return node.flatMap((child, index) => strictStructuredProblems(child, `${path}[${index}]`));
+  if (!node || typeof node !== "object") return [];
+  const object = node as Record<string, unknown>;
+  const problems: string[] = [];
+  if ("propertyNames" in object) problems.push(`${path}: propertyNames is not permitted`);
+  const properties = object.properties as Record<string, unknown> | undefined;
+  if (properties) {
+    if (object.additionalProperties !== false) problems.push(`${path}: additionalProperties must be false`);
+    const required = Array.isArray(object.required) ? (object.required as string[]) : [];
+    for (const name of Object.keys(properties)) if (!required.includes(name)) problems.push(`${path}.${name}: not in required`);
+  }
+  for (const [name, child] of Object.entries(object)) problems.push(...strictStructuredProblems(child, `${path}.${name}`));
+  return problems;
+}

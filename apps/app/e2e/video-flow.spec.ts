@@ -118,7 +118,8 @@ test.describe("video flow", () => {
     await expect(page.locator("video")).toBeVisible();
 
     await approve.click();
-    await expect(page.getByText("Selesai")).toBeVisible({ timeout: 900_000 });
-    await expect(page.getByRole("button", { name: "Unduh" }).first()).toBeVisible();
+    // The download control appears only after a final render has succeeded, and it is the point of the test.
+    // Do not wait on the word "Selesai": it is a substring of "Belum ada video yang selesai dirender." too.
+    await expect(page.getByRole("button", { name: "Unduh" }).first()).toBeVisible({ timeout: 900_000 });
   });
 });

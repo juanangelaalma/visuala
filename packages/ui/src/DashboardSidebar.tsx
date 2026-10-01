@@ -104,7 +104,7 @@ const sidebarClassNames = {
     headerCollapsed: "justify-center",
     logo: "h-7 w-32 text-white",
     iconButton: "inline-flex h-6 w-6 items-center justify-center text-neutral-450 transition-colors hover:text-white",
-    collapseButton: "inline-flex h-10 w-10 items-center justify-center border-neutral-500 bg-transparent text-neutral-450 transition-colors hover:border-white hover:text-white",
+    collapseButton: "inline-flex h-11 w-11 items-center justify-center border-neutral-500 bg-transparent text-neutral-450 transition-colors hover:border-white hover:text-white max-lg:hidden",
     menu: "flex flex-col gap-4",
     section: "flex flex-col gap-3",
     sectionTitle: "font-sans-secondary text-xs font-medium text-neutral-450",
@@ -120,7 +120,7 @@ const sidebarClassNames = {
     creditExpanded: "gap-3 px-3 py-2",
     creditCollapsed: "flex-col justify-center gap-0.5 px-1 py-2",
     creditIcon: "inline-flex h-6 w-6 shrink-0 items-center justify-center text-primary",
-    profile: "flex h-10 w-full items-center",
+    profile: "flex h-11 w-full items-center",
     profileExpanded: "justify-between",
     profileCollapsed: "justify-center",
     profileMain: "flex min-w-0 items-center gap-3",
@@ -129,8 +129,8 @@ const sidebarClassNames = {
     profileText: "min-w-0 grid",
     profileName: "truncate font-sans text-sm font-semibold text-white",
     profilePlan: "truncate font-sans text-xs font-medium text-neutral-450",
-    accountMenu: "absolute bottom-0 left-full z-20 ml-3 w-52 rounded-2xl border border-white/10 bg-dark-bg p-2 shadow-lg",
-    accountMenuItem: "flex w-full items-center gap-3 rounded-xl px-3 py-2 font-sans text-sm font-medium transition-colors hover:bg-surface-3 focus-visible:outline-2 focus-visible:outline-primary",
+    accountMenu: "absolute bottom-12 left-0 z-20 w-52 rounded-2xl border border-white/10 bg-dark-bg p-2 shadow-lg lg:bottom-0 lg:left-full lg:ml-3",
+    accountMenuItem: "flex min-h-11 w-full items-center gap-3 rounded-xl px-3 py-2 font-sans text-sm font-medium transition-colors hover:bg-surface-3 focus-visible:outline-2 focus-visible:outline-primary",
 } as const;
 
 function cx(...classNames: Array<string | undefined | false>) {

@@ -45,6 +45,70 @@ export const compositionSpecSchema = z
   })
   .strict();
 
+/**
+ * The provider-facing shape of the same spec. Strict structured output admits no dynamic-key object and no
+ * absent property, so module `content` is a pair list here, and the two fields the planner must not be trusted
+ * to invent (`version`, `transition`) are simply not offered. `compositionSpecFromWire` folds it back.
+ */
+const moduleContentPairSchema = z.object({ key: z.string().trim().min(1), value: z.string() }).strict();
+
+const wireModuleInstanceSchema = z
+  .object({
+    id: z.string().trim().min(1),
+    kind: z.enum(["internal", "catalog"]),
+    content: z.array(moduleContentPairSchema),
+  })
+  .strict();
+
+const wireSceneSchema = z
+  .object({
+    id: z.string().trim().regex(/^[a-z0-9_]+$/),
+    durationFrames: z.number().int().min(1),
+    modules: z.array(wireModuleInstanceSchema).min(1),
+  })
+  .strict();
+
+export const compositionSpecWireSchema = z
+  .object({
+    schemaVersion: z.literal(COMPOSITION_SPEC_VERSION),
+    format: z
+      .object({
+        aspectRatio: z.enum(ASPECT_RATIOS),
+        fps: z.number().int().min(1).max(120),
+        durationSeconds: z.number().int().min(MIN_DURATION_SECONDS).max(MAX_DURATION_SECONDS),
+      })
+      .strict(),
+    style: z.object({ id: z.string().trim().min(1), version: z.string().trim().min(1) }).strict(),
+    scenes: z.array(wireSceneSchema).min(1),
+  })
+  .strict();
+
+export type CompositionSpecWire = z.infer<typeof compositionSpecWireSchema>;
+
+/** Folds the pair list back into the record the schema validator, compiler, and fallback all read. */
+export function compositionSpecFromWire(wire: CompositionSpecWire): CompositionSpec {
+  return {
+    schemaVersion: wire.schemaVersion,
+    format: wire.format,
+    style: wire.style,
+    scenes: wire.scenes.map((scene) => ({
+      id: scene.id,
+      durationFrames: scene.durationFrames,
+      modules: scene.modules.map((module) => ({
+        id: module.id,
+        kind: module.kind,
+        content: contentRecord(module.content),
+      })),
+    })),
+  };
+}
+
+function contentRecord(pairs: readonly { key: string; value: string }[]): Record<string, string> {
+  const content: Record<string, string> = {};
+  for (const pair of pairs) content[pair.key] = pair.value;
+  return content;
+}
+
 export type CompositionModuleInstance = z.infer<typeof moduleInstanceSchema>;
 export type CompositionScene = z.infer<typeof sceneSchema>;
 export type CompositionSpec = z.infer<typeof compositionSpecSchema>;

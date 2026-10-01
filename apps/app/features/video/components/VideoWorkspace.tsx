@@ -3,18 +3,48 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
+import type { VideoMessage } from "@/domain/video/types";
 import { VIDEO_STYLE_PRESETS, durationLabel, languageLabel, videoTypeLabel } from "@/domain/video/settings";
 import { BrowserApiError, browserApiErrorMessage } from "@/lib/api/browser-client";
-import { videoApi } from "../api/video-api";
+import { videoApi, type VideoWorkspaceData } from "../api/video-api";
 import { ProjectAssetGallery } from "./ProjectAssetGallery";
 import { ProjectStatusBadge } from "./ProjectStatusBadge";
 import { RenderStatusPanel } from "./RenderStatusPanel";
 import { VideoBriefPanel } from "./VideoBriefPanel";
-import { VideoChat } from "./VideoChat";
+import { VideoChat, type VideoChatSendOutcome } from "./VideoChat";
 import { VideoCompositionPanel } from "./VideoCompositionPanel";
 import { VideoVersionList } from "./VideoVersionList";
 
-type Workspace = Awaited<ReturnType<typeof videoApi.loadVideoWorkspace>>;
+type Workspace = VideoWorkspaceData;
+
+type Conversation = {
+  kind: "opening" | "send";
+  text: string;
+  outgoing: string;
+  userPersisted: boolean;
+};
+type ActiveConversation = {
+  id: number;
+  projectId: string;
+  controller: AbortController;
+  revision: number;
+  kind: Conversation["kind"];
+  userPersisted: boolean;
+};
+type WorkspaceRead = {
+  generation: number;
+  revision: number;
+  projectId: string;
+  controller: AbortController;
+};
+
+const disconnectedMessage = "Koneksi terputus. Muat ulang percakapan sebelum mengirim lagi.";
+
+function mergeMessages(current: VideoMessage[], incoming: VideoMessage[]): VideoMessage[] {
+  const merged = new Map(current.map((message) => [message.id, message]));
+  for (const message of incoming) merged.set(message.id, message);
+  return [...merged.values()];
+}
 
 const focusRing = "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary";
 
@@ -27,64 +57,267 @@ export function VideoWorkspace({ projectId }: { projectId: string }) {
   const [workspace, setWorkspace] = useState<Workspace | null>(null);
   const [error, setError] = useState<unknown>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [requestNumber, setRequestNumber] = useState(0);
+  const [streaming, setStreaming] = useState<Conversation | null>(null);
   const [deleteConfirmation, setDeleteConfirmation] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState("");
   const [openingError, setOpeningError] = useState("");
   const [previewing, setPreviewing] = useState(false);
   const [approving, setApproving] = useState(false);
-  const generation = useRef(0);
+  const [recoveryError, setRecoveryError] = useState("");
+  const [recovering, setRecovering] = useState(false);
+  const currentProjectId = useRef(projectId);
+  currentProjectId.current = projectId;
+  const readGeneration = useRef(0);
+  const conversationRevision = useRef(0);
+  const conversationIdentity = useRef(0);
+  const activeConversation = useRef<ActiveConversation | null>(null);
+  const activeRead = useRef<WorkspaceRead | null>(null);
+  const recoveryBlocked = useRef(false);
+  const openingAttempted = useRef<string | null>(null);
+
+  const cancelRead = useCallback(() => {
+    activeRead.current?.controller.abort();
+    activeRead.current = null;
+    readGeneration.current += 1;
+  }, []);
+
+  const isCurrentConversation = useCallback((request: ActiveConversation) =>
+    activeConversation.current?.id === request.id
+    && currentProjectId.current === request.projectId
+    && conversationRevision.current === request.revision
+    && !request.controller.signal.aborted, []);
+
+  const readWorkspace = useCallback(async (targetProjectId: string, reconciliation = false) => {
+    cancelRead();
+    const request: WorkspaceRead = {
+      generation: readGeneration.current,
+      revision: conversationRevision.current,
+      projectId: targetProjectId,
+      controller: new AbortController(),
+    };
+    activeRead.current = request;
+    const isCurrent = () => !request.controller.signal.aborted
+      && readGeneration.current === request.generation
+      && conversationRevision.current === request.revision
+      && currentProjectId.current === request.projectId;
+
+    try {
+      const loaded = await videoApi.loadVideoWorkspace(targetProjectId, request.controller.signal);
+      if (!isCurrent()) return "stale" as const;
+      setWorkspace((current) => {
+        if (!isCurrent()) return current;
+        return {
+          ...loaded,
+          messages: mergeMessages(
+            current?.project.id === targetProjectId ? current.messages : [],
+            loaded.messages,
+          ),
+        };
+      });
+      if (loaded.messages.length > 0) setOpeningError("");
+      setError(null);
+      setIsLoading(false);
+      return "loaded" as const;
+    } catch (requestError) {
+      if (!isCurrent()) return "stale" as const;
+      if (!reconciliation) setError(requestError);
+      setIsLoading(false);
+      return "failed" as const;
+    } finally {
+      if (isCurrent() && activeRead.current === request) activeRead.current = null;
+    }
+  }, [cancelRead]);
 
   const reload = useCallback(() => {
-    setRequestNumber((current) => current + 1);
-  }, []);
+    // Every terminal path refreshes once, covering reloads requested during a turn.
+    if (activeConversation.current) return;
+    const targetProjectId = currentProjectId.current;
+    const revision = conversationRevision.current;
+    const reconciling = recoveryBlocked.current;
+    if (reconciling) setRecovering(true);
+    void readWorkspace(targetProjectId, reconciling).then((result) => {
+      if (result === "stale" || currentProjectId.current !== targetProjectId || conversationRevision.current !== revision) return;
+      if (reconciling) {
+        if (result === "loaded") {
+          recoveryBlocked.current = false;
+          setRecoveryError("");
+        }
+        setRecovering(false);
+      }
+    });
+  }, [readWorkspace]);
+
+  const beginConversation = useCallback((kind: Conversation["kind"], outgoing = "") => {
+    if (currentProjectId.current !== projectId || activeConversation.current || recoveryBlocked.current) return null;
+    cancelRead();
+    const request: ActiveConversation = {
+      id: ++conversationIdentity.current,
+      projectId,
+      controller: new AbortController(),
+      revision: ++conversationRevision.current,
+      kind,
+      userPersisted: false,
+    };
+    activeConversation.current = request;
+    setStreaming({ kind, outgoing, text: "", userPersisted: false });
+    setOpeningError("");
+    setRecoveryError("");
+    return request;
+  }, [cancelRead, projectId]);
+
+  const publishText = useCallback((request: ActiveConversation, delta: string) => {
+    if (!isCurrentConversation(request)) return;
+    setStreaming((current) => isCurrentConversation(request) && current
+      ? { ...current, text: current.text + delta }
+      : current);
+  }, [isCurrentConversation]);
+
+  const reconcileFailure = useCallback(async (request: ActiveConversation, failure: unknown): Promise<VideoChatSendOutcome> => {
+    const restoreDraft = failure instanceof BrowserApiError && !failure.streamed && !request.userPersisted;
+    const fallback = request.kind === "opening"
+      ? "AI belum dapat memulai percakapan. Coba lagi."
+      : "Pesan tidak dapat dikirim. Coba lagi.";
+    const message = restoreDraft
+      ? browserApiErrorMessage(failure, fallback)
+      : failure instanceof BrowserApiError
+        ? `${browserApiErrorMessage(failure, fallback)} ${request.kind === "send" ? "Jawaban Anda" : "Percakapan"} mungkin sudah tersimpan.`
+        : disconnectedMessage;
+    if (!isCurrentConversation(request)) return { ok: false, error: "", restoreDraft: false };
+    setStreaming(null);
+    if (request.kind === "opening") setOpeningError(message);
+    recoveryBlocked.current = true;
+    setRecoveryError(restoreDraft ? "" : message);
+    setRecovering(true);
+    const result = await readWorkspace(request.projectId, true);
+    if (!isCurrentConversation(request)) return { ok: false, error: "", restoreDraft: false };
+    if (result === "loaded") {
+      recoveryBlocked.current = false;
+      setRecoveryError("");
+    } else {
+      setRecoveryError(restoreDraft
+        ? "Percakapan belum dapat dimuat. Muat ulang percakapan sebelum mengirim lagi."
+        : message);
+    }
+    setRecovering(false);
+    return { ok: false, error: message, restoreDraft };
+  }, [isCurrentConversation, readWorkspace]);
+
+  const openConversation = useCallback(async () => {
+    const request = beginConversation("opening");
+    if (!request) return;
+    openingAttempted.current = request.projectId;
+    let failed = false;
+    try {
+      const opened = await videoApi.openInterview(request.projectId, {
+        signal: request.controller.signal,
+        onTextDelta: (delta) => publishText(request, delta),
+      });
+      if (!isCurrentConversation(request)) return;
+      setWorkspace((current) => current?.project.id === request.projectId
+        && conversationRevision.current === request.revision
+        && currentProjectId.current === request.projectId
+        && !request.controller.signal.aborted
+        ? { ...current, messages: mergeMessages([], opened.messages) }
+        : current);
+      setStreaming(null);
+      setOpeningError("");
+    } catch (openingFailure) {
+      if (!isCurrentConversation(request)) return;
+      failed = true;
+      await reconcileFailure(request, openingFailure);
+    } finally {
+      if (isCurrentConversation(request)) {
+        activeConversation.current = null;
+        if (!failed) void readWorkspace(request.projectId);
+      }
+    }
+  }, [beginConversation, isCurrentConversation, publishText, readWorkspace, reconcileFailure]);
+
+  const sendMessage = useCallback(async (content: string, assetIds?: string[]): Promise<VideoChatSendOutcome> => {
+    const request = beginConversation("send", content);
+    if (!request) return { ok: false, error: "Percakapan masih diproses.", restoreDraft: false };
+    let failed = false;
+    try {
+      const result = await videoApi.sendMessage(request.projectId, content, assetIds, {
+        signal: request.controller.signal,
+        onTextDelta: (delta) => publishText(request, delta),
+        onMessagePersisted: ({ message, project }) => {
+          if (!isCurrentConversation(request)) return;
+          request.userPersisted = true;
+          setWorkspace((current) => current?.project.id === request.projectId
+            && conversationRevision.current === request.revision
+            && currentProjectId.current === request.projectId
+            && !request.controller.signal.aborted
+            ? { ...current, project, messages: mergeMessages(current.messages, [message]) }
+            : current);
+          setStreaming((current) => isCurrentConversation(request) && current
+            ? { ...current, outgoing: "", userPersisted: true }
+            : current);
+        },
+      });
+      if (!isCurrentConversation(request)) return { ok: false, error: "", restoreDraft: false };
+      setWorkspace((current) => current?.project.id === request.projectId
+        && conversationRevision.current === request.revision
+        && currentProjectId.current === request.projectId
+        && !request.controller.signal.aborted
+        ? { ...current, project: result.project, messages: mergeMessages(current.messages, [result.message, result.reply]) }
+        : current);
+      setStreaming(null);
+      return { ok: true };
+    } catch (sendFailure) {
+      if (!isCurrentConversation(request)) return { ok: false, error: "", restoreDraft: false };
+      failed = true;
+      return await reconcileFailure(request, sendFailure);
+    } finally {
+      if (isCurrentConversation(request)) {
+        activeConversation.current = null;
+        if (!failed) void readWorkspace(request.projectId);
+      }
+    }
+  }, [beginConversation, isCurrentConversation, publishText, readWorkspace, reconcileFailure]);
 
   const applyPolledVersions = useCallback((nextVersions: Workspace["versions"]) => {
-    setWorkspace((current) => (current ? { ...current, versions: nextVersions } : current));
-  }, []);
+    if (currentProjectId.current !== projectId) return;
+    setWorkspace((current) => current?.project.id === projectId ? { ...current, versions: nextVersions } : current);
+  }, [projectId]);
 
   useEffect(() => {
-    const controller = new AbortController();
-    const requestGeneration = ++generation.current;
+    let cancelled = false;
+    openingAttempted.current = null;
+    recoveryBlocked.current = false;
     queueMicrotask(() => {
-      if (controller.signal.aborted) return;
-      if (requestNumber === 0) setIsLoading(true);
+      if (cancelled || currentProjectId.current !== projectId) return;
+      setIsLoading(true);
+      setWorkspace(null);
+      setStreaming(null);
       setError(null);
-      if (requestNumber === 0) {
-        setWorkspace(null);
-        setOpeningError("");
-      }
-      void videoApi.loadVideoWorkspace(projectId, controller.signal)
-        .then((loadedWorkspace) => {
-          if (controller.signal.aborted || requestGeneration !== generation.current) return;
-          setWorkspace(loadedWorkspace);
-          if (loadedWorkspace.messages.length === 0 && ["draft", "interviewing"].includes(loadedWorkspace.project.status)) {
-            void videoApi.openInterview(projectId, controller.signal)
-              .then(({ messages }) => {
-                if (controller.signal.aborted || requestGeneration !== generation.current) return;
-                setOpeningError("");
-                setWorkspace((current) => current?.project.id === projectId && current.messages.length === 0
-                  ? { ...current, messages }
-                  : current);
-              })
-              .catch((openingFailure: unknown) => {
-                if (!controller.signal.aborted && requestGeneration === generation.current) {
-                  setOpeningError(browserApiErrorMessage(openingFailure, "AI belum dapat memulai percakapan. Coba lagi."));
-                }
-              });
-          }
-        })
-        .catch((requestError: unknown) => {
-          if (!controller.signal.aborted && requestGeneration === generation.current) setError(requestError);
-        })
-        .finally(() => {
-          if (!controller.signal.aborted && requestGeneration === generation.current) setIsLoading(false);
-        });
+      setOpeningError("");
+      setRecoveryError("");
+      setRecovering(false);
+      setDeleteConfirmation(false);
+      setDeleteError("");
+      setDeleting(false);
+      setPreviewing(false);
+      setApproving(false);
+      void readWorkspace(projectId);
     });
+    return () => {
+      cancelled = true;
+      activeConversation.current?.controller.abort();
+      activeConversation.current = null;
+      conversationIdentity.current += 1;
+      conversationRevision.current += 1;
+      cancelRead();
+    };
+  }, [cancelRead, projectId, readWorkspace]);
 
-    return () => controller.abort();
-  }, [projectId, requestNumber]);
+  useEffect(() => {
+    if (isLoading || workspace?.project.id !== projectId || workspace.messages.length > 0
+      || !["draft", "interviewing"].includes(workspace.project.status)
+      || openingAttempted.current === projectId || recoveryBlocked.current) return;
+    void openConversation();
+  }, [isLoading, openConversation, projectId, workspace]);
 
   if (isLoading) {
     return <p role="status" className="rounded-3xl border border-white/10 bg-surface p-8 text-center text-neutral-300 shadow-card-inner">Memuat proyek video...</p>;
@@ -140,7 +373,13 @@ export function VideoWorkspace({ projectId }: { projectId: string }) {
     if (mode === "preview") {
       setPreviewing(true);
       try {
-        await videoApi.createComposition(project.id);
+        const { composition } = await videoApi.createComposition(project.id);
+        // A plan is only watchable once its frozen artifact has rendered, and approval stays closed until then.
+        await videoApi.startRender(project.id, {
+          idempotencyKey: crypto.randomUUID(),
+          compositionRevisionId: composition.id,
+          kind: "preview",
+        });
         reload();
       } finally {
         setPreviewing(false);
@@ -164,18 +403,6 @@ export function VideoWorkspace({ projectId }: { projectId: string }) {
     }
   }
 
-  async function retryOpening() {
-    const requestGeneration = generation.current;
-    setOpeningError("");
-    try {
-      const opened = await videoApi.openInterview(project.id);
-      if (requestGeneration === generation.current) {
-        setWorkspace((current) => current?.project.id === project.id ? { ...current, messages: opened.messages } : current);
-      }
-    } catch (openingFailure) {
-      if (requestGeneration === generation.current) setOpeningError(browserApiErrorMessage(openingFailure, "AI belum dapat memulai percakapan. Coba lagi."));
-    }
-  }
 
   return (
     <div>
@@ -191,14 +418,19 @@ export function VideoWorkspace({ projectId }: { projectId: string }) {
         <ProjectStatusBadge status={project.status} />
       </header>
 
-      <div className="mt-6 grid gap-6 xl:grid-cols-[minmax(0,1fr)_360px] xl:items-start">
-        <div className="space-y-6">
-          <VideoChat key={project.id} messages={messages} openingError={openingError} onRetryOpening={retryOpening} onSend={async (content, assetIds) => {
-            const result = await videoApi.sendMessage(project.id, content, assetIds);
-            setWorkspace((current) => current ? { ...current, project: result.project, messages: [...current.messages, result.message, result.reply] } : current);
-            reload();
-            return result;
-          }} />
+      <div className="mt-6 grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1fr)_360px] xl:items-start">
+        <div className="min-w-0 space-y-6">
+          <VideoChat
+            key={project.id}
+            messages={messages}
+            streaming={streaming}
+            openingError={openingError}
+            onRetryOpening={openConversation}
+            onSend={sendMessage}
+            recoveryError={recoveryError}
+            recovering={recovering}
+            onReloadConversation={reload}
+          />
 
         </div>
 

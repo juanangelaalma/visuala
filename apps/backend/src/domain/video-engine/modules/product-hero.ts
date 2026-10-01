@@ -4,7 +4,7 @@ import type { VideoModule } from "./types";
 
 export const productHero: VideoModule = {
   id: "ProductHero",
-  version: "1.0.0",
+  version: "1.1.0",
   supportedRatios: ["9:16", "1:1", "16:9"],
   slots: [{ name: "assetId", required: true, kind: "asset" }],
   build({ content, assets }) {
@@ -16,12 +16,22 @@ export const productHero: VideoModule = {
       css: `.hf-ProductHero {
   position: absolute;
   inset: 0;
-  overflow: hidden;
+  display: grid;
+  place-items: center;
+  padding: var(--hf-content-gutter);
   border: var(--hf-border) solid var(--hf-ink);
-  background: var(--hf-cream2);
+  background: var(--hf-cream);
 }
 
-.hf-ProductHero__image { width: 100%; height: 100%; object-fit: cover; display: block; }`,
+.hf-ProductHero__image {
+  display: block;
+  width: min(82cqw, 82cqh);
+  height: auto;
+  max-height: 72cqh;
+  object-fit: contain;
+  border: var(--hf-border) solid var(--hf-ink);
+  box-shadow: var(--hf-hard-shadow) var(--hf-green);
+}`,
     };
   },
 };

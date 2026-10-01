@@ -7,11 +7,12 @@ describe("video limits", () => {
   });
 
   it("falls back to the documented defaults", () => {
-    expect(readAssetLimits({})).toEqual({ maxAssetsPerProject: 8, maxProjectAssetBytes: 41943040, minImageDimension: 200, maxImageDimension: 8000 });
+    expect(readAssetLimits({})).toEqual({ maxAssetsPerProject: 8, maxProjectAssetBytes: 41943040, minImageDimension: 1, maxImageDimension: 8000 });
   });
 
-  it("honours an environment override and rejects a non-numeric one", () => {
+  it("honours environment overrides and rejects a non-numeric one", () => {
     expect(readAssetLimits({ VIDEO_MAX_ASSETS_PER_PROJECT: "3" }).maxAssetsPerProject).toBe(3);
+    expect(readAssetLimits({ VIDEO_MIN_IMAGE_DIMENSION: "200" }).minImageDimension).toBe(200);
     expect(() => readAssetLimits({ VIDEO_MAX_ASSETS_PER_PROJECT: "many" })).toThrowError(expect.objectContaining({ code: "video_input_invalid" }));
   });
 

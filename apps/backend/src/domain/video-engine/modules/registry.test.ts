@@ -19,7 +19,16 @@ function input(overrides: Partial<ModuleBuildInput> = {}): ModuleBuildInput {
 describe("internal module registry", () => {
   it("covers the allowlist exactly", () => {
     expect(INTERNAL_MODULES.map((module) => module.id)).toEqual([...INTERNAL_MODULE_IDS]);
-    expect(moduleVersions()).toEqual(Object.fromEntries(INTERNAL_MODULE_IDS.map((id) => [id, "1.0.0"])));
+    expect(moduleVersions()).toEqual({
+      ProductHero: "1.1.0",
+      Headline: "1.1.0",
+      SupportingCopy: "1.0.0",
+      OfferBadge: "1.1.0",
+      Price: "1.0.0",
+      BrandMark: "1.0.0",
+      CTA: "1.1.0",
+      BackgroundTexture: "1.0.0",
+    });
   });
 
   it("throws for an unknown module id", () => {

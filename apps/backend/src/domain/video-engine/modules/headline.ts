@@ -7,7 +7,7 @@ const SLOTS = [{ name: "text", required: true, kind: "text", maxLength: 40 }] as
 /** Fit to measure: the ramp steps down as the claim gets longer, so a long line never touches the safe margin. */
 export const headline: VideoModule = {
   id: "Headline",
-  version: "1.0.0",
+  version: "1.1.0",
   supportedRatios: ["9:16", "1:1", "16:9"],
   slots: SLOTS,
   build({ content }) {
@@ -39,6 +39,18 @@ export const headline: VideoModule = {
   letter-spacing: -0.01em;
   text-transform: uppercase;
   color: var(--hf-ink);
+}
+
+@container (max-aspect-ratio: 4 / 5) {
+  .hf-Headline {
+    left: 50%;
+    right: auto;
+    top: 44cqh;
+    bottom: auto;
+    width: 78cqw;
+    transform: translateX(-50%);
+    text-align: center;
+  }
 }`,
     };
   },

@@ -67,6 +67,11 @@ describe("buildComposition", () => {
     const css = file(buildComposition(input()), "styles.css");
 
     expect(css).toContain("--hf-cream: #EFE9D9;");
+    expect(css).toContain("--hf-content-gutter: 5cqw;");
+    expect(css).toContain("--hf-cell-pad: 1.7cqw;");
+    expect(css).toContain("--hf-green-dark: #136636;");
+    expect(css).not.toContain("--hf-contentGutter");
+    expect(css).not.toContain("--hf-cellPad");
     expect(css).toContain('@font-face');
     expect(css).toContain("archivo-black-latin-400-normal.woff2");
     expect(css).toContain(".hf-Headline__text");
@@ -79,7 +84,7 @@ describe("buildComposition", () => {
 
     expect(compiled.fonts.map((font) => font.path)).toContain("fonts/archivo-black-latin-400-normal.woff2");
     expect(compiled.assets.map((asset) => asset.path)).toEqual(["assets/asset-1.jpg"]);
-    expect(compiled.moduleVersions).toEqual({ ProductHero: "1.0.0", Headline: "1.0.0" });
+    expect(compiled.moduleVersions).toEqual({ ProductHero: "1.1.0", Headline: "1.1.0" });
   });
 
   it("wires a catalog item as a sub-composition host and carries its file and binaries", () => {
@@ -99,7 +104,7 @@ describe("buildComposition", () => {
     expect(file(compiled, "index.html")).toContain('data-composition-id="heygen-avatar-promo-card"');
     expect(compiled.files.map((entry) => entry.path)).toContain("compositions/heygen-avatar-promo-card.html");
     expect(compiled.binaries.map((entry) => entry.path)).toEqual(["assets/av_r1k1.mp4"]);
-    expect(compiled.moduleVersions).toEqual({ ProductHero: "1.0.0" });
+    expect(compiled.moduleVersions).toEqual({ ProductHero: "1.1.0" });
   });
 
   it("refuses a catalog instance that was not installed", () => {

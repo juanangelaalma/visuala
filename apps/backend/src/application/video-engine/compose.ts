@@ -1,5 +1,5 @@
 import type { AIService } from "../../domain/ai-service/contracts";
-import { videoBriefSchema } from "../../domain/video/brief";
+import { isBriefDraftComplete, videoBriefSchema } from "../../domain/video/brief";
 import { VideoError } from "../../domain/video/errors";
 import type { ProjectAssetRepository, VideoBriefRevisionRepository, VideoProjectRepository } from "../../domain/video/contracts";
 import { BUILT_IN_DESIGN_PACK } from "../../domain/video-engine/design-pack";
@@ -60,13 +60,16 @@ export async function runComposition(command: ComposeCommand, dependencies: Comp
 
   const parsedBrief = videoBriefSchema.safeParse(briefRevision.brief);
   if (!parsedBrief.success) throw new VideoError("video_input_invalid", "The stored brief is not readable.");
+  if (!isBriefDraftComplete(parsedBrief.data, project.videoType)) {
+    throw new VideoError("video_approval_incomplete", "The brief is missing information required for this video. Continue the interview before composing.");
+  }
   const brief = toValidationBrief(parsedBrief.data);
 
   const recipe = recipeById(project.videoType);
   const designPack = await dependencies.designPack.load(BUILT_IN_DESIGN_PACK);
   const catalog = await dependencies.loadCatalog();
   const assets = (await dependencies.assets.listOwned(command.projectId, command.userId))
-    .filter((asset) => asset.deletedAt === undefined && asset.moderationStatus === "allowed")
+    .filter((asset) => asset.deletedAt === undefined && asset.moderationStatus !== "blocked")
     .map((asset) => ({
       id: asset.id,
       objectKey: asset.objectKey,

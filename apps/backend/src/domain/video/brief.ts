@@ -59,9 +59,9 @@ const BASE_REQUIRED_FIELDS: readonly BriefField[] = ["productName", "audience", 
 /** What the interviewer must collect before approval, per video type. */
 export const REQUIRED_BRIEF_FIELDS: Record<VideoType, readonly BriefField[]> = {
   product_promo: [...BASE_REQUIRED_FIELDS, "callToAction"],
-  discount_promo: [...BASE_REQUIRED_FIELDS, "offer"],
+  discount_promo: [...BASE_REQUIRED_FIELDS, "offer", "callToAction"],
   product_launch: [...BASE_REQUIRED_FIELDS, "callToAction"],
-  menu_showcase: [...BASE_REQUIRED_FIELDS, "menuItems"],
+  menu_showcase: [...BASE_REQUIRED_FIELDS, "menuItems", "orderDestination"],
   storefront_showcase: [...BASE_REQUIRED_FIELDS, "orderDestination"],
 };
 

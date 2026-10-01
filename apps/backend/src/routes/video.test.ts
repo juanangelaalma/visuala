@@ -129,8 +129,7 @@ describe("video project routes", () => {
     mocks.openVideoInterview.mockResolvedValue([reply]);
     const response = await send("POST", `/video-projects/${project.id}/messages/opening`, { token: "token" });
     expect(response.status).toBe(200);
-    await expect(response.json()).resolves.toEqual({ messages: [replyResponse] });
-    expect(mocks.openVideoInterview).toHaveBeenCalledWith({ userId: user.id, projectId: project.id }, undefined);
+    await expect(response.text()).resolves.toBe(`event: completed\ndata: ${JSON.stringify({ messages: [replyResponse] })}\n\n`);
   });
 
   it("requires authentication before opening a conversation", async () => {
@@ -282,12 +281,99 @@ describe("video message routes", () => {
     expect(mocks.runVideoInterviewTurn).not.toHaveBeenCalled();
   });
 
-  it("runs one interview turn and answers 201 with the user message, the reply, and the project", async () => {
+  it("completes the stream with persisted public message and project DTOs", async () => {
     const response = await send("POST", `/video-projects/${project.id}/messages`, { token: "token", body: { content: "buat video jualan" } });
+    expect(response.status).toBe(200);
+    expect(response.headers.get("content-type")).toBe("text/event-stream; charset=utf-8");
+    await expect(response.text()).resolves.toBe(`event: completed\ndata: ${JSON.stringify({ message: messageResponse, reply: replyResponse, project: interviewingProject })}\n\n`);
+  });
 
-    expect(response.status).toBe(201);
-    await expect(response.json()).resolves.toEqual({ message: messageResponse, reply: replyResponse, project: interviewingProject });
-    expect(mocks.runVideoInterviewTurn).toHaveBeenCalledWith({ userId: "user-1", projectId: project.id, content: "buat video jualan" }, expect.anything());
+  it("publishes saved-user acknowledgement and provisional text before completion", async () => {
+    let finish!: () => void;
+    const gate = new Promise<void>((resolve) => { finish = resolve; });
+    mocks.runVideoInterviewTurn.mockImplementationOnce(async (_command, _dependencies, options) => {
+      options.onMessagePersisted({ message, project: interviewingProject });
+      options.onQuestionDelta("Siapa ");
+      await gate;
+      return { message, reply, project: interviewingProject };
+    });
+    const response = await send("POST", `/video-projects/${project.id}/messages`, { token: "token", body: { content: "halo" } });
+    const reader = response.body!.getReader();
+    const decoder = new TextDecoder();
+    expect(decoder.decode((await reader.read()).value)).toBe(`event: message\ndata: ${JSON.stringify({ message: messageResponse, project: interviewingProject })}\n\n`);
+    expect(decoder.decode((await reader.read()).value)).toBe('event: text-delta\ndata: {"delta":"Siapa "}\n\n');
+    finish();
+    expect(decoder.decode((await reader.read()).value)).toContain("event: completed");
+    expect((await reader.read()).done).toBe(true);
+    reader.releaseLock();
+  });
+
+  it("keeps opening uncommitted until its first fragment", async () => {
+    let publish!: () => void;
+    let finish!: () => void;
+    const started = new Promise<void>((resolve) => {
+      mocks.openVideoInterview.mockImplementationOnce(async (_command, _dependencies, options) => {
+        publish = () => options.onQuestionDelta("Apa ");
+        resolve();
+        await new Promise<void>((done) => { finish = done; });
+        return [reply];
+      });
+    });
+    let received = false;
+    const pending = send("POST", `/video-projects/${project.id}/messages/opening`, { token: "token" }).then((response) => { received = true; return response; });
+    await started;
+    expect(received).toBe(false);
+    publish();
+    const response = await pending;
+    const reader = response.body!.getReader();
+    expect(new TextDecoder().decode((await reader.read()).value)).toContain('"delta":"Apa "');
+    finish();
+    expect(new TextDecoder().decode((await reader.read()).value)).toContain("event: completed");
+    await reader.cancel();
+    reader.releaseLock();
+  });
+
+  it("maps a late provider failure into one safe terminal error", async () => {
+    mocks.runVideoInterviewTurn.mockImplementationOnce(async (_command, _dependencies, options) => {
+      options.onMessagePersisted({ message, project: interviewingProject });
+      options.onQuestionDelta("Preview");
+      throw new AIError({ code: "AI_UNAVAILABLE", safeMessage: "AI provider is unavailable.", requestId: "req", retryable: false });
+    });
+    const response = await send("POST", `/video-projects/${project.id}/messages`, { token: "token", body: { content: "halo" } });
+    expect(response.status).toBe(200);
+    const text = await response.text();
+    expect(text.match(/event: error/g)).toHaveLength(1);
+    expect(text).toContain('"status":503');
+    expect(text).not.toContain("event: completed");
+    expect(text).not.toMatch(/userId|projectId|apiKey/);
+  });
+
+  it("cancels application generation when the response reader disconnects", async () => {
+    let signal!: AbortSignal;
+    mocks.runVideoInterviewTurn.mockImplementationOnce(async (_command, _dependencies, options) => {
+      signal = options.abortSignal;
+      options.onMessagePersisted({ message, project: interviewingProject });
+      await new Promise<void>((resolve) => signal.addEventListener("abort", () => resolve(), { once: true }));
+      throw new Error("private upstream details");
+    });
+    const response = await send("POST", `/video-projects/${project.id}/messages`, { token: "token", body: { content: "halo" } });
+    await response.body!.cancel();
+    expect(signal.aborted).toBe(true);
+  });
+
+  it("hides unknown failures before and after stream commitment", async () => {
+    mocks.runVideoInterviewTurn.mockRejectedValueOnce(new Error("private upstream details"));
+    const rejected = await send("POST", `/video-projects/${project.id}/messages`, { token: "token", body: { content: "halo" } });
+    expect(rejected.status).toBe(500);
+    await expect(rejected.json()).resolves.toEqual({ error: "Internal server error." });
+    mocks.runVideoInterviewTurn.mockImplementationOnce(async (_command, _dependencies, options) => {
+      options.onMessagePersisted({ message, project: interviewingProject });
+      throw new Error("private upstream details");
+    });
+    const accepted = await send("POST", `/video-projects/${project.id}/messages`, { token: "token", body: { content: "halo" } });
+    const text = await accepted.text();
+    expect(text).toContain('"status":500,"error":"Internal server error."');
+    expect(text).not.toContain("private");
   });
 
   it("does not log message content", async () => {

@@ -20,6 +20,7 @@ import type { InterviewTurn } from "../../domain/video/interview";
 import { canMutateProjectAssets } from "../../domain/video/state-machine";
 import type { VideoMessage, VideoProject } from "../../domain/video/types";
 import { runInterviewer } from "./interviewer";
+import { throwIfInterviewAborted, type InterviewStreamOptions } from "./interview-stream";
 import { appendVideoMessage } from "./messages";
 import { saveBriefRevision } from "./revisions";
 
@@ -45,6 +46,10 @@ export type VideoInterviewTurnResult = {
   project: VideoProject;
 };
 
+export type VideoTurnStreamOptions = InterviewStreamOptions & {
+  onMessagePersisted?: (value: { message: VideoMessage; project: VideoProject }) => void;
+};
+
 /**
  * One chat turn, end to end: store what the user said, ask the interviewer for the updated draft and
  * its next question, and, once the draft is genuinely complete, stores the finished brief and
@@ -58,13 +63,39 @@ export type VideoInterviewTurnResult = {
 export async function runVideoInterviewTurn(
   command: VideoInterviewTurnCommand,
   dependencies: VideoConversationDependencies,
+  options?: VideoTurnStreamOptions,
 ): Promise<VideoInterviewTurnResult> {
+  throwIfInterviewAborted(options?.abortSignal);
   await requireMessageableProject(command.projectId, command.userId, dependencies);
+  throwIfInterviewAborted(options?.abortSignal);
+
+  // The shared write use cases await ownership checks before touching their repositories.
+  const projects: VideoConversationDependencies["projects"] = {
+    getOwned: (projectId, userId) => dependencies.projects.getOwned(projectId, userId),
+    transition: (...args) => {
+      throwIfInterviewAborted(options?.abortSignal);
+      return dependencies.projects.transition(...args);
+    },
+  };
+  const messages: VideoMessageRepository = {
+    listOwned: (projectId, userId) => dependencies.messages.listOwned(projectId, userId),
+    append: (input) => {
+      throwIfInterviewAborted(options?.abortSignal);
+      return dependencies.messages.append(input);
+    },
+  };
+  const briefRevisions: Pick<VideoBriefRevisionRepository, "create"> = {
+    create: (input) => {
+      throwIfInterviewAborted(options?.abortSignal);
+      return dependencies.briefRevisions.create(input);
+    },
+  };
 
   const { message, project: activeProject } = await appendVideoMessage(
     { userId: command.userId, projectId: command.projectId, content: command.content, ...(command.assetIds ? { assetIds: command.assetIds } : {}) },
-    { projects: dependencies.projects, messages: dependencies.messages, createId: dependencies.createId },
+    { projects, messages, createId: dependencies.createId },
   );
+  options?.onMessagePersisted?.({ message, project: activeProject });
 
   const [transcript, latestBrief, assets] = await Promise.all([
     dependencies.messages.listOwned(activeProject.id, command.userId),
@@ -81,6 +112,7 @@ export async function runVideoInterviewTurn(
       assetCount: assets.length,
     },
     { ai: dependencies.ai, createRequestId: dependencies.createId },
+    options,
   );
 
   const assetIds = assets.map((asset) => asset.id);
@@ -91,6 +123,7 @@ export async function runVideoInterviewTurn(
   let controls: unknown = null;
 
   if (!complete) {
+    throwIfInterviewAborted(options?.abortSignal);
     await saveBriefRevision(
       {
         userId: command.userId,
@@ -100,7 +133,7 @@ export async function runVideoInterviewTurn(
         generatedBy: interviewer.generatedBy,
         sourceMessageIds: [message.id],
       },
-      { projects: dependencies.projects, briefRevisions: dependencies.briefRevisions },
+      { projects, briefRevisions },
     );
     const nextTurn = unresolvedInterviewTurn(draft, activeProject, interviewer.turn, transcript);
     replyContent = nextTurn.question;
@@ -108,6 +141,7 @@ export async function runVideoInterviewTurn(
   } else {
     // `isBriefDraftComplete` has already proven this parses, so the cast is a narrow, checked one.
     const brief = videoBriefSchema.parse(draft);
+    throwIfInterviewAborted(options?.abortSignal);
     await saveBriefRevision(
       {
         userId: command.userId,
@@ -117,16 +151,18 @@ export async function runVideoInterviewTurn(
         generatedBy: interviewer.generatedBy,
         sourceMessageIds: [message.id],
       },
-      { projects: dependencies.projects, briefRevisions: dependencies.briefRevisions },
+      { projects, briefRevisions },
     );
 
     // The brief is the interview's whole output. The composition is planned on demand, once the user
     // asks for a preview, so an interview turn never pays for a plan the user may not want yet.
-    project = await enterAwaitingApproval(activeProject, command.userId, dependencies);
+    throwIfInterviewAborted(options?.abortSignal);
+    project = await enterAwaitingApproval(activeProject, command.userId, { projects });
     replyContent = "Brief sudah lengkap. Minta preview kalau sudah siap.";
   }
 
-  const reply = await dependencies.messages.append({
+  throwIfInterviewAborted(options?.abortSignal);
+  const reply = await messages.append({
     id: dependencies.createId(),
     projectId: project.id,
     userId: command.userId,

@@ -7,7 +7,7 @@ const SLOTS = [{ name: "text", required: true, kind: "text", maxLength: 24 }] as
 /** The pack's deliberate-imperfection annotation: a rotated yellow badge, the one rotated display mark. */
 export const offerBadge: VideoModule = {
   id: "OfferBadge",
-  version: "1.0.0",
+  version: "1.1.0",
   supportedRatios: ["9:16", "1:1", "16:9"],
   slots: SLOTS,
   build({ content }) {
@@ -33,6 +33,14 @@ export const offerBadge: VideoModule = {
   line-height: 0.92;
   text-transform: uppercase;
   color: var(--hf-ink);
+}
+
+@container (max-aspect-ratio: 4 / 5) {
+  .hf-OfferBadge {
+    left: 50%;
+    top: 35cqh;
+    transform: translateX(-50%) rotate(-4deg);
+  }
 }`,
     };
   },
