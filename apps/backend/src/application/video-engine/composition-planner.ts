@@ -8,7 +8,8 @@ import type { ArtDirection } from "../../domain/video-engine/art-direction";
 import type { Catalog } from "../../domain/video-engine/catalog";
 import type { VideoRecipe } from "../../domain/video-engine/recipes/types";
 import { validateComposition } from "../../domain/video-engine/validators";
-import type { ValidationBrief, ValidationIssue } from "../../domain/video-engine/validators/types";
+import { report, type ValidationBrief, type ValidationInput, type ValidationIssue } from "../../domain/video-engine/validators/types";
+import { validateStoryboard } from "../../domain/video-engine/validators/storyboard-validator";
 import type { GeneratedBy } from "../../domain/video/types";
 import type { LoadedDesignPack } from "../../infrastructure/video-engine/fs-design-pack-source";
 import { COMPOSITION_SPEC_SCHEMA_NAME, VIDEO_ENGINE_AI_SCHEMA_VERSION } from "./ai-schemas";
@@ -78,7 +79,7 @@ export async function runCompositionPlanner(
 
   const { data: _data, ...ai } = result;
   const spec = compositionSpecFromWire(result.data);
-  const report = validateComposition({
+  const report = validatePlan({
     spec,
     catalog: dependencies.catalog,
     recipe: command.recipe,
@@ -112,6 +113,7 @@ function fallback(command: CompositionPlannerCommand, issues: readonly Validatio
     designPack: command.designPack.manifest,
     format: command.format,
     brief: command.brief,
+    recipe: command.recipe,
     assets: command.assetIds.map((id) => ({ id })),
   });
 
@@ -126,7 +128,7 @@ export function assertFallbackValid(
 ): CompositionPlanResult {
   if (!plan.isFallback) return plan;
 
-  const report = validateComposition({
+  const report = validatePlan({
     spec: plan.spec,
     catalog,
     recipe: command.recipe,
@@ -139,4 +141,10 @@ export function assertFallbackValid(
     throw new PlanningError("fallback_invalid", `The fallback composition for ${command.recipe.id} is not valid: ${report.issues.map((issue) => issue.code).join(", ")}.`);
   }
   return plan;
+}
+
+function validatePlan(input: ValidationInput) {
+  const validation = validateComposition(input);
+  if (validation.issues.some((issue) => issue.code === "schema_invalid")) return validation;
+  return report([...validation.issues, ...validateStoryboard(input)]);
 }

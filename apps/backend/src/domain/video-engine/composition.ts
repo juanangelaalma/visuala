@@ -6,6 +6,9 @@ export const COMPOSITION_ID = "main";
 export const COMPOSITION_FPS = 30;
 export const ASPECT_RATIOS = ["9:16", "1:1", "16:9"] as const;
 export const SCENE_TRANSITIONS = ["cut", "fade", "slide", "zoom"] as const;
+export const SCENE_MOTIONS = ["staged_reveal", "product_push"] as const;
+export const DEFAULT_SCENE_TRANSITION = "slide";
+export const DEFAULT_SCENE_MOTION = "staged_reveal";
 /** A scene shorter than this is a flash, not a beat; the validator refuses it. */
 export const MIN_SCENE_SECONDS = 0.5;
 export const MIN_DURATION_SECONDS = 4;
@@ -26,6 +29,7 @@ const sceneSchema = z
     id: z.string().trim().regex(/^[a-z0-9_]+$/),
     durationFrames: z.number().int().min(1),
     transition: z.enum(SCENE_TRANSITIONS).optional(),
+    motion: z.enum(SCENE_MOTIONS).optional(),
     modules: z.array(moduleInstanceSchema).min(1),
   })
   .strict();
@@ -45,11 +49,7 @@ export const compositionSpecSchema = z
   })
   .strict();
 
-/**
- * The provider-facing shape of the same spec. Strict structured output admits no dynamic-key object and no
- * absent property, so module `content` is a pair list here, and the two fields the planner must not be trusted
- * to invent (`version`, `transition`) are simply not offered. `compositionSpecFromWire` folds it back.
- */
+/** Strict provider output uses a pair list for content and requires bounded executable motion fields. */
 const moduleContentPairSchema = z.object({ key: z.string().trim().min(1), value: z.string() }).strict();
 
 const wireModuleInstanceSchema = z
@@ -64,6 +64,8 @@ const wireSceneSchema = z
   .object({
     id: z.string().trim().regex(/^[a-z0-9_]+$/),
     durationFrames: z.number().int().min(1),
+    transition: z.enum(SCENE_TRANSITIONS),
+    motion: z.enum(SCENE_MOTIONS),
     modules: z.array(wireModuleInstanceSchema).min(1),
   })
   .strict();
@@ -94,6 +96,8 @@ export function compositionSpecFromWire(wire: CompositionSpecWire): CompositionS
     scenes: wire.scenes.map((scene) => ({
       id: scene.id,
       durationFrames: scene.durationFrames,
+      transition: scene.transition,
+      motion: scene.motion,
       modules: scene.modules.map((module) => ({
         id: module.id,
         kind: module.kind,
@@ -115,7 +119,13 @@ export type CompositionSpec = z.infer<typeof compositionSpecSchema>;
 
 export type CompositionFormat = CompositionSpec["format"];
 
-export type SceneTimelineEntry = { id: string; startFrames: number; durationFrames: number; transition: string };
+export type SceneTimelineEntry = {
+  id: string;
+  startFrames: number;
+  durationFrames: number;
+  transition: (typeof SCENE_TRANSITIONS)[number];
+  motion: (typeof SCENE_MOTIONS)[number];
+};
 
 /** Scene start frames in spec order. The compiler and the duration validator share this one walk. */
 export function sceneTimeline(spec: Pick<CompositionSpec, "scenes">): SceneTimelineEntry[] {
@@ -125,7 +135,8 @@ export function sceneTimeline(spec: Pick<CompositionSpec, "scenes">): SceneTimel
       id: scene.id,
       startFrames: cursor,
       durationFrames: scene.durationFrames,
-      transition: scene.transition ?? "cut",
+      transition: scene.transition ?? DEFAULT_SCENE_TRANSITION,
+      motion: scene.motion ?? DEFAULT_SCENE_MOTION,
     };
     cursor += scene.durationFrames;
     return entry;

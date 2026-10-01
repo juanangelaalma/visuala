@@ -1,3 +1,4 @@
+import { escapeHtml } from "../html";
 import { ModuleError } from "./types";
 import type { InternalModuleId } from "./ids";
 import type { ModuleAsset, ModuleSlot } from "./types";
@@ -17,6 +18,10 @@ export function readSlots(moduleId: InternalModuleId, slots: readonly ModuleSlot
     resolved[slot.name] = value;
   }
   return resolved;
+}
+
+export function animatedWords(text: string): string {
+  return text.split(/(\s+)/).map((part) => /^\s+$/.test(part) ? escapeHtml(part) : `<span class="hf-word">${escapeHtml(part)}</span>`).join("");
 }
 
 export function assertRatioSupported(moduleId: InternalModuleId, supported: readonly string[], aspectRatio: string): void {

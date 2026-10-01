@@ -2,11 +2,12 @@ import { canonicalJson, sha256Hex } from "./hash";
 import { localFontFaceCss } from "./design-pack";
 import { frameSizeFor } from "./format";
 import { internalModuleById } from "./modules/registry";
+import { SCENE_LAYOUT_CSS } from "./modules/layout";
 import { COMPOSITION_ID, sceneTimeline } from "./composition";
 import type { CompositionSpec, CompositionScene } from "./composition";
 import type { DesignPackManifest } from "./design-pack";
 
-export const COMPILER_VERSION = "1.0.1";
+export const COMPILER_VERSION = "1.1.0";
 
 export type CompileAsset = {
   id: string;
@@ -77,20 +78,25 @@ export function buildComposition(input: CompileInput): CompiledComposition {
     }
   }
 
-  const moduleCss = new Map<string, string>();
+  const moduleCss: string[] = [];
+  const moduleVersions: Record<string, string> = {};
+  const moduleAssets = input.assets.map((asset) => ({ id: asset.id, fileName: asset.fileName }));
   const scenesHtml = timeline
-    .map((entry) => {
-      const scene = spec.scenes.find((candidate) => candidate.id === entry.id) as CompositionScene;
+    .map((entry, sceneIndex) => {
+      const scene = spec.scenes[sceneIndex] as CompositionScene;
       const internals = scene.modules.filter((instance) => instance.kind === "internal");
+      const role = internals.some((instance) => instance.id === "CTA") ? "cta"
+        : internals.some((instance) => instance.id === "OfferBadge" || instance.id === "Price") ? "offer" : "product";
       const modules = internals.map((instance) => {
         const module = internalModuleById(instance.id as never);
         const output = module.build({
           designPack,
           aspectRatio: spec.format.aspectRatio,
           content: instance.content,
-          assets: input.assets.map((asset) => ({ id: asset.id, fileName: asset.fileName })),
+          assets: moduleAssets,
         });
-        moduleCss.set(instance.id, output.css);
+        moduleCss.push(`@scope (#scene-${entry.id}) {\n${output.css}\n}`);
+        moduleVersions[instance.id] = module.version;
         return output.html;
       });
 
@@ -99,18 +105,24 @@ export function buildComposition(input: CompileInput): CompiledComposition {
         .map((instance, index) => renderHost(instance.id, blocks.get(instance.id) as CompiledBlock, entry.startFrames, entry.durationFrames, index + 1, spec.format.fps));
 
       return [
-        `<div id="scene-${entry.id}" class="clip hf-scene" data-scene="${entry.id}" data-start="${seconds(entry.startFrames, spec.format.fps)}" data-duration="${seconds(entry.durationFrames, spec.format.fps)}" data-track-index="0">`,
-        ...modules.map((html) => indent(html, 1)),
+        `<div id="scene-${entry.id}" class="clip hf-scene" data-scene="${entry.id}" data-role="${role}" data-transition="${entry.transition}" data-motion="${entry.motion}" data-start="${seconds(entry.startFrames, spec.format.fps)}" data-duration="${seconds(entry.durationFrames, spec.format.fps)}" data-track-index="0">`,
+        `  <div id="content-${entry.id}" class="hf-scene__content">`,
+        ...modules.map((html) => indent(html, 2)),
+        "  </div>",
         "</div>",
         ...hosts,
       ].join("\n");
     })
     .join("\n");
 
-  const styles = [tokenCss(designPack, frame), localFontFaceCss(designPack), baseCss(frame), ...moduleCss.values()].join("\n\n");
+  const styles = [tokenCss(designPack, frame), localFontFaceCss(designPack), baseCss(frame), SCENE_LAYOUT_CSS, ...moduleCss].join("\n\n");
   const html = document(spec, input, frame, scenesHtml);
 
-  const files: CompiledFile[] = [{ path: "index.html", contents: html }, { path: "styles.css", contents: styles }];
+  const files: CompiledFile[] = [
+    { path: "index.html", contents: html },
+    { path: "styles.css", contents: styles },
+    { path: "ledger.json", contents: JSON.stringify(seamLedger(spec), null, 2) },
+  ];
   const binaries: CompiledBinaryRef[] = [];
   for (const block of blocks.values()) {
     files.push({ path: block.entryPath, contents: block.entryContents });
@@ -132,8 +144,6 @@ export function buildComposition(input: CompileInput): CompiledComposition {
     package: font.package,
     file: font.file,
   }));
-  const moduleVersions: Record<string, string> = {};
-  for (const id of moduleCss.keys()) moduleVersions[id] = internalModuleById(id as never).version;
 
   return {
     compositionId: COMPOSITION_ID,
@@ -252,31 +262,92 @@ ${scenesHtml}
 }
 
 /** One paused timeline: every tween is absolute and `fromTo`, so any seek lands on the same visual state. */
+// Paired power4 curves follow the registry cut-the-curve primitive; timed clips own the hard swap.
 function timelineScript(designPack: DesignPackManifest): string {
-  const enter = designPack.motion.enterSeconds;
-  const stagger = designPack.motion.staggerSeconds;
   return `
 (function () {
   var tl = gsap.timeline({ paused: true });
-  var ENTER = ${enter};
-  var STAGGER = ${stagger};
-  document.querySelectorAll("[data-scene]").forEach(function (scene) {
-    var start = Number(scene.getAttribute("data-start")) || 0;
-    var anims = scene.querySelectorAll(".hf-anim");
+  var scenes = Array.from(document.querySelectorAll("[data-scene]"));
+  var ENTER = ${designPack.motion.enterSeconds};
+  scenes.forEach(function (scene, sceneIndex) {
+    var start = Number(scene.dataset.start);
+    var duration = Number(scene.dataset.duration);
+    var content = scene.querySelector(".hf-scene__content");
+    var incoming = sceneIndex > 0 ? scene.dataset.transition : "cut";
+    var next = scenes[sceneIndex + 1];
+    var outgoing = next ? next.dataset.transition : "cut";
+    var entryTime = Math.min(0.3, duration / 4, sceneIndex > 0 ? Number(scenes[sceneIndex - 1].dataset.duration) / 4 : duration / 4);
+    var exitTime = next ? Math.min(0.3, duration / 4, Number(next.dataset.duration) / 4) : 0;
+    var settle = incoming === "cut" ? 0 : entryTime;
+    var travel = Number(document.getElementById("hf-root").dataset.width) * 0.12;
+    if (incoming === "zoom") {
+      tl.fromTo(content, { scale: 0.88 }, { scale: 1, duration: entryTime, ease: "power4.out" }, start);
+    } else if (incoming !== "cut") {
+      tl.fromTo(content, { x: travel }, { x: 0, duration: entryTime, ease: "power4.out" }, start);
+    }
+    if (outgoing === "zoom") {
+      tl.fromTo(content, { scale: 1 }, { scale: 1.12, duration: exitTime, ease: "power4.in", immediateRender: false }, start + duration - exitTime);
+    } else if (outgoing !== "cut") {
+      tl.fromTo(content, { x: 0 }, { x: -travel, duration: exitTime, ease: "power4.in", immediateRender: false }, start + duration - exitTime);
+      if (outgoing === "fade") {
+        tl.fromTo(content, { opacity: 1 }, { opacity: 0.35, duration: exitTime, ease: "none", immediateRender: false }, start + duration - exitTime);
+      }
+    }
+    var anims = Array.from(scene.querySelectorAll(".hf-anim"));
+    var enter = Math.min(ENTER, duration / 4);
+    var revealWindow = Math.max(0, duration - settle - exitTime - Math.min(0.8, duration * 0.3) - enter);
     anims.forEach(function (el, index) {
-      var at = start + index * STAGGER;
-      var kind = el.getAttribute("data-anim") || "fade";
-      if (kind === "rise") tl.fromTo(el, { y: 48, autoAlpha: 0 }, { y: 0, autoAlpha: 1, duration: ENTER, ease: "power2.out" }, at);
-      else if (kind === "scale") tl.fromTo(el, { scale: 1.04, autoAlpha: 0 }, { scale: 1, autoAlpha: 1, duration: ENTER, ease: "power2.out" }, at);
-      else tl.fromTo(el, { autoAlpha: 0 }, { autoAlpha: 1, duration: ENTER, ease: "power2.out" }, at);
+      var module = el.closest(".hf-module");
+      var anchor = module.matches(".hf-ProductHero, .hf-Headline, .hf-OfferBadge") || (scene.dataset.role === "cta" && module.matches(".hf-CTA"));
+      var at = start + settle + (anchor ? 0 : revealWindow * (index + 1) / Math.max(1, anims.length));
+      var kind = el.dataset.anim || "fade";
+      if (anchor && sceneIndex > 0) { tl.set(el, { autoAlpha: 1 }, start); return; }
+      if (kind === "rise") tl.fromTo(el, { y: Math.min(48, Number(document.getElementById("hf-root").dataset.height) * 0.02), autoAlpha: anchor ? 0.35 : 0 }, { y: 0, autoAlpha: 1, duration: enter, ease: "power4.out" }, at);
+      else if (kind === "scale") tl.fromTo(el, { scale: 0.94, autoAlpha: anchor ? 0.35 : 0 }, { scale: 1, autoAlpha: 1, duration: enter, ease: "power4.out" }, at);
+      else tl.fromTo(el, { autoAlpha: anchor ? 0.35 : 0 }, { autoAlpha: 1, duration: enter, ease: "power4.out" }, at);
     });
+    if (scene.dataset.motion === "staged_reveal") {
+      var focal = scene.querySelector(scene.dataset.role === "cta" ? ".hf-CTA" : scene.dataset.role === "offer" ? ".hf-OfferBadge, .hf-Headline, .hf-Price" : ".hf-Headline");
+      var words = focal ? Array.from(focal.querySelectorAll(".hf-word")) : [];
+      words.forEach(function (word, index) {
+        if (index === 0) { tl.set(word, { autoAlpha: 1 }, start); return; }
+        var at = start + settle + revealWindow * index / Math.max(1, words.length - 1);
+        tl.fromTo(word, { autoAlpha: 0 }, { autoAlpha: 1, duration: Math.min(0.2, enter), ease: "none" }, at);
+      });
+    }
+    if (scene.dataset.motion === "product_push") {
+      var image = scene.querySelector(".hf-ProductHero img");
+      var cameraStart = start + settle + enter;
+      var cameraTime = duration - settle - enter - exitTime;
+      if (image && cameraTime > 0) tl.fromTo(image, { scale: 1 }, { scale: 1.08, duration: cameraTime, ease: "none" }, cameraStart);
+    }
   });
   window.__timelines["${COMPOSITION_ID}"] = tl;
 })();`;
 }
 
+function seamLedger(spec: CompositionSpec): object {
+  const entries = sceneTimeline(spec);
+  return {
+    fps: spec.format.fps,
+    seams: entries.slice(1).flatMap((entry, index) => {
+      if (entry.transition === "cut") return [];
+      const axis = entry.transition === "zoom" ? "z" : "x";
+      const dir = axis === "z" ? 1 : -1;
+      const duration = Math.min(0.3, entries[index]!.durationFrames / spec.format.fps / 4, entry.durationFrames / spec.format.fps / 4);
+      return [{
+        id: `${entries[index]!.id}_to_${entry.id}`,
+        cut: entry.startFrames / spec.format.fps,
+        technique: axis === "z" ? "zoom-through" : "cut-the-curve LEFT",
+        exit: { selector: `#content-${entries[index]!.id}`, axis, dir, dur: duration },
+        entry: { selector: `#content-${entry.id}`, axis, dir, dur: duration },
+      }];
+    }),
+  };
+}
+
 function seconds(frames: number, fps: number): string {
-  return String(Math.round((frames / fps) * 1000) / 1000);
+  return String(frames / fps);
 }
 
 function indent(value: string, levels: number): string {

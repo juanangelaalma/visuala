@@ -1,46 +1,42 @@
-import { escapeHtml } from "../html";
-import { readSlots } from "./support";
+import { animatedWords, readSlots } from "./support";
 import type { VideoModule } from "./types";
 
 const SLOTS = [{ name: "text", required: true, kind: "text", maxLength: 24 }] as const;
 
-/** The pack's deliberate-imperfection annotation: a rotated yellow badge, the one rotated display mark. */
+/** The featured marker keeps its rotation separate from the animated copy. */
 export const offerBadge: VideoModule = {
   id: "OfferBadge",
-  version: "1.1.0",
+  version: "1.2.0",
   supportedRatios: ["9:16", "1:1", "16:9"],
   slots: SLOTS,
   build({ content }) {
     const { text } = readSlots("OfferBadge", SLOTS, content);
     return {
-      html: `<div class="hf-OfferBadge hf-module">
-  <span class="hf-OfferBadge__text hf-anim" data-anim="scale">${escapeHtml(text)}</span>
+      html: `<div class="hf-OfferBadge hf-module" data-zone="offer">
+  <div class="hf-OfferBadge__plate">
+    <span class="hf-OfferBadge__text hf-anim" data-anim="scale">${animatedWords(text)}</span>
+  </div>
 </div>`,
       css: `.hf-OfferBadge {
-  position: absolute;
-  left: var(--hf-content-gutter);
-  top: 26cqh;
+  padding: calc(2.5 * var(--hf-layout-unit)) calc(3 * var(--hf-layout-unit));
+}
+
+.hf-OfferBadge__plate {
   transform: rotate(-4deg);
-  background: var(--hf-yellow);
+  background: var(--hf-pink);
   border: var(--hf-border) solid var(--hf-ink);
-  padding: var(--hf-cell-pad);
+  box-shadow: var(--hf-hard-shadow) var(--hf-orange);
+  padding: calc(1.7 * var(--hf-layout-unit));
 }
 
 .hf-OfferBadge__text {
   display: block;
-  font-family: var(--hf-display-family);
-  font-size: 4.2cqw;
-  line-height: 0.92;
+  font-family: var(--hf-mono-family);
+  font-size: var(--hf-offer-size);
+  line-height: 1.15;
   text-transform: uppercase;
   color: var(--hf-ink);
-}
-
-@container (max-aspect-ratio: 4 / 5) {
-  .hf-OfferBadge {
-    left: 50%;
-    top: 35cqh;
-    transform: translateX(-50%) rotate(-4deg);
-  }
+  overflow-wrap: anywhere;
 }`,
     };
   },

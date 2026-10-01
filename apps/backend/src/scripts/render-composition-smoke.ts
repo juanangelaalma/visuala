@@ -9,6 +9,7 @@ import { sha256Hex } from "../domain/video-engine/hash";
 import { createCatalogInstaller } from "../infrastructure/video-engine/catalog-installer";
 import { createFsDesignPackSource } from "../infrastructure/video-engine/fs-design-pack-source";
 import { createHyperframesCli } from "../infrastructure/video-engine/hyperframes-cli";
+import { createCompositionVisualGate } from "../infrastructure/video-engine/composition-visual-check";
 import { gsapScriptPath, resolveFontFile } from "../infrastructure/video-engine/font-file";
 import { writeComposition } from "../infrastructure/video-engine/composition-writer";
 import { HyperFramesRenderEngine } from "../infrastructure/video-engine/hyperframes-render-engine";
@@ -69,6 +70,8 @@ async function main(): Promise<void> {
 
     console.log(`artifact: ${artifactDir}`);
     console.log(`compositionHash: ${compiled.compositionHash}`);
+    await createCompositionVisualGate({ cli: createHyperframesCli() }).check({ dir: artifactDir, spec, resolution: options.resolution });
+    console.log("visual gate: passed");
 
     const engine = new HyperFramesRenderEngine({ maxOutputBytes: 500 * 1024 * 1024, maxWorkers: 1, lowMemoryMode: false, disableGpu: false });
     const result = await engine.render({

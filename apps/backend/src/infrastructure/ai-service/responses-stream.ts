@@ -26,6 +26,20 @@ const eventSchema = z.object({
   type: z.unknown().optional(),
   delta: z.unknown().optional(),
   response: z.unknown().optional(),
+  item: z.unknown().optional(),
+  output_index: z.unknown().optional(),
+});
+const completedMessageEventSchema = z.object({
+  output_index: z.number().int().nonnegative(),
+  item: z.object({
+    type: z.literal("message"),
+    role: z.literal("assistant"),
+    status: z.literal("completed"),
+    content: z.array(z.union([
+      z.object({ type: z.literal("output_text"), text: z.string() }),
+      z.object({ type: z.literal("refusal"), refusal: z.string() }),
+    ])).min(1),
+  }),
 });
 
 export type ResponsesStreamResult = {
@@ -64,6 +78,8 @@ export async function readResponsesStream(
   let eventName = "";
   let refused = false;
   let terminal: ResponsesStreamResult | undefined;
+  const completedMessages = new Map<number, z.infer<typeof completedMessageEventSchema>["item"]>();
+  let invalidMessageItem = false;
 
   const dispatch = () => {
     if (signal.aborted) throw failure("AI_CANCELLED");
@@ -86,6 +102,16 @@ export async function readResponsesStream(
     if (type === "response.output_text.delta") {
       if (typeof event.delta !== "string") throw failure("AI_INVALID_OUTPUT");
       if (event.delta && !refused) onTextDelta(event.delta);
+    } else if (type === "response.output_item.done") {
+      if (event.item && typeof event.item === "object" && "type" in event.item && event.item.type === "message") {
+        const completed = completedMessageEventSchema.safeParse(event);
+        if (completed.success) {
+          completedMessages.set(completed.data.output_index, completed.data.item);
+          if (completed.data.item.content.some((part) => part.type === "refusal")) refused = true;
+        } else {
+          invalidMessageItem = true;
+        }
+      }
     } else if (type === "response.refusal.delta" || type === "response.refusal.done") {
       refused = true;
     } else if (type === "response.completed" || type === "response.incomplete" || type === "response.failed"
@@ -94,6 +120,11 @@ export async function readResponsesStream(
       const parsedResponse = responseSchema.safeParse(event.response);
       if (!parsedResponse.success) throw failure(cancelled ? "AI_CANCELLED" : "AI_INVALID_OUTPUT");
       const body = parsedResponse.data;
+      // Some Responses gateways leave terminal output empty but publish finalized message items.
+      if (type === "response.completed" && body.status === "completed"
+        && Array.isArray(body.output) && body.output.length === 0 && completedMessages.size > 0 && !invalidMessageItem) {
+        body.output = [...completedMessages].sort(([left], [right]) => left - right).map(([, item]) => item);
+      }
       terminal = { body, refused, cancelled, invalidTerminal: !cancelled && body.status !== type.slice("response.".length) };
     } else if (type === "error" || type === "response.error") {
       throw failure("AI_UNAVAILABLE");

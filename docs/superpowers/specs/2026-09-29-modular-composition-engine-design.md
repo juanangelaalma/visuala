@@ -84,7 +84,7 @@ apps/backend/
 ```
 Interviewer (kept)  ->  Recipe Resolver  ->  Design Pack Loader  ->  Art Director (AI)
    ->  Catalog Search (code)  ->  Composition Planner (AI)  ->  Composition Spec
-   ->  Validators  ->  Compiler  ->  Frozen Artifact  ->  Visual Check
+   ->  Validators  ->  Compiler  ->  Visual Check  ->  Frozen Artifact
    ->  Preview (draft MP4 from the frozen artifact)  ->  Approve  ->  Render (delivery MP4)  ->  MP4
 ```
 
@@ -121,14 +121,23 @@ Zod schema, `schemaVersion: "composition-spec@v1"`:
 ```
 { schemaVersion, format: { aspectRatio, fps, durationSeconds },
   style: { id: "creative-mode", version },
-  scenes: [ { id, durationFrames, transition?, modules: [ ModuleInstance ] } ] }
+  scenes: [ { id, durationFrames, transition?, motion?, modules: [ ModuleInstance ] } ] }
 
 ModuleInstance = { id, kind: "internal" | "catalog", version?, content: Record<string, string>, variables?: Record<string, string> }
 ```
 
-Internal modules and catalog blocks are both **sub-compositions**, so one assembled `index.html`
-holds hosts for both. Catalog entries are pinned by the item name from `catalog.json` and its
-source files are vendored into the artifact at compile time.
+Internal modules render inline inside each scoped scene content grid. Catalog blocks mount through
+sub-composition hosts, pinned by item name from `catalog.json`; their source files are vendored into
+the artifact at compile time.
+
+New provider output requires `transition` (`cut`, `fade`, `slide`, `zoom`) and `motion`
+(`staged_reveal`, `product_push`). Stored specs may omit them; the timeline resolves `slide` and
+`staged_reveal`. Transitions describe entry from the previous scene. `product_push` requires a
+ProductHero. The compiler emits a `ledger.json` for directional handoffs and seek-safe GSAP.
+
+Scene and catalog-host timestamps serialize the full `frames / fps` value, not a
+millisecond-rounded value. Boundary samples also derive from integer frame indices. This
+keeps fractional-second beats aligned with the producer's half-open clip intervals.
 
 ## Validators (PRD §13)
 
@@ -138,16 +147,41 @@ owned, present, and hash-verified) · `duration` (sum of `durationFrames` ≤ `d
 `compatibility` (each catalog item's dimensions match the target aspect; internal modules declare
 supported ratios).
 
-Failure order: next candidate -> next candidate -> fallback composition. Every rejected candidate
-and the reason is recorded as an observation event.
+The planner makes one attempt, then uses the deterministic fallback if validation rejects it.
+New plans also pass `validateStoryboard`: ordered recipe beats, one focal purpose per beat,
+no repeated visible phrases in a scene, and CTA only in the closing beat. Supporting copy may
+preserve the confirmed key message without creating a second headline. This planning-only gate
+does not reject the structure of existing stored revisions. Fallbacks use the same recipe beats
+and semantic validation.
 
 ## Visual check (PRD §17)
 
-Rule-based and offline (no AI scoring): text inside safe area, no extreme overlap, product visible,
-CTA readable, images loaded, every scene renders, the composition can be seeked, and first/middle/
-last frames are valid. Implemented with `@hyperframes/producer` primitives (`createCaptureSession`,
-`captureFrame`, `getCompositionDuration`, `runHyperframeLint`) plus FFprobe. `hyperframes check`
-(CLI 0.8.59) is the developer gate during authoring, not a runtime dependency.
+Compilation writes a scratch artifact, runs the pinned `hyperframes@0.8.59 check`, then samples
+geometry with the producer's real seekable runtime. Only a passing artifact can be uploaded.
+The CLI gate checks lint, runtime, layout, motion, contrast, and media frame bounds; incomplete,
+inconsistent, truncated, or unsampled reports fail closed.
+
+`createCompositionVisualGate` runs capture in a separate Node process using
+`composition-visual-worker.ts`. Node with native TypeScript stripping must be on `PATH`.
+The worker owns `createFileServer`, `createCaptureSession`, `initializeSession`, and
+`captureFrameToBuffer`: the producer's Hono adapter replaces global `Request`/`Response`,
+which must never happen in the Bun API process. Each check has a unique temporary directory,
+validated JSON results, a five-minute process deadline, and cleanup on success or failure.
+Missing or incomplete worker results fail closed. Samples cover readable phases and one frame before, at, and after
+each interior boundary. It checks text wrapping/clipping, module and image/text collisions,
+every staged word being readable before the beat closes, loaded images/fonts, and nonblank
+handoffs. Failed gates remove scratch and perform no artifact upload. Catalog-only mounted
+beats can provide the foreground at a boundary.
+
+Internal modules share a content-driven grid with portrait, square, and landscape states.
+Sparse product, offer, and CTA beats have distinct focal layouts. Module CSS is scoped to its
+scene with `@scope`, so one scene's tone cannot replace another's stylesheet. ProductHero has
+no opaque full-frame fill. The offer is the pink marker with the single hard shadow; the green
+closing plate reserves cream display type for the CTA and a cream-backed supporting line.
+
+`pnpm --filter backend compose:smoke --ratio 9:16 --resolution 1080p --duration 10 --keep`
+runs this same visual gate before rendering. Approved artifacts remain immutable; generator
+changes require a new composition, not editing previously uploaded HTML.
 
 ## Preview and approval (PRD §18, §19)
 

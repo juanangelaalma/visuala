@@ -394,6 +394,135 @@ describe("OpenAIResponsesAdapter structured streams", () => {
     }
   });
 
+  it("uses completed assistant items in output order when the completed response has empty output", async () => {
+    const deltas: string[] = [];
+    const first = { type: "message", role: "assistant", status: "completed", content: [{ type: "output_text", text: '{"answer":' }] };
+    const second = { type: "message", role: "assistant", status: "completed", content: [{ type: "output_text", text: '"final"}' }] };
+    const server = await startHttpFixtureServer(() => ({
+      headers: { "content-type": "text/event-stream" },
+      rawBody: streamEvent("response.output_text.delta", { delta: '{"answer":"preview' })
+        + streamEvent("response.output_item.done", { output_index: 0, item: { type: "reasoning", summary: [] } })
+        + streamEvent("response.output_item.done", { output_index: 2, item: second })
+        + streamEvent("response.output_item.done", { output_index: 1, item: first })
+        + streamEvent("response.output_item.done", { output_index: 1, item: first })
+        + streamEvent("response.completed", { response: { ...successBody, output: [] } }),
+    }), "/v1/");
+
+    await expect(streamAdapter(server.baseUrl).generateStructured(streamRequest((delta) => deltas.push(delta))))
+      .resolves.toMatchObject({
+        json: '{"answer":"final"}', finishReason: "stop", providerRequestId: "resp_1",
+        usage: { inputTokens: 11, outputTokens: 4, totalTokens: 15 },
+      });
+    expect(deltas).toEqual(['{"answer":"preview']);
+  });
+
+  it("keeps nonempty terminal output authoritative over completed item output", async () => {
+    const server = await startHttpFixtureServer(() => ({
+      headers: { "content-type": "text/event-stream" },
+      rawBody: streamEvent("response.output_item.done", {
+        output_index: 0,
+        item: { type: "message", role: "assistant", status: "completed", content: [{ type: "output_text", text: '{"answer":"item"}' }] },
+      }) + streamEvent("response.completed", { response: structuredBody('{"answer":"terminal"}') }),
+    }), "/v1/");
+    await expect(streamAdapter(server.baseUrl).generateStructured(streamRequest(() => {})))
+      .resolves.toMatchObject({ json: '{"answer":"terminal"}' });
+  });
+
+  it.each([
+    ["preview deltas", streamEvent("response.output_text.delta", { delta: '{"answer":"preview"}' })],
+    ["text completion without an item", streamEvent("response.output_text.done", { text: '{"answer":"text"}' })],
+    ["unfinished message", streamEvent("response.output_item.done", {
+      output_index: 0, item: { type: "message", role: "assistant", status: "in_progress", content: [{ type: "output_text", text: '{"answer":"unfinished"}' }] },
+    })],
+    ["invalid message content", streamEvent("response.output_item.done", {
+      output_index: 0, item: { type: "message", role: "assistant", status: "completed", content: [{ type: "output_text", text: 42 }] },
+    })],
+  ])("does not accept %s as completed assistant output", async (_name, prefix) => {
+    const server = await startHttpFixtureServer(() => ({
+      headers: { "content-type": "text/event-stream" },
+      rawBody: prefix + streamEvent("response.completed", { response: { ...successBody, output: [] } }),
+    }), "/v1/");
+    await expect(streamAdapter(server.baseUrl).generateStructured(streamRequest(() => {})))
+      .rejects.toSatisfy((error: AIError | OutputValidationError) => (
+        error instanceof OutputValidationError ? error.error.code === "AI_INVALID_OUTPUT" : error.code === "AI_INVALID_OUTPUT"
+      ));
+  });
+
+  it.each([
+    ["failed", "AI_UNAVAILABLE"],
+    ["incomplete", "AI_UNAVAILABLE"],
+    ["cancelled", "AI_CANCELLED"],
+  ])("does not let completed items override a %s response", async (status, code) => {
+    const server = await startHttpFixtureServer(() => ({
+      headers: { "content-type": "text/event-stream" },
+      rawBody: streamEvent("response.output_item.done", {
+        output_index: 0,
+        item: { type: "message", role: "assistant", status: "completed", content: [{ type: "output_text", text: '{"answer":"item"}' }] },
+      }) + streamEvent(`response.${status}`, { response: { ...successBody, status, output: [] } }),
+    }), "/v1/");
+    await expect(streamAdapter(server.baseUrl).generateStructured(streamRequest(() => {})))
+      .rejects.toSatisfy((error: OutputValidationError) => error instanceof OutputValidationError && error.error.code === code);
+  });
+
+  it("rejects a completed refusal item even when the completed response has empty output", async () => {
+    const server = await startHttpFixtureServer(() => ({
+      headers: { "content-type": "text/event-stream" },
+      rawBody: streamEvent("response.output_item.done", {
+        output_index: 0,
+        item: { type: "message", role: "assistant", status: "completed", content: [{ type: "refusal", refusal: "secret" }] },
+      }) + streamEvent("response.completed", { response: { ...successBody, output: [] } }),
+    }), "/v1/");
+    await expect(streamAdapter(server.baseUrl).generateStructured(streamRequest(() => {})))
+      .rejects.toSatisfy((error: OutputValidationError) => (
+        error instanceof OutputValidationError && error.error.code === "AI_REFUSED" && !error.message.includes("secret")
+      ));
+  });
+
+  it("requires a terminal response after a completed assistant item", async () => {
+    const server = await startHttpFixtureServer(() => ({
+      headers: { "content-type": "text/event-stream" },
+      rawBody: streamEvent("response.output_item.done", {
+        output_index: 0,
+        item: { type: "message", role: "assistant", status: "completed", content: [{ type: "output_text", text: '{"answer":"item"}' }] },
+      }) + "data: [DONE]\n\n",
+    }), "/v1/");
+    await expect(streamAdapter(server.baseUrl).generateStructured(streamRequest(() => {})))
+      .rejects.toMatchObject({ code: "AI_UNAVAILABLE", dispatchOutcome: "ambiguous" });
+  });
+
+  it("rejects reconstruction if another assistant item did not finish", async () => {
+    const server = await startHttpFixtureServer(() => ({
+      headers: { "content-type": "text/event-stream" },
+      rawBody: streamEvent("response.output_item.done", {
+        output_index: 0,
+        item: { type: "message", role: "assistant", status: "completed", content: [{ type: "output_text", text: '{"answer":"item"}' }] },
+      }) + streamEvent("response.output_item.done", {
+        output_index: 1,
+        item: { type: "message", role: "assistant", status: "incomplete", content: [{ type: "output_text", text: "unfinished" }] },
+      }) + streamEvent("response.completed", { response: { ...successBody, output: [] } }),
+    }), "/v1/");
+    await expect(streamAdapter(server.baseUrl).generateStructured(streamRequest(() => {})))
+      .rejects.toSatisfy((error: OutputValidationError) => (
+        error instanceof OutputValidationError && error.error.code === "AI_INVALID_OUTPUT"
+        && error.provider.usage.totalTokens === 15
+      ));
+  });
+
+  it("preserves terminal truncation and usage when an item finishes incomplete", async () => {
+    const server = await startHttpFixtureServer(() => ({
+      headers: { "content-type": "text/event-stream" },
+      rawBody: streamEvent("response.output_item.done", {
+        output_index: 0,
+        item: { type: "message", role: "assistant", status: "incomplete", content: [{ type: "output_text", text: '{"answer":"partial' }] },
+      }) + streamEvent("response.incomplete", { response: {
+        ...responseWithContent([{ type: "output_text", text: '{"answer":"partial' }]),
+        status: "incomplete", incomplete_details: { reason: "max_output_tokens" },
+      } }),
+    }), "/v1/");
+    await expect(streamAdapter(server.baseUrl).generateStructured(streamRequest(() => {})))
+      .resolves.toMatchObject({ json: '{"answer":"partial', finishReason: "length", usage: { totalTokens: 15 } });
+  });
+
   it("decodes split UTF-8, CRLF, multiline data, comments and multiple records without forwarding progress", async () => {
     const text = ': heartbeat\r\n\r\n'
       + 'event: response.output_text.delta\r\n'

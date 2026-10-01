@@ -44,7 +44,7 @@ export function validateFacts(spec: CompositionSpec, brief: ValidationBrief, rec
   return issues;
 }
 
-function isTextSlot(kind: "internal" | "catalog", id: string, slot: string, catalog: Catalog): boolean {
+export function isTextSlot(kind: "internal" | "catalog", id: string, slot: string, catalog: Catalog): boolean {
   if (kind === "internal") {
     if (!isInternalModuleId(id)) return true;
     return internalModuleById(id).slots.find((candidate) => candidate.name === slot)?.kind === "text";

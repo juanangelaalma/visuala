@@ -1,34 +1,28 @@
-import { escapeHtml } from "../html";
-import { readSlots } from "./support";
+import { animatedWords, readSlots } from "./support";
 import type { VideoModule } from "./types";
 
 const SLOTS = [{ name: "text", required: true, kind: "text", maxLength: 40 }] as const;
 
-/** Fit to measure: the ramp steps down as the claim gets longer, so a long line never touches the safe margin. */
 export const headline: VideoModule = {
   id: "Headline",
-  version: "1.1.0",
+  version: "1.2.0",
   supportedRatios: ["9:16", "1:1", "16:9"],
   slots: SLOTS,
   build({ content }) {
     const { text } = readSlots("Headline", SLOTS, content);
     const size = text.length <= 12 ? "hero" : text.length <= 24 ? "xl" : "lg";
     return {
-      html: `<h1 class="hf-Headline hf-module" data-size="${size}">
-  <span class="hf-Headline__text hf-anim" data-anim="rise">${escapeHtml(text)}</span>
+      html: `<h1 class="hf-Headline hf-module" data-zone="headline" data-size="${size}">
+  <span class="hf-Headline__text hf-anim" data-anim="rise">${animatedWords(text)}</span>
 </h1>`,
       css: `.hf-Headline {
-  --hf-headline-size: 8cqw;
-  position: absolute;
-  left: var(--hf-content-gutter);
-  right: var(--hf-content-gutter);
-  bottom: 20cqh;
+  --hf-headline-size: var(--hf-headline-lg);
   margin: 0;
-  max-width: var(--hf-headline-max-width);
+  align-self: center;
 }
 
-.hf-Headline[data-size="hero"] { --hf-headline-size: 15.5cqw; }
-.hf-Headline[data-size="xl"] { --hf-headline-size: 11cqw; }
+.hf-Headline[data-size="hero"] { --hf-headline-size: var(--hf-headline-hero); }
+.hf-Headline[data-size="xl"] { --hf-headline-size: var(--hf-headline-xl); }
 
 .hf-Headline__text {
   display: block;
@@ -38,19 +32,9 @@ export const headline: VideoModule = {
   line-height: 0.92;
   letter-spacing: -0.01em;
   text-transform: uppercase;
-  color: var(--hf-ink);
-}
-
-@container (max-aspect-ratio: 4 / 5) {
-  .hf-Headline {
-    left: 50%;
-    right: auto;
-    top: 44cqh;
-    bottom: auto;
-    width: 78cqw;
-    transform: translateX(-50%);
-    text-align: center;
-  }
+  color: var(--hf-scene-ink);
+  overflow-wrap: anywhere;
+  text-wrap: balance;
 }`,
     };
   },

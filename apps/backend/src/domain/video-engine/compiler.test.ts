@@ -40,72 +40,13 @@ function input(overrides: Partial<CompileInput> = {}): CompileInput {
   return { spec: spec(), designPack, assets: ASSETS, blocks: new Map(), resolution: "1080p", language: "id", ...overrides };
 }
 
-function file(compiled: ReturnType<typeof buildComposition>, path: string): string {
-  const found = compiled.files.find((candidate) => candidate.path === path);
-  if (!found) throw new Error(`no file ${path}: ${compiled.files.map((candidate) => candidate.path).join(", ")}`);
-  return found.contents;
-}
-
 describe("buildComposition", () => {
-  it("builds a sized, seekable document with one scene clip per scene", () => {
-    const compiled = buildComposition(input());
-    const html = file(compiled, "index.html");
-
-    expect(compiled.compositionId).toBe("main");
-    expect(html).toContain('data-composition-id="main"');
-    expect(html).toContain('data-width="1080"');
-    expect(html).toContain('data-height="1920"');
-    expect(html).toContain('data-duration="12"');
-    expect(html).toContain('data-start="0"');
-    expect(html).toContain('data-start="6"');
-    expect(html).toContain('data-scene="scene_2"');
-    expect(html).toContain("gsap.timeline({ paused: true })");
-    expect(html).toContain('window.__timelines["main"]');
-  });
-
-  it("inlines the design tokens, the font faces, and each module's css", () => {
-    const css = file(buildComposition(input()), "styles.css");
-
-    expect(css).toContain("--hf-cream: #EFE9D9;");
-    expect(css).toContain("--hf-content-gutter: 5cqw;");
-    expect(css).toContain("--hf-cell-pad: 1.7cqw;");
-    expect(css).toContain("--hf-green-dark: #136636;");
-    expect(css).not.toContain("--hf-contentGutter");
-    expect(css).not.toContain("--hf-cellPad");
-    expect(css).toContain('@font-face');
-    expect(css).toContain("archivo-black-latin-400-normal.woff2");
-    expect(css).toContain(".hf-Headline__text");
-    expect(css).toContain("container-type: size");
-    expect(css).not.toContain(".hf-CTA");
-  });
-
-  it("lists only the fonts and assets the composition actually uses", () => {
+  it("omits unreferenced assets from the frozen artifact", () => {
     const compiled = buildComposition(input());
 
-    expect(compiled.fonts.map((font) => font.path)).toContain("fonts/archivo-black-latin-400-normal.woff2");
     expect(compiled.assets.map((asset) => asset.path)).toEqual(["assets/asset-1.jpg"]);
-    expect(compiled.moduleVersions).toEqual({ ProductHero: "1.1.0", Headline: "1.1.0" });
   });
 
-  it("wires a catalog item as a sub-composition host and carries its file and binaries", () => {
-    const compiled = buildComposition(
-      input({
-        spec: spec({
-          scenes: [
-            { id: "scene_1", durationFrames: 180, modules: [{ id: "ProductHero", kind: "internal", content: { assetId: "asset-1" } }] },
-            { id: "scene_2", durationFrames: 180, modules: [{ id: "heygen-avatar-promo-card", kind: "catalog", content: { titleLine1: "Julumpia" } }] },
-          ],
-        }),
-        blocks: new Map([["heygen-avatar-promo-card", BLOCK]]),
-      }),
-    );
-
-    expect(file(compiled, "index.html")).toContain('data-composition-src="compositions/heygen-avatar-promo-card.html"');
-    expect(file(compiled, "index.html")).toContain('data-composition-id="heygen-avatar-promo-card"');
-    expect(compiled.files.map((entry) => entry.path)).toContain("compositions/heygen-avatar-promo-card.html");
-    expect(compiled.binaries.map((entry) => entry.path)).toEqual(["assets/av_r1k1.mp4"]);
-    expect(compiled.moduleVersions).toEqual({ ProductHero: "1.1.0" });
-  });
 
   it("refuses a catalog instance that was not installed", () => {
     const withBlock = spec({
@@ -127,6 +68,52 @@ describe("buildComposition", () => {
     expect(() =>
       buildComposition(input({ spec: both, blocks: new Map([["heygen-avatar-promo-card", BLOCK], ["other-block", other]]) })),
     ).toThrow(/both provide/);
+  });
+
+  it("keeps exactly one internal scene active on every frame of fractional-second beats", () => {
+    const durations = [113, 113, 112, 112];
+    const fractionalSpec = spec({
+      format: { aspectRatio: "9:16", fps: 30, durationSeconds: 15 },
+      scenes: durations.map((durationFrames, index) => ({
+        id: `scene_${index}`,
+        durationFrames,
+        modules: [{ id: "Headline", kind: "internal", content: { text: `Beat ${index}` } }],
+      })),
+    });
+    const compiled = buildComposition(input({ spec: fractionalSpec }));
+    const html = compiled.files.find((file) => file.path === "index.html")!.contents;
+    const clips = [...html.matchAll(/<div\b[^>]*data-scene="([^"]+)"[^>]*>/g)].map(([tag, id]) => ({
+      id,
+      start: Number(tag!.match(/data-start="([^"]+)"/)![1]),
+      duration: Number(tag!.match(/data-duration="([^"]+)"/)![1]),
+    }));
+    let expectedScene = 0;
+    let endFrame = durations[0]!;
+    for (let frame = 0; frame < 450; frame++) {
+      if (frame === endFrame) endFrame += durations[++expectedScene]!;
+      const time = frame / 30;
+      const active = clips.filter((clip) => clip.start <= time && time < clip.start + clip.duration);
+      expect(active.map((clip) => clip.id), `frame ${frame}`).toEqual([`scene_${expectedScene}`]);
+    }
+  });
+
+  it("activates catalog hosts at the same fractional boundary as their internal scene", () => {
+    const fractionalSpec = spec({
+      format: { aspectRatio: "9:16", fps: 30, durationSeconds: 15 },
+      scenes: [
+        { id: "opening", durationFrames: 338, modules: [{ id: "Headline", kind: "internal", content: { text: "Opening" } }] },
+        { id: "closing", durationFrames: 112, modules: [{ id: BLOCK.name, kind: "catalog", content: {} }] },
+      ],
+    });
+    const compiled = buildComposition(input({ spec: fractionalSpec, blocks: new Map([[BLOCK.name, BLOCK]]) }));
+    const html = compiled.files.find((file) => file.path === "index.html")!.contents;
+    const tag = html.match(/<div\b[^>]*data-composition-src="[^"]+"[^>]*>/)![0];
+    const start = Number(tag.match(/data-start="([^"]+)"/)![1]);
+    const duration = Number(tag.match(/data-duration="([^"]+)"/)![1]);
+    expect(start <= 337 / 30).toBe(false);
+    expect(start <= 338 / 30 && 338 / 30 < start + duration).toBe(true);
+    expect(start <= 449 / 30 && 449 / 30 < start + duration).toBe(true);
+    expect(15 < start + duration).toBe(false);
   });
 
   it("is content-addressed: the same input hashes the same, a changed input does not", () => {

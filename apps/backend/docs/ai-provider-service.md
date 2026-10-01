@@ -129,6 +129,12 @@ Structured requests can supply `onTextDelta?: (delta: string) => void` and `abor
 The callback receives raw structured JSON text deltas, not validated data. The video interviewer
 incrementally extracts only decoded `turn.question`; drafts and choices are not published.
 Terminal provider output is parsed and schema-validated before the Promise resolves.
+Nonempty terminal `response.output` remains authoritative. If a successful `response.completed`
+contains `output: []`, the stream reader assembles validated assistant messages from
+`response.output_item.done`, ordered and deduplicated by `output_index`. Each message must have
+status `completed`; unfinished or malformed message items prevent reconstruction. Delta text and
+`response.output_text.done` alone are never accepted as final output. A terminal response is still
+required, and failure, cancellation, refusal, and truncation retain their existing handling.
 Calls without the callback and ordinary text calls stay buffered.
 
 An operation cannot retry after publishing any nonempty delta. Before publication, only the existing

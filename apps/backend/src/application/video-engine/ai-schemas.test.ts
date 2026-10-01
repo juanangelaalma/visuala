@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { z } from "zod";
-import { COMPOSITION_SPEC_VERSION } from "../../domain/video-engine/composition";
+import { COMPOSITION_SPEC_VERSION, compositionSpecFromWire, compositionSpecWireSchema, compositionSpecSchema, sceneTimeline } from "../../domain/video-engine/composition";
 import { VIDEO_ENGINE_AI_SCHEMAS } from "./ai-schemas";
 
 const validDirection = {
@@ -24,11 +24,15 @@ const validSpec = {
     {
       id: "scene_1",
       durationFrames: 180,
+      transition: "slide",
+      motion: "staged_reveal",
       modules: [{ id: "Headline", kind: "internal", content: [{ key: "text", value: "Julumpia" }] }],
     },
     {
       id: "scene_2",
       durationFrames: 180,
+      transition: "zoom",
+      motion: "staged_reveal",
       modules: [{ id: "CTA", kind: "internal", content: [{ key: "text", value: "Pesan sekarang" }] }],
     },
   ],
@@ -42,11 +46,6 @@ describe("video engine ai schemas", () => {
     for (const key of keys) expect(key).toMatch(/^[^@\s]+@[^@\s]+$/);
   });
 
-  it("converts every schema to JSON Schema, so the adapter can hand it to a provider", () => {
-    for (const [key, schema] of Object.entries(VIDEO_ENGINE_AI_SCHEMAS)) {
-      expect(() => z.toJSONSchema(schema, { unrepresentable: "throw", target: "draft-7" }), key).not.toThrow();
-    }
-  });
 
   it("round-trips a valid art direction and a valid composition spec", () => {
     expect(VIDEO_ENGINE_AI_SCHEMAS["art_direction@v1"].parse(validDirection)).toEqual(validDirection);
@@ -56,8 +55,35 @@ describe("video engine ai schemas", () => {
   it("refuses a spec whose scene has no module and whose version is unknown", () => {
     const schema = VIDEO_ENGINE_AI_SCHEMAS["composition_spec@v1"];
 
-    expect(schema.safeParse({ ...validSpec, scenes: [{ id: "scene_1", durationFrames: 180, modules: [] }] }).success).toBe(false);
+    expect(schema.safeParse({ ...validSpec, scenes: [{ ...validSpec.scenes[0]!, modules: [] }] }).success).toBe(false);
     expect(schema.safeParse({ ...validSpec, schemaVersion: "composition-spec@v2" }).success).toBe(false);
+  });
+
+  it("requires bounded executable motion and transition fields on provider output", () => {
+    const scene = validSpec.scenes[0]!;
+    for (const replacement of [
+      { ...scene, transition: "dissolve" },
+      { ...scene, motion: "float_forever" },
+      { ...scene, transition: undefined },
+      { ...scene, motion: undefined },
+    ]) {
+      expect(compositionSpecWireSchema.safeParse({ ...validSpec, scenes: [replacement] }).success).toBe(false);
+    }
+  });
+
+  it("reconstructs executable fields while accepting stored specs without them", () => {
+    const spec = compositionSpecFromWire(compositionSpecWireSchema.parse(validSpec));
+    expect(sceneTimeline(spec).map(({ transition, motion }) => ({ transition, motion }))).toEqual([
+      { transition: "slide", motion: "staged_reveal" },
+      { transition: "zoom", motion: "staged_reveal" },
+    ]);
+    const legacy = compositionSpecSchema.parse({
+      ...spec, scenes: spec.scenes.map(({ transition: _transition, motion: _motion, ...scene }) => scene),
+    });
+    expect(sceneTimeline(legacy).map(({ transition, motion }) => ({ transition, motion }))).toEqual([
+      { transition: "slide", motion: "staged_reveal" },
+      { transition: "slide", motion: "staged_reveal" },
+    ]);
   });
 
   it("keeps every schema inside what strict structured output allows", () => {

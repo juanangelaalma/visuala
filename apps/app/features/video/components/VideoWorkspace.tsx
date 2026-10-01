@@ -167,6 +167,7 @@ export function VideoWorkspace({ projectId }: { projectId: string }) {
   }, [cancelRead, projectId]);
 
   const publishText = useCallback((request: ActiveConversation, delta: string) => {
+    console.log(request, delta)
     if (!isCurrentConversation(request)) return;
     setStreaming((current) => isCurrentConversation(request) && current
       ? { ...current, text: current.text + delta }
@@ -213,6 +214,7 @@ export function VideoWorkspace({ projectId }: { projectId: string }) {
         signal: request.controller.signal,
         onTextDelta: (delta) => publishText(request, delta),
       });
+      console.log(opened)
       if (!isCurrentConversation(request)) return;
       setWorkspace((current) => current?.project.id === request.projectId
         && conversationRevision.current === request.revision

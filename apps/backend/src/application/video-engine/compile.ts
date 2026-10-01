@@ -7,10 +7,12 @@ import { compositionArtifactPrefix } from "../../domain/video-engine/artifact-ma
 import type { LoadedDesignPack } from "../../infrastructure/video-engine/fs-design-pack-source";
 import type { ArtifactFile, CompositionArtifactStore } from "../../infrastructure/video-engine/composition-artifact-store";
 import type { CatalogInstaller } from "../../infrastructure/video-engine/catalog-installer";
+import type { CompositionVisualGate } from "../../infrastructure/video-engine/composition-visual-check";
 
 export type CompileDependencies = {
   installer: CatalogInstaller;
   artifactStore: CompositionArtifactStore;
+  gate: CompositionVisualGate;
   /** The composition writer, injected so this use case never constructs infrastructure itself. */
   write: (compiled: CompiledComposition, targetDir: string) => Promise<void>;
   /** A throwaway directory per compile: the artifact's only durable copy is what was uploaded. */
@@ -56,6 +58,7 @@ export async function compileComposition(command: CompileCommand, dependencies: 
 
     const artifactDir = join(scratchDir, "artifact");
     await dependencies.write(compiled, artifactDir);
+    await dependencies.gate.check({ dir: artifactDir, spec: command.spec, resolution: command.resolution });
 
     const files = await readArtifactDirectory(artifactDir);
     const prefix = compositionArtifactPrefix(command.projectId, compiled.compositionHash);

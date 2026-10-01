@@ -97,7 +97,7 @@ function fakeCli(root: string, files: Record<string, string | Uint8Array>): Hype
       return { ok: true, name, type: "hyperframes:block", written, installed: [name], snippet: `<div data-composition-src="${Object.keys(files)[0]}"></div>`, warnings: [] };
     },
     async check() {
-      return { ok: true };
+      throw new Error("Catalog installation must not run the composition gate.");
     },
   };
 }

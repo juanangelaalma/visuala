@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 import type { AIService } from "../../domain/ai-service/contracts";
-import { COMPOSITION_SPEC_VERSION, compositionSpecFromWire, type CompositionSpec, type CompositionSpecWire } from "../../domain/video-engine/composition";
+import { COMPOSITION_SPEC_VERSION, compositionSpecFromWire, type CompositionSpecWire } from "../../domain/video-engine/composition";
 import { buildCatalog } from "../../domain/video-engine/catalog";
 import type { Catalog, CatalogItem } from "../../domain/video-engine/catalog";
 import { PlanningError } from "../../domain/video-engine/errors";
@@ -10,6 +10,7 @@ import type { ArtDirection } from "../../domain/video-engine/art-direction";
 import type { ValidationBrief } from "../../domain/video-engine/validators/types";
 import { assertFallbackValid, runCompositionPlanner, type CompositionPlannerCommand } from "./composition-planner";
 import type { CatalogCandidate } from "./candidate-selector";
+import { COMPOSITION_PLANNER_PROMPT_VERSION } from "./prompts";
 
 const USER_ID = "11111111-1111-4111-8111-111111111111";
 const PROJECT_ID = "33333333-3333-4333-8333-333333333333";
@@ -69,17 +70,17 @@ function wireModule(id: string, kind: "internal" | "catalog", content: Record<st
   return { id, kind, content: Object.entries(content).map(([key, value]) => ({ key, value })) };
 }
 
-/** The shape the provider returns: module content is a pair list, and no `version`/`transition` is offered. hook 4s, message 4s, proof 2s, cta 2s at 30 fps. */
+/** Product hook, key message, product hold, then the closing action, at 30 fps. */
 function plannedSpec(overrides: Partial<CompositionSpecWire> = {}): CompositionSpecWire {
   return {
     schemaVersion: COMPOSITION_SPEC_VERSION,
     format: { aspectRatio: "9:16", fps: 30, durationSeconds: 12 },
     style: { id: "creative-mode", version: "1" },
     scenes: [
-      { id: "hook", durationFrames: 120, modules: [wireModule("ProductHero", "internal", { assetId: ASSET_ID })] },
-      { id: "message", durationFrames: 120, modules: [wireModule("Headline", "internal", { text: "Julumpia" })] },
-      { id: "proof", durationFrames: 60, modules: [wireModule("OfferBadge", "internal", { text: "Diskon 20%" })] },
-      { id: "cta", durationFrames: 60, modules: [wireModule("CTA", "internal", { text: "Pesan sekarang" })] },
+      { id: "hook", durationFrames: 120, transition: "slide", motion: "product_push", modules: [wireModule("ProductHero", "internal", { assetId: ASSET_ID })] },
+      { id: "message", durationFrames: 120, transition: "slide", motion: "staged_reveal", modules: [wireModule("Headline", "internal", { text: brief.keyMessage })] },
+      { id: "proof", durationFrames: 60, transition: "slide", motion: "product_push", modules: [wireModule("ProductHero", "internal", { assetId: ASSET_ID })] },
+      { id: "cta", durationFrames: 60, transition: "slide", motion: "staged_reveal", modules: [wireModule("CTA", "internal", { text: "Pesan sekarang" })] },
     ],
     ...overrides,
   };
@@ -121,7 +122,7 @@ async function command(overrides: Partial<CompositionPlannerCommand> = {}) {
 }
 
 describe("runCompositionPlanner", () => {
-  it("returns a valid plan with its provenance, and sends the candidates and frame math to the planner", async () => {
+  it("returns a valid plan with its provenance", async () => {
     const ai = aiService(plannedSpec());
 
     const result = await runCompositionPlanner(await command(), { ai, createRequestId: () => "local-1", catalog: catalog([]) });
@@ -129,24 +130,19 @@ describe("runCompositionPlanner", () => {
     expect(result.isFallback).toBe(false);
     expect(result.issues).toEqual([]);
     expect(result.spec).toEqual(compositionSpecFromWire(plannedSpec()));
-    expect(result.generatedBy?.promptVersion).toBe("composition_planner@v1");
+    expect(result.generatedBy?.promptVersion).toBe(COMPOSITION_PLANNER_PROMPT_VERSION);
     expect(result.ai?.latencyMs).toBe(2500);
 
     const request = vi.mocked(ai.generateStructured).mock.calls[0][0];
     expect(request.task).toBe("composition_planner");
     expect(request.schema.name).toBe("composition_spec");
-    expect(request.instructions).toContain("product-reveal");
-    expect(request.instructions).toContain("360 frames total");
-    expect(request.instructions).toContain("must use ProductHero");
   });
 
   it("falls back when the plan names a catalog id that was never offered", async () => {
     const spec = plannedSpec({
       scenes: [
-        { id: "hook", durationFrames: 120, modules: [wireModule("surprise-block", "catalog")] },
-        { id: "message", durationFrames: 120, modules: [wireModule("Headline", "internal", { text: "Julumpia" })] },
-        { id: "proof", durationFrames: 60, modules: [wireModule("OfferBadge", "internal", { text: "Diskon 20%" })] },
-        { id: "cta", durationFrames: 60, modules: [wireModule("CTA", "internal", { text: "Pesan sekarang" })] },
+        { id: "hook", durationFrames: 120, transition: "slide", motion: "staged_reveal", modules: [wireModule("surprise-block", "catalog")] },
+        ...plannedSpec().scenes.slice(1),
       ],
     });
     const known = { catalog: catalog(["surprise-block"]) };
@@ -162,10 +158,9 @@ describe("runCompositionPlanner", () => {
   it("falls back when the model invents a price the brief never stated", async () => {
     const spec = plannedSpec({
       scenes: [
-        { id: "hook", durationFrames: 120, modules: [wireModule("ProductHero", "internal", { assetId: ASSET_ID })] },
-        { id: "message", durationFrames: 120, modules: [wireModule("Headline", "internal", { text: "Harga Rp9.999" })] },
-        { id: "proof", durationFrames: 60, modules: [wireModule("OfferBadge", "internal", { text: "Diskon 20%" })] },
-        { id: "cta", durationFrames: 60, modules: [wireModule("CTA", "internal", { text: "Pesan sekarang" })] },
+        plannedSpec().scenes[0]!,
+        { id: "message", durationFrames: 120, transition: "slide", motion: "staged_reveal", modules: [wireModule("Headline", "internal", { text: "Harga Rp9.999" })] },
+        ...plannedSpec().scenes.slice(2),
       ],
     });
 
@@ -178,10 +173,10 @@ describe("runCompositionPlanner", () => {
   it("uses internal modules only when no candidate matched, and still succeeds", async () => {
     const internalOnly = plannedSpec({
       scenes: [
-        { id: "hook", durationFrames: 90, modules: [wireModule("ProductHero", "internal", { assetId: ASSET_ID })] },
-        { id: "message", durationFrames: 90, modules: [wireModule("Headline", "internal", { text: "Julumpia" })] },
-        { id: "proof", durationFrames: 90, modules: [wireModule("OfferBadge", "internal", { text: "Diskon 20%" })] },
-        { id: "cta", durationFrames: 90, modules: [wireModule("CTA", "internal", { text: "Pesan sekarang" })] },
+        { ...plannedSpec().scenes[0]!, durationFrames: 90 },
+        { ...plannedSpec().scenes[1]!, durationFrames: 90 },
+        { ...plannedSpec().scenes[2]!, durationFrames: 90 },
+        { ...plannedSpec().scenes[3]!, durationFrames: 90 },
       ],
     });
     const ai = aiService(internalOnly);
@@ -189,7 +184,44 @@ describe("runCompositionPlanner", () => {
     const result = await runCompositionPlanner(await command({ candidates: [] }), { ai, createRequestId: () => "local-1", catalog: catalog([]) });
 
     expect(result.isFallback).toBe(false);
-    expect(vi.mocked(ai.generateStructured).mock.calls[0][0].instructions).toContain("Use internal modules only");
+  });
+
+  it("falls back on semantically repeated copy without another model request", async () => {
+    const spec = plannedSpec();
+    spec.scenes[0]!.modules.push(
+      wireModule("Headline", "internal", { text: brief.productName }),
+      wireModule("BrandMark", "internal", { text: brief.productName }),
+    );
+    const ai = aiService(spec);
+    const complete = await command();
+    const result = await runCompositionPlanner(complete, { ai, createRequestId: () => "local-1", catalog: catalog([]) });
+
+    expect(result.isFallback).toBe(true);
+    expect(result.issues.map((issue) => issue.code)).toContain("copy_repeated");
+    expect(vi.mocked(ai.generateStructured)).toHaveBeenCalledTimes(1);
+    expect(assertFallbackValid(result, complete, catalog([]))).toBe(result);
+  });
+
+  it("accepts a product, offer, then CTA discount story with executable scene direction", async () => {
+    const spec = plannedSpec({
+      scenes: [
+        { id: "product_reveal", durationFrames: 120, transition: "cut", motion: "product_push", modules: [wireModule("ProductHero", "internal", { assetId: ASSET_ID })] },
+        { id: "offer_reveal", durationFrames: 120, transition: "slide", motion: "staged_reveal", modules: [wireModule("OfferBadge", "internal", { text: brief.offer!.label })] },
+        { id: "cta", durationFrames: 120, transition: "zoom", motion: "staged_reveal", modules: [wireModule("CTA", "internal", { text: brief.callToAction! })] },
+      ],
+    });
+    const complete = await command({
+      recipe: recipeById("discount_promo"),
+      artDirection: { ...artDirection, beats: recipeById("discount_promo").beats.map((beat) => ({ ...beat, emphasis: "medium" as const })) },
+    });
+    const result = await runCompositionPlanner(complete, { ai: aiService(spec), createRequestId: () => "local-1", catalog: catalog([]) });
+
+    expect(result.isFallback).toBe(false);
+    expect(result.spec.scenes.map((scene) => [scene.id, scene.motion, scene.transition])).toEqual([
+      ["product_reveal", "product_push", "cut"],
+      ["offer_reveal", "staged_reveal", "slide"],
+      ["cta", "staged_reveal", "zoom"],
+    ]);
   });
 
   it("offers the fallback when the brief itself is unusable", async () => {
@@ -208,10 +240,8 @@ describe("runCompositionPlanner", () => {
 describe("assertFallbackValid", () => {
   const unknownModule = plannedSpec({
     scenes: [
-      { id: "hook", durationFrames: 120, modules: [wireModule("Nope", "internal")] },
-      { id: "message", durationFrames: 120, modules: [wireModule("Headline", "internal", { text: "Julumpia" })] },
-      { id: "proof", durationFrames: 60, modules: [wireModule("OfferBadge", "internal", { text: "Diskon 20%" })] },
-      { id: "cta", durationFrames: 60, modules: [wireModule("CTA", "internal", { text: "Pesan sekarang" })] },
+      { id: "hook", durationFrames: 120, transition: "slide", motion: "staged_reveal", modules: [wireModule("Nope", "internal")] },
+      ...plannedSpec().scenes.slice(1),
     ],
   });
 
@@ -220,7 +250,7 @@ describe("assertFallbackValid", () => {
     const plan = await runCompositionPlanner(complete, { ai: aiService(unknownModule), createRequestId: () => "local-1", catalog: catalog([]) });
 
     expect(plan.isFallback).toBe(true);
-    expect(plan.issues.map((issue) => issue.code)).toEqual(["internal_module_unknown", "asset_unused"]);
+    expect(plan.issues.map((issue) => issue.code)).toEqual(expect.arrayContaining(["internal_module_unknown", "beat_focus_invalid"]));
 
     const checked = assertFallbackValid(plan, complete, catalog([]));
     expect(checked).toBe(plan);

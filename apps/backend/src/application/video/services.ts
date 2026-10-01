@@ -14,6 +14,7 @@ import { SupabaseRenderJobRepository, SupabaseVideoVersionRepository } from "../
 import { SupabaseCompositionArtifactStore } from "../../infrastructure/video-engine/composition-artifact-store";
 import { createCatalogInstaller } from "../../infrastructure/video-engine/catalog-installer";
 import { createHyperframesCli } from "../../infrastructure/video-engine/hyperframes-cli";
+import { createCompositionVisualGate } from "../../infrastructure/video-engine/composition-visual-check";
 import { createFsCatalogSource } from "../../infrastructure/video-engine/fs-catalog-source";
 import { createFsDesignPackSource } from "../../infrastructure/video-engine/fs-design-pack-source";
 import { gsapScriptPath, resolveFontFile } from "../../infrastructure/video-engine/font-file";
@@ -109,6 +110,12 @@ export function createComposeServices(
   const bucket = readAssetBucket(environment);
   const objectStore = new SupabaseAssetObjectStore(supabase, bucket);
   const artifactStore = new SupabaseCompositionArtifactStore(supabase, bucket);
+  const cli = createHyperframesCli();
+  const gate = createCompositionVisualGate({
+    cli,
+    ...(environment.HYPERFRAMES_BROWSER_PATH ? { browserPath: environment.HYPERFRAMES_BROWSER_PATH } : {}),
+    disableGpu: environment.PRODUCER_DISABLE_GPU !== "false",
+  });
 
   return {
     projects: new SupabaseVideoProjectRepository(supabase),
@@ -124,7 +131,8 @@ export function createComposeServices(
     createId: () => crypto.randomUUID(),
     compile: (command) =>
       compileComposition(command, {
-        installer: createCatalogInstaller({ cli: createHyperframesCli() }),
+        installer: createCatalogInstaller({ cli }),
+        gate,
         artifactStore,
         write: (compiled, targetDir) =>
           writeComposition(compiled, targetDir, {

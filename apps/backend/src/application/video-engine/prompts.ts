@@ -1,4 +1,4 @@
-import { COMPOSITION_SPEC_VERSION, MIN_SCENE_SECONDS } from "../../domain/video-engine/composition";
+import { COMPOSITION_SPEC_VERSION, MIN_SCENE_SECONDS, SCENE_MOTIONS, SCENE_TRANSITIONS } from "../../domain/video-engine/composition";
 import { INTERNAL_MODULES } from "../../domain/video-engine/modules/registry";
 import type { ArtDirection } from "../../domain/video-engine/art-direction";
 import type { VideoRecipe } from "../../domain/video-engine/recipes/types";
@@ -6,7 +6,7 @@ import type { ValidationBrief } from "../../domain/video-engine/validators/types
 import type { CatalogCandidate } from "./candidate-selector";
 
 export const ART_DIRECTOR_PROMPT_VERSION = "art_director@v1";
-export const COMPOSITION_PLANNER_PROMPT_VERSION = "composition_planner@v1";
+export const COMPOSITION_PLANNER_PROMPT_VERSION = "composition_planner@v2";
 
 const LANGUAGE_NAMES: Readonly<Record<string, string>> = {
   id: "Bahasa Indonesia",
@@ -83,9 +83,17 @@ export function compositionPlannerInstructions(input: {
     "You are the planner for a modular video composition engine. Return one composition spec.",
     "",
     `Format: aspectRatio ${input.aspectRatio}, fps ${input.fps}, durationSeconds ${input.durationSeconds} (${totalFrames} frames total).`,
-    "Scene durationFrames must add up to exactly that total. Scenes play back to back in the order given, one per art-direction beat, in the same order.",
+    "Scene durationFrames must add up to exactly that total. Make exactly one scene per recipe beat below, with that beat's exact id, in the same order. Each scene has one purpose and one focal element.",
     `schemaVersion is "${COMPOSITION_SPEC_VERSION}". style is the design pack's id and version.`,
     `On-screen language: ${languageName(input.language)}`,
+    "",
+    "Recipe storyboard to realise:",
+    ...input.recipe.beats.map((beat) => `- ${beat.id}: ${beat.intent}`),
+    ...(input.recipe.id === "discount_promo" ? [
+      "The discount story is product_reveal → offer_reveal → cta. The product scene gives ProductHero the focus, with its name as a caption; no OfferBadge, Price or CTA. The offer scene uses one OfferBadge for the exact confirmed label, with optional distinct offer detail. The closing scene gives one CTA the focus.",
+    ] : []),
+    "For other recipes, realise their own beat purposes: product beats show the product/name, message or highlight beats show the keyMessage, menu shows the named menu items, tease withholds the product image, and cta/visit closes on the confirmed action/destination.",
+    "The confirmed keyMessage may remain as subordinate SupportingCopy on a product or closing scene when the art direction calls for it, but never as a competing Headline. Do not repeat text already visible in another module in that scene.",
     "",
     "Confirmed brief. It is the only source of facts:",
     JSON.stringify(input.brief),
@@ -126,11 +134,16 @@ export function compositionPlannerInstructions(input: {
     "- Scene ids are unique snake_case, and each scene has at least one module; the first module is behind, the last in front.",
     "- Module ids and slot keys are case-sensitive: copy them from the lists above exactly, never lowercase or rename them.",
     "- `content` is always a list of `{ key, value }` pairs, and `[]` when a module has no values.",
+    `- Every scene must include transition (${SCENE_TRANSITIONS.join(", ")}) and motion (${SCENE_MOTIONS.join(", ")}). No free-form motion names.`,
+    "- transition describes the incoming handoff to this scene; use slide by default. cut is a hard cut, zoom is a directional zoom, fade is a directional handoff with an early fade, not a long dissolve.",
+    "- Use staged_reveal by default to reveal the focal content in reading order. Use product_push only on a product beat containing ProductHero.",
+    "- Reserve CTA for the final closing scene. Never repeat its action in opening or offer beats.",
+    "- Never repeat visible text within a scene, even with different case, punctuation, or a longer phrase around it. BrandMark and Headline must not repeat the product name; OfferBadge and Headline must not repeat the offer.",
     `- Every scene is at least ${shortestScene} frames and at most ${totalFrames} frames.`,
     "- Every content value is either text that already appears in the brief, an asset id from the list, or a ground tone. Never invent a price, discount, address, phone number, or claim.",
     ...(input.assetIds.length === 0 ? [] : ["- At least one scene must use ProductHero with an assetId copied exactly from the asset list."]),
     "- A catalog block may only sit in a scene at least as long as its own duration.",
-    "- Keep a Headline and a CTA module in the composition so it always reads without the catalog.",
+    "- Every beat must remain understandable from its internal focal module; a catalog block can support it but cannot replace it.",
     "- Return the JSON object only.",
   ].join("\n");
 }
