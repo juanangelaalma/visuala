@@ -1,5 +1,6 @@
 import type { RenderJobRepository } from "../../domain/video-engine/contracts";
 import { reclaimStaleJob, runRenderJob, type RenderJobDependencies, type RenderJobOutcome } from "./render-job";
+import { processTrace } from "./process-trace";
 
 /** True when the reclaimer's next turn has come. Half the staleness window means a peer's abandoned job is picked up within about one and a half windows. */
 export function isReclaimDue(now: number, lastReclaimAt: number, everyMs: number): boolean {
@@ -24,7 +25,8 @@ export async function reclaimStaleRenderJobs(
   const stale = await dependencies.jobs.listStale(input.startedBefore, input.limit);
   let reclaimed = 0;
   for (const job of stale) {
-    const outcome = await reclaimStaleJob(job.id, dependencies);
+    const trace = processTrace({ jobId: job.id, projectId: job.projectId, sourceFile: "apps/backend/src/application/video-engine/render-worker.ts" });
+    const outcome = await trace.run("render.worker.reclaim", () => reclaimStaleJob(job.id, dependencies));
     if (outcome.outcome === "failed") reclaimed += 1;
   }
   return reclaimed;

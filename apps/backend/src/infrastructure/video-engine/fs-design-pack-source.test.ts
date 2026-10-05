@@ -1,4 +1,4 @@
-import { mkdirSync, mkdtempSync, writeFileSync } from "node:fs";
+import { mkdirSync, mkdtempSync, readFileSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
@@ -16,6 +16,18 @@ describe("createFsDesignPackSource", () => {
     expect(pack.manifest.styleId).toBe("creative-mode");
     expect(pack.frameMd).toContain("Creative Mode");
     expect(pack.frameMd.length).toBeGreaterThan(500);
+  });
+
+  it("loads optional design.md without requiring it for packs that only have frame.md", async () => {
+    const tempRoot = makeTempRoot();
+    const dir = designPackDirectory(tempRoot, { id: "creative-mode", version: "1" });
+    mkdirSync(dir, { recursive: true });
+    writeFileSync(join(dir, "manifest.json"), readFileSync(join(root, "design-packs/creative-mode/v1/manifest.json")));
+    writeFileSync(join(dir, "frame.md"), "Poster frame direction");
+    const pack = createFsDesignPackSource(tempRoot);
+    expect((await pack.load({ id: "creative-mode", version: "1" })).designMd).toBeNull();
+    writeFileSync(join(dir, "design.md"), "Warm and tactile");
+    expect((await pack.load({ id: "creative-mode", version: "1" })).designMd).toBe("Warm and tactile");
   });
 
   it("reports a missing pack with the design_pack_missing code", async () => {

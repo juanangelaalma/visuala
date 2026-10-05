@@ -12,6 +12,7 @@ export type CompositionSmokeOptions = {
   /** A catalog item to install and host in the second scene; empty renders internal modules only. */
   block: string | null;
   keep: boolean;
+  htmlFile: string | null;
   outDir: string | null;
 };
 
@@ -23,6 +24,7 @@ export const SMOKE_DEFAULTS: CompositionSmokeOptions = {
   quality: "draft",
   block: null,
   keep: false,
+  htmlFile: null,
   outDir: null,
 };
 
@@ -54,6 +56,9 @@ export function parseCompositionSmokeOptions(args: readonly string[]): Compositi
         break;
       case "--quality":
         options.quality = assertQuality(value());
+        break;
+      case "--html":
+        options.htmlFile = value();
         break;
       case "--block":
         options.block = value();

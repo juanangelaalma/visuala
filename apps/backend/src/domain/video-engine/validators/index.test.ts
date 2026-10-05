@@ -5,9 +5,9 @@ import { COMPOSITION_SPEC_VERSION, sceneTimeline, totalFrames } from "../composi
 import { parseDesignPackManifest } from "../design-pack";
 import { parseCatalogRows, buildCatalog } from "../catalog";
 import type { Catalog } from "../catalog";
-import { buildFallbackSpec } from "../fallback";
 import { recipeById } from "../recipes/registry";
 import { validateComposition } from "./index";
+import { validateStoryboard } from "./storyboard-validator";
 import type { ValidationBrief, ValidationInput } from "./types";
 import type { CompositionSpec } from "../composition";
 
@@ -152,6 +152,13 @@ describe("asset validator", () => {
 
     expect(codes(input({ spec: bad }))).toContain("asset_slot_missing");
   });
+
+  it("refuses to silently omit every uploaded asset", () => {
+    const bad = spec();
+    bad.scenes[0]!.modules = [{ id: "BrandMark", kind: "internal", content: { text: "Julumpia" } }];
+
+    expect(codes(input({ spec: bad }))).toContain("asset_unused");
+  });
 });
 
 describe("duration validator", () => {
@@ -201,35 +208,72 @@ describe("compatibility validator", () => {
 describe("scene timeline", () => {
   it("walks scenes in order", () => {
     expect(sceneTimeline(spec())).toEqual([
-      { id: "scene_1", startFrames: 0, durationFrames: 120, transition: "cut" },
-      { id: "scene_2", startFrames: 120, durationFrames: 120, transition: "cut" },
-      { id: "scene_3", startFrames: 240, durationFrames: 120, transition: "cut" },
+      { id: "scene_1", startFrames: 0, durationFrames: 120, transition: "cut", motion: "staged_reveal" },
+      { id: "scene_2", startFrames: 120, durationFrames: 120, transition: "slide", motion: "staged_reveal" },
+      { id: "scene_3", startFrames: 240, durationFrames: 120, transition: "slide", motion: "staged_reveal" },
     ]);
     expect(totalFrames(spec())).toBe(360);
   });
 });
 
-describe("fallback composition", () => {
-  const format = { aspectRatio: "9:16", fps: 30, durationSeconds: 12 } as const;
+describe("planned storyboard semantics", () => {
+  function plannedSpec(): CompositionSpec {
+    const planned = spec();
+    planned.scenes[0] = { ...planned.scenes[0]!, id: "product_reveal", modules: [
+      ...planned.scenes[0]!.modules,
+      { id: "Headline", kind: "internal", content: { text: BRIEF.productName } },
+    ] };
+    planned.scenes[1] = { ...planned.scenes[1]!, id: "offer_reveal", modules: [
+      { id: "OfferBadge", kind: "internal", content: { text: BRIEF.offer!.label } },
+    ] };
+    planned.scenes[2] = { ...planned.scenes[2]!, id: "cta" };
+    return planned;
+  }
 
-  it("passes every validator", () => {
-    const fallback = buildFallbackSpec({ designPack, format, brief: BRIEF, assets: ASSETS });
+  it("allows the confirmed key message as subordinate product and closing support", () => {
+    const value = plannedSpec();
+    value.scenes[0]!.modules.push({ id: "SupportingCopy", kind: "internal", content: { text: BRIEF.keyMessage } });
 
-    expect(validateComposition(input({ spec: fallback })).ok).toBe(true);
+    expect(validateStoryboard(input({ spec: value }))).toEqual([]);
   });
 
-  it("still passes with no assets and no offer", () => {
-    const fallback = buildFallbackSpec({ designPack, format, brief: { ...BRIEF, offer: null }, assets: [] });
-    const report = validateComposition(input({ spec: fallback, recipe: recipeById("product_promo"), brief: { ...BRIEF, offer: null }, assets: [] }));
+  it("refuses the key message as a rival product headline", () => {
+    const value = plannedSpec();
+    value.scenes[0]!.modules.find((module) => module.id === "Headline")!.content.text = BRIEF.keyMessage;
 
-    expect(report.ok).toBe(true);
-    expect(fallback.scenes[0]!.modules.map((module) => module.id)).toContain("BrandMark");
+    expect(validateStoryboard(input({ spec: value })).map((issue) => issue.code)).toContain("beat_focus_invalid");
   });
 
-  it("uses only internal modules", () => {
-    const fallback = buildFallbackSpec({ designPack, format, brief: BRIEF, assets: ASSETS });
-
-    expect(fallback.scenes.flatMap((scene) => scene.modules).every((module) => module.kind === "internal")).toBe(true);
+  it.each([
+    {
+      name: "brand and headline repeat the product name",
+      code: "copy_repeated",
+      change: (value: CompositionSpec) => value.scenes[0]!.modules.push({ id: "BrandMark", kind: "internal", content: { text: "JULUMPIA!" } }),
+    },
+    {
+      name: "offer headline repeats the badge inside a longer phrase",
+      code: "copy_repeated",
+      change: (value: CompositionSpec) => value.scenes[1]!.modules.push({ id: "Headline", kind: "internal", content: { text: BRIEF.keyMessage } }),
+    },
+    {
+      name: "CTA appears before closing",
+      code: "cta_not_closing",
+      change: (value: CompositionSpec) => value.scenes[0]!.modules.push({ id: "CTA", kind: "internal", content: { text: BRIEF.callToAction! } }),
+    },
+    {
+      name: "the product beat shows the offer instead",
+      code: "beat_focus_invalid",
+      change: (value: CompositionSpec) => { value.scenes[0]!.modules = value.scenes[1]!.modules; },
+    },
+    {
+      name: "recipe beats are reordered",
+      code: "beat_order_invalid",
+      change: (value: CompositionSpec) => { [value.scenes[0], value.scenes[1]] = [value.scenes[1]!, value.scenes[0]!]; },
+    },
+  ])("rejects $name", ({ code, change }) => {
+    const value = plannedSpec();
+    change(value);
+    expect(validateStoryboard(input({ spec: value })).map((issue) => issue.code)).toContain(code);
   });
 });
 

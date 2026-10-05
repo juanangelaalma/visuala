@@ -2,6 +2,7 @@ import { describe, expect, it, vi } from "vitest";
 import type { AIService } from "../../domain/ai-service/contracts";
 import { AIError } from "../../domain/ai-service/errors";
 import type { VideoOutputSettings, VideoMessage, VideoProject } from "../../domain/video/types";
+import type { StructuredResult } from "../../domain/ai-service/types";
 import { runInterviewer } from "./interviewer";
 
 const USER_ID = "11111111-1111-4111-8111-111111111111";
@@ -33,15 +34,25 @@ const turn = {
   briefComplete: false,
 };
 
+function structuredResult(data: unknown): StructuredResult<unknown> {
+  return {
+    requestId: "ai-request-1", profileId: "primary", provider: "google", model: "gemini-2.0",
+    providerRequestId: "provider-1", attemptCount: 1, finishReason: "stop",
+    usage: { inputTokens: 10, outputTokens: 5, totalTokens: 15 }, estimatedCost: null, latencyMs: 20, data,
+  };
+}
+
 function aiService(data: unknown): AIService {
   return {
     generateText: vi.fn(),
-    generateStructured: vi.fn(async () => ({
-      requestId: "ai-request-1", profileId: "primary", provider: "google", model: "gemini-2.0",
-      providerRequestId: "provider-1", attemptCount: 1, finishReason: "stop" as const,
-      usage: { inputTokens: 10, outputTokens: 5, totalTokens: 15 }, estimatedCost: null, latencyMs: 20, data,
-    })),
+    generateStructured: vi.fn(async () => structuredResult(data)),
   } as unknown as AIService;
+}
+
+function deferred<T>() {
+  let resolve!: (value: T) => void;
+  const promise = new Promise<T>((done) => { resolve = done; });
+  return { promise, resolve };
 }
 
 function dependencies(ai: AIService) {
@@ -65,30 +76,58 @@ describe("runInterviewer", () => {
     });
   });
 
-  it("asks the interviewer task with the project context and the registered schema", async () => {
+  it("publishes only question text while the structured result is still pending", async () => {
     const ai = aiService({ draft, turn });
-
-    await runInterviewer({ userId: USER_ID, project: project(), transcript: transcript(), draft: null, assetCount: 2 }, dependencies(ai));
-
-    const request = vi.mocked(ai.generateStructured).mock.calls[0]?.[0];
-    expect(request).toMatchObject({
-      task: "interviewer",
-      context: { userId: USER_ID, projectId: PROJECT_ID },
-      promptVersion: "interviewer@v2",
-      schema: { name: "interview_result", version: "v1" },
+    const preview = deferred<void>();
+    const deltas: string[] = [];
+    const release = deferred<void>();
+    let settled = false;
+    vi.mocked(ai.generateStructured).mockImplementationOnce(async (request) => {
+      request.onTextDelta?.('{"draft":{"question":"not the question"},"turn":{"question":"Siapa target ');
+      await release.promise;
+      return structuredResult({ draft, turn });
     });
-    expect(request?.messages).toEqual([{ role: "user", content: "buat video jualan kopi ini" }]);
+
+    const pending = runInterviewer(
+      { userId: USER_ID, project: project(), transcript: transcript(), draft: null, assetCount: 2 },
+      dependencies(ai),
+      { onQuestionDelta: (delta) => { deltas.push(delta); preview.resolve(); } },
+    ).then((result) => { settled = true; return result; });
+
+    await preview.promise;
+    expect(deltas.join("")).toBe("Siapa target ");
+    expect(settled).toBe(false);
+    release.resolve();
+    expect((await pending).turn).toEqual(turn);
   });
 
-  it("tells the model the required fields and the question language", async () => {
+  it("rejects invalid final controls even after a question preview", async () => {
     const ai = aiService({ draft, turn });
+    const deltas: string[] = [];
+    vi.mocked(ai.generateStructured).mockImplementationOnce(async (request) => {
+      request.onTextDelta?.('{"turn":{"question":"Siapa target pembelinya?"}}');
+      return structuredResult({ draft, turn: { ...turn, recommendedOptionId: "missing" } });
+    });
 
-    await runInterviewer({ userId: USER_ID, project: project(), transcript: transcript(), draft: null, assetCount: 2 }, dependencies(ai));
+    await expect(runInterviewer(
+      { userId: USER_ID, project: project(), transcript: transcript(), draft: null, assetCount: 0 },
+      dependencies(ai),
+      { onQuestionDelta: (delta) => deltas.push(delta) },
+    )).rejects.toMatchObject({ code: "AI_INVALID_OUTPUT" });
+    expect(deltas.join("")).toBe(turn.question);
+  });
 
-    const instructions = vi.mocked(ai.generateStructured).mock.calls[0]?.[0].instructions ?? "";
-    expect(instructions).toContain("productName, audience, objective, keyMessage, callToAction");
-    expect(instructions).toContain("Bahasa Indonesia");
-    expect(instructions).toContain("2");
+  it("does not start generation after cancellation", async () => {
+    const ai = aiService({ draft, turn });
+    const controller = new AbortController();
+    controller.abort();
+
+    await expect(runInterviewer(
+      { userId: USER_ID, project: project(), transcript: transcript(), draft: null, assetCount: 0 },
+      dependencies(ai),
+      { abortSignal: controller.signal },
+    )).rejects.toMatchObject({ code: "AI_CANCELLED" });
+    expect(ai.generateStructured).not.toHaveBeenCalled();
   });
 
   it("rejects a turn that recommends an option it did not list", async () => {

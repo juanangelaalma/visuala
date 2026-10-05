@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
-import { DesignPackError, GROUND_TONES, designPackTokenSummary, localFontFaceCss, parseDesignPackManifest } from "./design-pack";
+import { DesignPackError, GROUND_TONES, designPackTokenSummary, parseDesignPackManifest } from "./design-pack";
 
 function committedManifest(): Record<string, unknown> {
   return JSON.parse(readFileSync(resolve(process.cwd(), "design-packs/creative-mode/v1/manifest.json"), "utf8")) as Record<string, unknown>;
@@ -74,23 +74,6 @@ describe("parseDesignPackManifest", () => {
       expect(error).toBeInstanceOf(DesignPackError);
       expect((error as DesignPackError).code).toBe("design_pack_invalid");
     }
-  });
-});
-
-describe("localFontFaceCss", () => {
-  it("declares each shipped face against a relative file", () => {
-    const css = localFontFaceCss(parseDesignPackManifest(committedManifest()));
-
-    expect(css).toContain('font-family: "Archivo Black"');
-    expect(css).toContain('url("fonts/archivo-black-latin-400-normal.woff2") format("woff2")');
-    expect(css).toContain('font-family: "Space Grotesk"');
-    expect(css).toContain('font-family: "JetBrains Mono"');
-    expect(css.match(/@font-face/g)).toHaveLength(3);
-  });
-
-  it("honours a custom base directory", () => {
-    const css = localFontFaceCss(parseDesignPackManifest(committedManifest()), "assets/fonts");
-    expect(css).toContain('url("assets/fonts/space-grotesk-latin-400-normal.woff2")');
   });
 });
 

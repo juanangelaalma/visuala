@@ -28,12 +28,6 @@ export function internalModuleById(id: InternalModuleId): VideoModule {
   return module;
 }
 
-export function moduleVersions(): Record<string, string> {
-  const versions: Record<string, string> = {};
-  for (const module of INTERNAL_MODULES) versions[module.id] = module.version;
-  return versions;
-}
-
 export { INTERNAL_MODULE_IDS };
 export type { InternalModuleId } from "./ids";
-export type { ModuleBuildInput, ModuleAsset, ModuleOutput, ModuleSlot, VideoModule } from "./types";
+export type { ModuleSlot, VideoModule } from "./types";

@@ -3,7 +3,8 @@ import { describe, expect, it, vi } from "vitest";
 import type { ResolvedAIConfig } from "../../domain/ai-service/config";
 import type { AssetResolver, ProviderAdapter, UsageRecorder } from "../../domain/ai-service/contracts";
 import { AIError } from "../../domain/ai-service/errors";
-import type { GenerateStructuredRequest, GenerateTextRequest, ProviderTextResult } from "../../domain/ai-service/types";
+import { OutputValidationError } from "../../domain/ai-service/output-validation-error";
+import type { GenerateStructuredRequest, GenerateTextRequest, ProviderStructuredResult, ProviderTextResult } from "../../domain/ai-service/types";
 import { DefaultAIService } from "./ai-service";
 
 const config: ResolvedAIConfig = {
@@ -68,10 +69,18 @@ describe("DefaultAIService success and output", () => {
   it.each([
     ["invalid JSON", "{"],
     ["schema mismatch", '{"answer":3}'],
-  ])("rejects %s structured output without repair", async (_name, structuredJson) => {
-    const fixture = makeFixture({ structuredJson });
-    await expect(fixture.service.generateStructured(structuredRequest())).rejects.toMatchObject({ code: "AI_INVALID_OUTPUT" });
+  ])("retains terminal streaming usage on %s failure", async (_name, structuredJson) => {
+    const fixture = makeFixture({ structuredJson, maximumConcurrency: 1 });
+
+    await expect(fixture.service.generateStructured({ ...structuredRequest(), onTextDelta: () => undefined }))
+      .rejects.toMatchObject({ code: "AI_INVALID_OUTPUT" });
     expect(fixture.generateStructured).toHaveBeenCalledOnce();
+
+    expect(fixture.attemptOutcomes[0]).toMatchObject({ errorCode: "AI_INVALID_OUTPUT", providerRequestId: "provider-1",
+      usage: { inputTokens: 10, outputTokens: 5, totalTokens: 15 }, billingUnknown: false, estimatedCost: { amount: 0.00002 } });
+    expect(fixture.operationOutcomes[0]).toMatchObject({ attemptCount: 1, errorCode: "AI_INVALID_OUTPUT",
+      usage: { inputTokens: 10, outputTokens: 5, totalTokens: 15 }, estimatedCost: { amount: 0.00002 }, costComplete: true });
+    await expect(fixture.service.generateText(textRequest({ requestId: "request-2" }))).resolves.toMatchObject({ text: "answer" });
   });
 
   it("does not call the adapter when operation-start persistence fails", async () => {
@@ -223,6 +232,118 @@ describe("DefaultAIService retry and deadline", () => {
   });
 });
 
+describe("DefaultAIService structured streaming", () => {
+  it("publishes previews before completion and uses the terminal JSON as the result", async () => {
+    const { promise: gate, resolve: release } = Promise.withResolvers<void>();
+    const { promise: deltaReceived, resolve: notifyDelta } = Promise.withResolvers<void>();
+    const fixture = makeFixture({ structuredAdapterImplementation: async (request) => {
+      request.onTextDelta?.('{"answer":"preview');
+      await gate;
+      return { json: '{"answer":"final"}', model: "actual-model", providerRequestId: "provider-1", finishReason: "stop",
+        usage: { inputTokens: 10, outputTokens: 5, totalTokens: 15 } };
+    } });
+    const deltas: string[] = [];
+    let settled = false;
+    const promise = fixture.service.generateStructured({ ...structuredRequest(), onTextDelta: (delta) => {
+      deltas.push(delta);
+      notifyDelta();
+    } });
+    void promise.then(() => { settled = true; });
+
+    await deltaReceived;
+    expect(deltas).toEqual(['{"answer":"preview']);
+    expect(settled).toBe(false);
+    expect(fixture.operationOutcomes).toEqual([]);
+    release();
+    await expect(promise).resolves.toMatchObject({ data: { answer: "final" }, attemptCount: 1 });
+  });
+
+  it.each(["fragment", " "])("does not retry a rejected transient failure after publishing %j", async (delta) => {
+    const fixture = makeFixture({ maximumConcurrency: 1, structuredAdapterImplementation: async (request) => {
+      request.onTextDelta?.(delta);
+      throw retryableError();
+    } });
+    const deltas: string[] = [];
+
+    await expect(fixture.service.generateStructured({ ...structuredRequest(), onTextDelta: (text) => { deltas.push(text); } }))
+      .rejects.toMatchObject({ code: "AI_UNAVAILABLE" });
+
+    expect(deltas).toEqual([delta]);
+    expect(fixture.attemptRecords.map((record) => record.attemptNumber)).toEqual([1]);
+    expect(fixture.sleep).not.toHaveBeenCalled();
+    await expect(fixture.service.generateText(textRequest({ requestId: "request-2" }))).resolves.toMatchObject({ text: "answer" });
+  });
+
+  it("keeps rejected transient retries before any nonempty publication", async () => {
+    const fixture = makeFixture({ structuredAdapterImplementation: async (request) => {
+      if (request.attempt.attemptNumber === 1) {
+        request.onTextDelta?.("");
+        throw retryableError({ retryAfterMs: 200 });
+      }
+      request.onTextDelta?.('{"answer":"yes"}');
+      return { json: '{"answer":"yes"}', model: "actual-model", providerRequestId: "provider-2", finishReason: "stop",
+        usage: { inputTokens: 10, outputTokens: 5, totalTokens: 15 } };
+    } });
+    const deltas: string[] = [];
+
+    await expect(fixture.service.generateStructured({ ...structuredRequest(), onTextDelta: (delta) => { deltas.push(delta); } }))
+      .resolves.toMatchObject({ data: { answer: "yes" }, attemptCount: 2 });
+
+    expect(deltas).toEqual(['{"answer":"yes"}']);
+    expect(fixture.sleep).toHaveBeenCalledWith(200, expect.any(AbortSignal));
+  });
+
+  it.each(["cancel", "timeout"] as const)("preserves ambiguous dispatch accounting on %s and releases the permit", async (kind) => {
+    const controller = new AbortController();
+    const { promise: started, resolve: notifyStarted } = Promise.withResolvers<void>();
+    const fixture = makeFixture({ maximumConcurrency: 1, structuredAdapterImplementation: (request) => {
+      const { promise, reject } = Promise.withResolvers<ProviderStructuredResult>();
+      request.onTextDelta?.('{"answer":"');
+      request.attempt.signal.addEventListener("abort", () => reject(retryableError({
+        dispatchOutcome: "ambiguous", providerRequestId: "provider-dispatched",
+      })), { once: true });
+      notifyStarted();
+      return promise;
+    } });
+
+    const promise = fixture.service.generateStructured({ ...structuredRequest(), abortSignal: controller.signal, onTextDelta: () => undefined });
+    await started;
+    if (kind === "cancel") controller.abort();
+    else fixture.scheduler.advanceBy(1_000);
+
+    await expect(promise).rejects.toMatchObject({ code: kind === "cancel" ? "AI_CANCELLED" : "AI_TIMEOUT",
+      dispatchOutcome: "ambiguous", providerRequestId: "provider-dispatched" });
+    expect(fixture.attemptOutcomes[0]).toMatchObject({ dispatchOutcome: "ambiguous", usageUnknown: true,
+      billingUnknown: true, usage: unknownUsage(), estimatedCost: null, costComplete: false });
+    expect(fixture.operationOutcomes[0]).toMatchObject({ attemptCount: 1, usage: unknownUsage(), estimatedCost: null, costComplete: false });
+    expect(fixture.sleep).not.toHaveBeenCalled();
+    await expect(fixture.service.generateText(textRequest({ requestId: "request-2" }))).resolves.toMatchObject({ text: "answer" });
+    expect(fixture.scheduler.pendingCount()).toBe(0);
+  });
+
+  it.each([
+    { name: "known", usage: { inputTokens: 12, outputTokens: 8, totalTokens: 20 }, billingUnknown: false, cost: { amount: 0.000028 } },
+    { name: "partial", usage: { inputTokens: 12, outputTokens: null, totalTokens: null }, billingUnknown: false, cost: null },
+    { name: "absent", usage: { inputTokens: null, outputTokens: null, totalTokens: null }, billingUnknown: true, cost: null },
+  ])("retains $name terminal usage evidence when cancellation races validation failure", async ({ usage, billingUnknown, cost }) => {
+    const controller = new AbortController();
+    const fixture = makeFixture({ structuredAdapterImplementation: async () => {
+      controller.abort();
+      throw new OutputValidationError(retryableError({ code: "AI_INVALID_OUTPUT", retryable: false, dispatchOutcome: "ambiguous" }), {
+        providerRequestId: "terminal-id", model: "terminal-model", finishReason: "unknown",
+        usage,
+      });
+    } });
+
+    await expect(fixture.service.generateStructured({ ...structuredRequest(), abortSignal: controller.signal, onTextDelta: () => undefined }))
+      .rejects.toMatchObject({ code: "AI_CANCELLED" });
+
+    expect(fixture.attemptOutcomes[0]).toMatchObject({ providerRequestId: "terminal-id", billingUnknown,
+      usageUnknown: billingUnknown, usage, estimatedCost: cost, costComplete: cost !== null });
+    expect(fixture.operationOutcomes[0]).toMatchObject({ usage, estimatedCost: cost, costComplete: cost !== null });
+  });
+});
+
 describe("DefaultAIService cancellation and concurrency", () => {
   it("maps abort before start to cancellation without invoking the adapter", async () => {
     const controller = new AbortController();
@@ -368,6 +489,7 @@ type FixtureOptions = {
   randomValues?: number[];
   sleepImplementation?: (milliseconds: number, signal?: AbortSignal) => Promise<void>;
   adapterImplementation?: (request: Parameters<ProviderAdapter["generateText"]>[0]) => Promise<ProviderTextResult>;
+  structuredAdapterImplementation?: (request: Parameters<ProviderAdapter["generateStructured"]>[0]) => Promise<ProviderStructuredResult>;
   maximumConcurrency?: number;
   holdFirstAdapter?: boolean;
   startAttemptError?: Error;
@@ -401,7 +523,12 @@ function makeFixture(options: FixtureOptions = {}) {
     }
     return result;
   });
-  const generateStructured = vi.fn(async (request) => { events.push(`adapter:structured:${request.attempt.attemptNumber}`); now += 25; return { ...result, json: options.structuredJson ?? '{"answer":"yes"}' }; });
+  const generateStructured = vi.fn(async (request: Parameters<ProviderAdapter["generateStructured"]>[0]) => {
+    events.push(`adapter:structured:${request.attempt.attemptNumber}`);
+    now += 25;
+    if (options.structuredAdapterImplementation) return options.structuredAdapterImplementation(request);
+    return { ...result, json: options.structuredJson ?? '{"answer":"yes"}' };
+  });
   const adapter: ProviderAdapter = { generateText, generateStructured };
   const resolveAsset = vi.fn(async (...arguments_: Parameters<AssetResolver["resolve"]>) => {
     events.push("asset:resolve");

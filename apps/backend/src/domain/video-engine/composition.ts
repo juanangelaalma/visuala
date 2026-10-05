@@ -6,6 +6,9 @@ export const COMPOSITION_ID = "main";
 export const COMPOSITION_FPS = 30;
 export const ASPECT_RATIOS = ["9:16", "1:1", "16:9"] as const;
 export const SCENE_TRANSITIONS = ["cut", "fade", "slide", "zoom"] as const;
+export const SCENE_MOTIONS = ["staged_reveal", "product_push"] as const;
+export const DEFAULT_SCENE_TRANSITION = "slide";
+export const DEFAULT_SCENE_MOTION = "staged_reveal";
 /** A scene shorter than this is a flash, not a beat; the validator refuses it. */
 export const MIN_SCENE_SECONDS = 0.5;
 export const MIN_DURATION_SECONDS = 4;
@@ -26,6 +29,7 @@ const sceneSchema = z
     id: z.string().trim().regex(/^[a-z0-9_]+$/),
     durationFrames: z.number().int().min(1),
     transition: z.enum(SCENE_TRANSITIONS).optional(),
+    motion: z.enum(SCENE_MOTIONS).optional(),
     modules: z.array(moduleInstanceSchema).min(1),
   })
   .strict();
@@ -45,13 +49,83 @@ export const compositionSpecSchema = z
   })
   .strict();
 
+/** Strict provider output uses a pair list for content and requires bounded executable motion fields. */
+const moduleContentPairSchema = z.object({ key: z.string().trim().min(1), value: z.string() }).strict();
+
+const wireModuleInstanceSchema = z
+  .object({
+    id: z.string().trim().min(1),
+    kind: z.enum(["internal", "catalog"]),
+    content: z.array(moduleContentPairSchema),
+  })
+  .strict();
+
+const wireSceneSchema = z
+  .object({
+    id: z.string().trim().regex(/^[a-z0-9_]+$/),
+    durationFrames: z.number().int().min(1),
+    transition: z.enum(SCENE_TRANSITIONS),
+    motion: z.enum(SCENE_MOTIONS),
+    modules: z.array(wireModuleInstanceSchema).min(1),
+  })
+  .strict();
+
+export const compositionSpecWireSchema = z
+  .object({
+    schemaVersion: z.literal(COMPOSITION_SPEC_VERSION),
+    format: z
+      .object({
+        aspectRatio: z.enum(ASPECT_RATIOS),
+        fps: z.number().int().min(1).max(120),
+        durationSeconds: z.number().int().min(MIN_DURATION_SECONDS).max(MAX_DURATION_SECONDS),
+      })
+      .strict(),
+    style: z.object({ id: z.string().trim().min(1), version: z.string().trim().min(1) }).strict(),
+    scenes: z.array(wireSceneSchema).min(1),
+  })
+  .strict();
+
+export type CompositionSpecWire = z.infer<typeof compositionSpecWireSchema>;
+
+/** Folds the pair list back into the record the schema validator, compiler, and fallback all read. */
+export function compositionSpecFromWire(wire: CompositionSpecWire): CompositionSpec {
+  return {
+    schemaVersion: wire.schemaVersion,
+    format: wire.format,
+    style: wire.style,
+    scenes: wire.scenes.map((scene) => ({
+      id: scene.id,
+      durationFrames: scene.durationFrames,
+      transition: scene.transition,
+      motion: scene.motion,
+      modules: scene.modules.map((module) => ({
+        id: module.id,
+        kind: module.kind,
+        content: contentRecord(module.content),
+      })),
+    })),
+  };
+}
+
+function contentRecord(pairs: readonly { key: string; value: string }[]): Record<string, string> {
+  const content: Record<string, string> = {};
+  for (const pair of pairs) content[pair.key] = pair.value;
+  return content;
+}
+
 export type CompositionModuleInstance = z.infer<typeof moduleInstanceSchema>;
 export type CompositionScene = z.infer<typeof sceneSchema>;
 export type CompositionSpec = z.infer<typeof compositionSpecSchema>;
 
 export type CompositionFormat = CompositionSpec["format"];
 
-export type SceneTimelineEntry = { id: string; startFrames: number; durationFrames: number; transition: string };
+export type SceneTimelineEntry = {
+  id: string;
+  startFrames: number;
+  durationFrames: number;
+  transition: (typeof SCENE_TRANSITIONS)[number];
+  motion: (typeof SCENE_MOTIONS)[number];
+};
 
 /** Scene start frames in spec order. The compiler and the duration validator share this one walk. */
 export function sceneTimeline(spec: Pick<CompositionSpec, "scenes">): SceneTimelineEntry[] {
@@ -61,7 +135,8 @@ export function sceneTimeline(spec: Pick<CompositionSpec, "scenes">): SceneTimel
       id: scene.id,
       startFrames: cursor,
       durationFrames: scene.durationFrames,
-      transition: scene.transition ?? "cut",
+      transition: scene.transition ?? DEFAULT_SCENE_TRANSITION,
+      motion: scene.motion ?? DEFAULT_SCENE_MOTION,
     };
     cursor += scene.durationFrames;
     return entry;

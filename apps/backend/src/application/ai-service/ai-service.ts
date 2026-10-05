@@ -1,6 +1,7 @@
 import type { ResolvedAIConfig } from "../../domain/ai-service/config";
 import type { AIService, AssetResolver, ProviderAdapter, UsageRecorder } from "../../domain/ai-service/contracts";
 import { AIError, diagnosticField, sanitizedDiagnostic } from "../../domain/ai-service/errors";
+import { OutputValidationError } from "../../domain/ai-service/output-validation-error";
 import type { AIAttemptUsage } from "../../domain/ai-service/usage";
 import type { AIOperationOutcome, AIUsage, GenerateStructuredRequest, GenerateTextRequest, ProviderResultMetadata, StructuredResult, TextResult } from "../../domain/ai-service/types";
 import { aggregateOperationUsage, calculateAttemptCost } from "./calculate-cost";
@@ -31,6 +32,7 @@ type TimerScheduler = {
 type GenerateRequest = GenerateTextRequest | GenerateStructuredRequest<unknown>;
 type ProviderOutput = ProviderResultMetadata & { text?: string; json?: string };
 type AttemptResult<T> = { output: ProviderOutput; value: T; attempts: AIAttemptUsage[]; attemptCount: number };
+type TextPublication = { published: boolean; onDelta: (delta: string) => void };
 
 export class DefaultAIService implements AIService {
   private readonly limiter: ConcurrencyLimiter;
@@ -47,18 +49,27 @@ export class DefaultAIService implements AIService {
   }
 
   async generateStructured<T>(request: GenerateStructuredRequest<T>): Promise<StructuredResult<T>> {
-    return this.execute(request, async (adapterRequest, adapter) => adapter.generateStructured({ ...adapterRequest,
-      schemaName: request.schema.name, schemaVersion: request.schema.version }), (output) => {
+    return this.execute(request, async (adapterRequest, adapter, onTextDelta) => adapter.generateStructured({ ...adapterRequest,
+      schemaName: request.schema.name, schemaVersion: request.schema.version, ...(onTextDelta ? { onTextDelta } : {}) }), (output) => {
       requireSuccessfulOutput(output, request.requestId, output.json ?? "");
-      return parseStructuredOutput(request, output.json ?? "");
+      return parseStructuredOutput(request, output.json ?? "", output);
     }, (metadata, value) => ({ ...metadata, data: value }));
   }
 
   private async execute<T, R>(request: GenerateRequest,
-    invoke: (providerRequest: ProviderRequest, adapter: ProviderAdapter) => Promise<ProviderOutput>,
+    invoke: (providerRequest: ProviderRequest, adapter: ProviderAdapter, onTextDelta?: (delta: string) => void) => Promise<ProviderOutput>,
     validate: (output: ProviderOutput) => T,
     makeResult: (metadata: Omit<TextResult, "text">, value: T) => R): Promise<R> {
     const startedAt = this.dependencies.now();
+    const callback = "schema" in request ? request.onTextDelta : undefined;
+    const publication: TextPublication | undefined = callback ? {
+      published: false,
+      onDelta: (delta) => {
+        if (!delta.length) return;
+        publication!.published = true;
+        callback(delta);
+      },
+    } : undefined;
     if (request.abortSignal?.aborted) throw cancelledError(request.requestId);
     const config = cloneConfig(this.dependencies.resolveConfig(request.task));
     await this.startOperation(request, config);
@@ -68,7 +79,7 @@ export class DefaultAIService implements AIService {
       const asset = await this.resolveAsset(validatedRequest, config);
       if (request.abortSignal?.aborted) throw cancelledError(request.requestId);
       release = await this.acquirePermit(validatedRequest, config, startedAt);
-      const attempt = await this.runAttempts(validatedRequest, config, asset, startedAt, invoke, validate);
+      const attempt = await this.runAttempts(validatedRequest, config, asset, startedAt, invoke, validate, publication);
       const aggregate = aggregateOperationUsage(attempt.attempts, config.pricing);
       const metadata = resultMetadata(validatedRequest.requestId, config, attempt.output, aggregate, this.dependencies.now() - startedAt, attempt.attemptCount);
       await this.finalizeOperationSafely(request.requestId, outcomeFromSuccess(metadata, aggregate));
@@ -104,8 +115,8 @@ export class DefaultAIService implements AIService {
 
   private async runAttempts<T>(request: GenerateRequest, config: ResolvedAIConfig,
     asset: Awaited<ReturnType<AssetResolver["resolve"]>> | undefined, startedAt: number,
-    invoke: (providerRequest: ProviderRequest, adapter: ProviderAdapter) => Promise<ProviderOutput>,
-    validate: (output: ProviderOutput) => T): Promise<AttemptResult<T>> {
+    invoke: (providerRequest: ProviderRequest, adapter: ProviderAdapter, onTextDelta?: (delta: string) => void) => Promise<ProviderOutput>,
+    validate: (output: ProviderOutput) => T, publication?: TextPublication): Promise<AttemptResult<T>> {
     const attempts: AIAttemptUsage[] = [];
     const signal = request.abortSignal ?? new AbortController().signal;
     for (let attemptNumber = 1; attemptNumber <= config.limits.maxAttempts; attemptNumber += 1) {
@@ -123,22 +134,25 @@ export class DefaultAIService implements AIService {
       const attemptSignal = combinedSignal(signal, executionBudget, this.dependencies.scheduler);
       try {
         const output = await invoke(providerRequest(request, asset, attemptId, attemptNumber, attemptSignal.signal),
-          this.dependencies.getAdapter(cloneConfig(config)));
+          this.dependencies.getAdapter(cloneConfig(config)), publication?.onDelta);
         const usage = attemptUsage(output, false);
         const value = validate(output);
         attempts.push(usage);
         await this.finalizeAttempt(attemptId, output, attemptStartedAt, null, "rejected", false, config);
         return { output, value, attempts, attemptCount: attemptNumber };
       } catch (error) {
-        const normalized = signal.aborted ? cancelledError(request.requestId)
-          : attemptSignal.timedOut() ? timeoutError(request.requestId) : normalizeError(error, request.requestId);
-        const billingUnknown = normalized.dispatchOutcome === "ambiguous";
+        const providerError = normalizeError(error, request.requestId);
+        const normalized = signal.aborted ? cancelledError(request.requestId, providerError)
+          : attemptSignal.timedOut() ? timeoutError(request.requestId, providerError) : providerError;
         const provider = error instanceof OutputValidationError ? error.provider : errorMetadata(normalized, config);
+        const hasTerminalUsage = error instanceof OutputValidationError
+          && (provider.usage.inputTokens !== null || provider.usage.outputTokens !== null || provider.usage.totalTokens !== null);
+        const billingUnknown = normalized.dispatchOutcome === "ambiguous" && !hasTerminalUsage;
         if (!(error instanceof OutputValidationError) || attempts.length < attemptNumber) {
           attempts.push(billingUnknown ? unknownAttemptUsage() : attemptUsage(provider, false));
         }
         await this.finalizeAttempt(attemptId, provider, attemptStartedAt, normalized.code, normalized.dispatchOutcome, billingUnknown, config);
-        if (!this.canRetry(normalized, attemptNumber, config)) throw new AttemptFailure(normalized, attemptNumber, attempts);
+        if (publication?.published || !this.canRetry(normalized, attemptNumber, config)) throw new AttemptFailure(normalized, attemptNumber, attempts);
         const delay = retryDelay(normalized, attemptNumber, this.dependencies.random());
         const remainingAfterDelay = config.limits.totalDeadlineMs - (this.dependencies.now() - startedAt + delay);
         if (remainingAfterDelay < config.limits.attemptTimeoutMs) {
@@ -251,12 +265,12 @@ function requireSuccessfulOutput(result: ProviderResultMetadata, requestId: stri
   if (result.finishReason !== "stop" || !output.trim()) throw new OutputValidationError(invalidOutputError(requestId), result);
 }
 
-function parseStructuredOutput<T>(request: GenerateStructuredRequest<T>, json: string): T {
+function parseStructuredOutput<T>(request: GenerateStructuredRequest<T>, json: string, provider: ProviderResultMetadata): T {
   try {
     return request.schema.schema.parse(JSON.parse(json));
   } catch (error) {
     if (error instanceof OutputValidationError) throw error;
-    throw invalidOutputError(request.requestId);
+    throw new OutputValidationError(invalidOutputError(request.requestId), provider);
   }
 }
 
@@ -302,12 +316,6 @@ function normalizeError(error: unknown, requestId: string): AIError {
   return error instanceof AIError ? error : unavailableError(requestId);
 }
 
-class OutputValidationError extends Error {
-  constructor(readonly error: AIError, readonly provider: ProviderResultMetadata) {
-    super(error.safeMessage);
-  }
-}
-
 function invalidOutputError(requestId: string): AIError {
   return serviceError("AI_INVALID_OUTPUT", "AI provider returned invalid output.", requestId);
 }
@@ -316,16 +324,18 @@ function unavailableError(requestId: string): AIError {
   return serviceError("AI_UNAVAILABLE", "AI service is unavailable.", requestId);
 }
 
-function timeoutError(requestId: string): AIError {
-  return serviceError("AI_TIMEOUT", "AI request timed out.", requestId);
+function timeoutError(requestId: string, evidence?: AIError): AIError {
+  return serviceError("AI_TIMEOUT", "AI request timed out.", requestId, evidence);
 }
 
-function cancelledError(requestId: string): AIError {
-  return serviceError("AI_CANCELLED", "AI request was cancelled.", requestId);
+function cancelledError(requestId: string, evidence?: AIError): AIError {
+  return serviceError("AI_CANCELLED", "AI request was cancelled.", requestId, evidence);
 }
 
-function serviceError(code: AIError["code"], safeMessage: string, requestId: string): AIError {
-  return new AIError({ code, safeMessage, requestId, retryable: false });
+function serviceError(code: AIError["code"], safeMessage: string, requestId: string, evidence?: AIError): AIError {
+  return new AIError({ code, safeMessage, requestId, retryable: false,
+    dispatchOutcome: evidence?.dispatchOutcome, providerRequestId: evidence?.providerRequestId,
+    providerStatus: evidence?.providerStatus, sanitizedDiagnostic: evidence?.sanitizedDiagnostic });
 }
 
 function combinedSignal(external: AbortSignal, milliseconds: number, scheduler: TimerScheduler) {

@@ -4,11 +4,13 @@ import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { promisify } from "node:util";
 import { frameSizeFor } from "../domain/video-engine/format";
+import { assertCompositionHtml } from "../application/video-engine/composition-author";
 import { buildComposition } from "../domain/video-engine/compiler";
 import { sha256Hex } from "../domain/video-engine/hash";
 import { createCatalogInstaller } from "../infrastructure/video-engine/catalog-installer";
 import { createFsDesignPackSource } from "../infrastructure/video-engine/fs-design-pack-source";
 import { createHyperframesCli } from "../infrastructure/video-engine/hyperframes-cli";
+import { createCompositionVisualGate } from "../infrastructure/video-engine/composition-visual-check";
 import { gsapScriptPath, resolveFontFile } from "../infrastructure/video-engine/font-file";
 import { writeComposition } from "../infrastructure/video-engine/composition-writer";
 import { HyperFramesRenderEngine } from "../infrastructure/video-engine/hyperframes-render-engine";
@@ -16,15 +18,10 @@ import { buildSmokeSpec, parseCompositionSmokeOptions } from "./composition-smok
 
 const run = promisify(execFile);
 
-/**
- * Operator check for the composition engine: does this host turn a Composition Spec into an MP4?
- *
- * It uses no API and no Supabase. Without `--block` it renders the internal modules alone; with one it
- * installs a real registry item and hosts it as a sub-composition, which is the only way to prove the
- * catalog path end to end before the planner depends on it.
- */
+/** Renders a supplied HTML composition through the same packaging and visual gate as production. */
 async function main(): Promise<void> {
   const options = parseCompositionSmokeOptions(process.argv.slice(2));
+  if (!options.htmlFile) throw new Error("Supply a complete composition with --html <index.html>.");
   const root = process.cwd();
   const styleId = "creative-mode";
   const styleVersion = "1";
@@ -54,7 +51,9 @@ async function main(): Promise<void> {
       ? await createCatalogInstaller({ cli: createHyperframesCli() }).install([{ name: options.block }], scratchDir)
       : new Map();
 
-    const compiled = buildComposition({ spec, designPack, assets: [asset], blocks, resolution: options.resolution, language: "id" });
+    const html = await readFile(resolve(options.htmlFile), "utf8");
+    assertCompositionHtml(html, spec, frame);
+    const compiled = buildComposition({ html, spec, designPack, assets: [asset], blocks, resolution: options.resolution, language: "id" });
 
     await writeComposition(compiled, artifactDir, {
       objectStore: {
@@ -69,6 +68,8 @@ async function main(): Promise<void> {
 
     console.log(`artifact: ${artifactDir}`);
     console.log(`compositionHash: ${compiled.compositionHash}`);
+    await createCompositionVisualGate({ cli: createHyperframesCli() }).check({ dir: artifactDir, spec, resolution: options.resolution });
+    console.log("visual gate: passed");
 
     const engine = new HyperFramesRenderEngine({ maxOutputBytes: 500 * 1024 * 1024, maxWorkers: 1, lowMemoryMode: false, disableGpu: false });
     const result = await engine.render({

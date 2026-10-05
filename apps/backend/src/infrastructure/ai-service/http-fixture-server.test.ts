@@ -14,6 +14,7 @@ export type FixtureResponse = {
   body?: unknown;
   rawBody?: string;
   delayMs?: number;
+  chunks?: AsyncIterable<string | Uint8Array>;
 };
 
 type FixtureServer = {
@@ -33,7 +34,11 @@ export async function startHttpFixtureServer(
     const fixtureRequest = await readFixtureRequest(request);
     requests.push(fixtureRequest);
     const fixtureResponse = await respond(fixtureRequest);
-    await sendFixtureResponse(response, fixtureResponse);
+    try {
+      await sendFixtureResponse(response, fixtureResponse);
+    } catch {
+      response.destroy();
+    }
   });
   await listen(server);
   const address = server.address();
@@ -79,6 +84,15 @@ async function readFixtureRequest(request: import("node:http").IncomingMessage):
 async function sendFixtureResponse(response: import("node:http").ServerResponse, fixture: FixtureResponse): Promise<void> {
   if (fixture.delayMs) await new Promise((resolve) => setTimeout(resolve, fixture.delayMs));
   response.writeHead(fixture.status ?? 200, { "content-type": "application/json", ...fixture.headers });
+  if (fixture.chunks) {
+    response.flushHeaders();
+    for await (const chunk of fixture.chunks) {
+      if (response.destroyed) return;
+      response.write(chunk);
+    }
+    response.end();
+    return;
+  }
   response.end(fixture.rawBody ?? JSON.stringify(fixture.body ?? {}));
 }
 

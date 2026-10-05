@@ -4,6 +4,16 @@
 **Status:** Simplified MVP  
 **Tujuan:** Mengganti worker video lama Visuala dengan composition engine berbasis AI + HyperFrames.
 
+> Catatan implementasi: dokumen v0.3 ini mencatat rancangan modular awal. Alur produksi saat ini tidak lagi memakai compiler untuk menyusun HTML dari modul. AI menulis seluruh `index.html`, termasuk CSS, JavaScript, dan timeline GSAP. Ringkasan kontrak terkini ada di bagian berikut.
+
+## Kontrak komposisi saat ini
+
+Brief yang telah disetujui, recipe, art direction, `frame.md`, `manifest.json`, aset pengguna, dan kandidat katalog menjadi konteks model. Planner AI tetap menghasilkan spec terstruktur untuk urutan beat, durasi, dan pemeriksaan fakta. Setelah blok katalog yang dipilih terpasang, model menulis dokumen `index.html` lengkap. Label motion pada spec bukan batas pilihan gerak: model menentukan markup, tata letak, transisi, dan koreografi sendiri.
+
+Sistem hanya memeriksa kontrak HyperFrames (root `main`, scene dan timing, timeline yang bisa di-seek, dependensi lokal), mengemas HTML AI tanpa mengubah satu byte pun, menyalin aset/font/blok yang disetujui, menjalankan visual check, lalu membekukan artefak berdasarkan hash sebelum preview dan render final. Kegagalan HTML atau visual check menghentikan proses; compiler tidak mengganti hasil AI dengan template. `design.md` bila tersedia, `frame.md`, dan `manifest.json` adalah masukan arah visual, bukan dokumen komposisi yang dihasilkan model.
+
+Alasan arah visual ada di design pack: warna dan tipografi mempertahankan identitas kreator; ritme antar-scene serta gerak diputuskan per brief agar video tidak berulang mengikuti template. Instrumen DOM untuk visual check tidak menetapkan bentuk adegan.
+
 ---
 
 ## 1. Ringkasan

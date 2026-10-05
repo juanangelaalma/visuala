@@ -14,6 +14,7 @@ import { SupabaseRenderJobRepository, SupabaseVideoVersionRepository } from "../
 import { SupabaseCompositionArtifactStore } from "../../infrastructure/video-engine/composition-artifact-store";
 import { createCatalogInstaller } from "../../infrastructure/video-engine/catalog-installer";
 import { createHyperframesCli } from "../../infrastructure/video-engine/hyperframes-cli";
+import { createCompositionVisualGate } from "../../infrastructure/video-engine/composition-visual-check";
 import { createFsCatalogSource } from "../../infrastructure/video-engine/fs-catalog-source";
 import { createFsDesignPackSource } from "../../infrastructure/video-engine/fs-design-pack-source";
 import { gsapScriptPath, resolveFontFile } from "../../infrastructure/video-engine/font-file";
@@ -25,6 +26,7 @@ import { readRenderWorkerConfig } from "../../infrastructure/video-engine/render
 import { VIDEO_AI_SCHEMAS } from "./ai-schemas";
 import { VIDEO_ENGINE_AI_SCHEMAS } from "../video-engine/ai-schemas";
 import { compileComposition } from "../video-engine/compile";
+import { runCompositionAuthor } from "../video-engine/composition-author";
 import { runComposition } from "../video-engine/compose";
 import { runRenderJob } from "../video-engine/render-job";
 import type { ComposeDependencies } from "../video-engine/compose";
@@ -109,6 +111,13 @@ export function createComposeServices(
   const bucket = readAssetBucket(environment);
   const objectStore = new SupabaseAssetObjectStore(supabase, bucket);
   const artifactStore = new SupabaseCompositionArtifactStore(supabase, bucket);
+  const cli = createHyperframesCli();
+  const gate = createCompositionVisualGate({
+    cli,
+    ...(environment.HYPERFRAMES_BROWSER_PATH ? { browserPath: environment.HYPERFRAMES_BROWSER_PATH } : {}),
+    disableGpu: environment.PRODUCER_DISABLE_GPU !== "false",
+  });
+  const ai = createAIService({ environment, schemas: VIDEO_ENGINE_AI_SCHEMAS });
 
   return {
     projects: new SupabaseVideoProjectRepository(supabase),
@@ -118,14 +127,16 @@ export function createComposeServices(
     compositionRevisions: new SupabaseCompositionRevisionRepository(supabase),
     artifacts: new SupabaseCompositionArtifactRepository(supabase),
     events: new SupabaseCompositionEventRepository(supabase),
-    ai: createAIService({ environment, schemas: VIDEO_ENGINE_AI_SCHEMAS }),
+    ai,
     designPack: createFsDesignPackSource(),
     loadCatalog: () => createFsCatalogSource().load(),
     createId: () => crypto.randomUUID(),
     compile: (command) =>
       compileComposition(command, {
-        installer: createCatalogInstaller({ cli: createHyperframesCli() }),
+        installer: createCatalogInstaller({ cli }),
+        gate,
         artifactStore,
+        author: (command, blocks, correction) => runCompositionAuthor({ ...command, blocks, correction }, { ai, createRequestId: () => crypto.randomUUID() }),
         write: (compiled, targetDir) =>
           writeComposition(compiled, targetDir, {
             objectStore,

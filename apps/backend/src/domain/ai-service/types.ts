@@ -46,6 +46,7 @@ export type AISchema<T> = {
 
 export type GenerateStructuredRequest<T> = GenerateRequest & {
   schema: AISchema<T>;
+  onTextDelta?: (delta: string) => void;
 };
 
 export type AIUsage = {
@@ -114,6 +115,7 @@ export type ProviderTextRequest = ProviderRequest;
 export type ProviderStructuredRequest = ProviderRequest & {
   schemaName: string;
   schemaVersion: string;
+  onTextDelta?: (delta: string) => void;
 };
 
 export type ProviderResultMetadata = {

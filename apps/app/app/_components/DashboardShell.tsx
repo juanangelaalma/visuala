@@ -2,7 +2,7 @@
 
 import { DashboardFooter, DashboardNavbar, DashboardSidebar, type DashboardSidebarSection } from "@visuala/ui";
 import { usePathname } from "next/navigation";
-import { useMemo, useRef, type ReactNode } from "react";
+import { useMemo, useRef, useState, type ReactNode } from "react";
 import { logoutAction } from "@/features/auth/actions/auth-actions";
 import type { AuthUser } from "@/domain/auth/types";
 
@@ -76,6 +76,8 @@ function getActiveItemId(pathname: string, sections: DashboardSidebarSection[]) 
 export default function DashboardShell({ children, sections = defaultDashboardSections, showCreateButton = false, currentUser, creditBalance }: DashboardShellProps) {
   const pathname = usePathname();
   const logoutFormRef = useRef<HTMLFormElement>(null);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const isDefaultSections = sections === defaultDashboardSections;
   const showPricingCta = isDefaultSections;
   const pricingIsActive = pathname === "/billing/plans" || pathname.startsWith("/billing/plans/");
@@ -93,12 +95,42 @@ export default function DashboardShell({ children, sections = defaultDashboardSe
   };
 
   return (
-    <div className="h-screen overflow-hidden bg-dark-bg p-4">
-      <div className="flex h-full gap-8">
-        <DashboardSidebar profile={profile} items={sections} activeItemId={activeItemId} creditBalance={creditBalance} className="h-full min-h-0 shrink-0" onLogout={handleLogout} />
+    <div className="min-h-dvh bg-dark-bg p-3 sm:p-4 lg:h-dvh lg:overflow-hidden">
+      <div className="flex min-h-0 flex-col gap-4 lg:h-full lg:flex-row lg:gap-8">
+        <button
+          type="button"
+          aria-expanded={mobileMenuOpen}
+          aria-controls="dashboard-menu"
+          className="inline-flex min-h-11 items-center justify-between rounded-full border border-white/15 bg-pricing-bg px-4 text-sm font-semibold text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary lg:hidden"
+          onClick={() => {
+            setSidebarCollapsed(false);
+            setMobileMenuOpen((open) => !open);
+          }}
+        >
+          <span>{mobileMenuOpen ? "Tutup menu" : "Menu dashboard"}</span>
+          <span aria-hidden="true">{mobileMenuOpen ? "−" : "+"}</span>
+        </button>
+        <div
+          id="dashboard-menu"
+          className={`${mobileMenuOpen ? "block" : "hidden"} min-h-0 shrink-0 lg:block`}
+          onClick={(event) => {
+            if (event.target instanceof Element && event.target.closest("a[href]")) setMobileMenuOpen(false);
+          }}
+        >
+          <DashboardSidebar
+            profile={profile}
+            items={sections}
+            activeItemId={activeItemId}
+            creditBalance={creditBalance}
+            collapsed={sidebarCollapsed}
+            onCollapsedChange={setSidebarCollapsed}
+            className="shrink-0 max-lg:min-h-0 max-lg:w-full lg:h-full lg:min-h-0"
+            onLogout={handleLogout}
+          />
+        </div>
         <form ref={logoutFormRef} action={logoutAction} className="hidden" />
 
-        <div className="flex min-w-0 flex-1 flex-col gap-4 overflow-y-auto">
+        <div className="flex min-h-0 min-w-0 flex-1 flex-col gap-4 lg:overflow-y-auto">
           <DashboardNavbar
             showCreateButton={showCreateButton || isDefaultSections}
             createHref="/dashboard/videos/new"

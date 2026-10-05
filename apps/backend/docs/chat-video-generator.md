@@ -11,6 +11,41 @@ MP4 upload, and the `video_versions` row that makes the player and the download 
 
 The PRD this implements is `docs/prd/chat-based-ai-video-generator-mvp.md`.
 
+## Current composition path
+
+`runComposition` validates the brief, asks the art director and composition planner for direction and a factual scene plan, then compiles a model-authored `index.html`. The author receives the full `frame.md`, optional `design.md`, `manifest.json`, storyboard, approved image paths, and installed catalog paths. It writes the entire HTML document, inline CSS, and seekable GSAP timeline. The compiler does not assemble HTML or add motion. It packages the exact response with local fonts, images, optional catalog blocks, and GSAP. HyperFrames and the geometry gate inspect the frozen bytes before upload. Preview and final render use those same bytes.
+
+The `composition_planner` AI task is used for both the structured plan and the HTML text call. Configure its profile with enough input for `frame.md`, the plan, and the previous HTML on correction turns, and enough output tokens for a complete replacement document. No deterministic template substitutes for rejected model output. For an offline renderer check, provide a complete document matching the smoke storyboard to `pnpm compose:smoke -- --html /path/to/index.html`. The smoke script no longer synthesizes production HTML.
+
+HTML validation accepts both `window.__timelines["main"] = tl` and the equivalent `window.__timelines.main = tl` registration. The key must be exactly `main` (case-sensitive), and the expression must be an assignment, not an equality comparison. Root format attributes, storyboard scene order/timing, the local GSAP script, and local-resource restrictions are still checked; equivalent property syntax alone must not cause `composition_html_invalid`.
+
+HTML compilation allows one initial generation and at most two correction turns (three HTML generations total). A rejected generation is returned to the author with its complete latest HTML and structured findings, including available scene, selector, sample time, bounding box, and source file. Every replacement is structurally validated, materialized into a clean artifact directory, and checked by HyperFrames and the geometry gate again. Only the final accepted, inspected bytes are packaged and uploaded; rejected generations never become preview artifacts.
+
+Corrections are limited to recognized authored-content failures: incomplete or nonconforming HTML, scene timing/order, external resources, geometry/readability issues such as blank boundaries or overlap, and positively classified HyperFrames lint/layout/motion/contrast findings. Unknown or mixed findings, runtime/resource/font failures, incomplete capture reports, browser/process failures, and AI/installer/writer/storage failures stop immediately without HTML regeneration. HyperFrames lint-only rejection is correctable only when its report matches the pinned CLI's deliberate pre-browser lint rejection; partial browser reports are not. The product-image overlap rule still protects the full `.hf-module` product zone, not just image pixels; correction does not relax that contract.
+
+The composition author prompt (`composition_author@v2`) explicitly keeps `.clip`/`.hf-scene` static and directs GSAP animation to `.hf-scene__content` or `.hf-module` descendants. It also requires real foreground text or imagery to remain visible at scene boundaries, including the boundary frame and following frame, and tells the author to keep the outgoing foreground until incoming content is visible. Text must fit its actual module and canvas bounds with a safe margin. On correction turns, findings such as `gsap_animates_clip_element`, `gsap_fullscreen_overlay_starts_visible`, `blank_boundary`, and text overflow/clipping receive targeted remediation guidance; the selector and bounding box are included when available.
+
+After three rejected HTML generations, the API returns HTTP 502 with a generic message, `code` (`composition_html_invalid` or `composition_visual_check_failed`), final `issueCodes`, and `attempts: 3`. It does not expose generated HTML, internal exception messages, selectors, or storage paths. Each correction is another AI operation and can increase provider cost and request latency.
+
+The Bun HTTP server uses an `idleTimeout` of 255 seconds so a composition request can wait for AI planning and compilation before receiving its first response bytes. This is a connection inactivity limit, not the AI attempt deadline or render-worker timeout. HTML corrections run in the same request and do not reset this limit. Any reverse proxy must also allow long-running composition requests; requests taking longer than 255 seconds without response bytes can still disconnect.
+
+Composition plans are checked against the selected recipe and the confirmed brief. For `product_launch`, the planner prompt spells out the tease, reveal, key-message, and CTA scene roles. A rejected model plan is sent back with the previous spec and full validator feedback for up to two correction turns (three generated plans total). Every replacement passes the same validators before compilation; there is no deterministic substitute or validation bypass. Missing required brief fields stop immediately, because model correction cannot supply confirmed facts. Correction turns are additional AI operations and can increase latency and provider cost. If correction is exhausted, planning errors return HTTP 502 with a safe message, planning code, and issue codes rather than an unhandled 500; the internal error retains scene/module locations.
+
+This section supersedes the deterministic template/composition-writer descriptions in the older foundation notes below; the render worker still replays the frozen artifact.
+
+## Preview and render process logs
+
+The API and render worker emit one JSON line per traced stage under `event: "video_process"`. Each line has `timestamp`, `sourceFile` (repo-relative TypeScript source path), `stage`, `status`, and available correlation fields: `projectId`, AI `requestId`, or render `jobId`. Async stages emit `started`, then `completed` or `failed` with `durationMs`. Failure lines include a code, never the raw error message or stack. Exceptions retain their original behavior.
+
+- Composition: project/brief/design-pack/catalog/assets loading, brief validation, art direction, candidate selection, planning, compilation, and revision/artifact/event persistence.
+- AI: `art_director_ai`, `planner_attempt`, `planner_ai`, `planner_validation`, and `planner_correction`. Planner logs include the attempt number and validation issue codes.
+- Compilation: scratch allocation, catalog installation, HTML authoring, artifact writing, visual inspection, packaging, upload, and scratch cleanup. `compile.html.attempt`, `compile.html.validation`, and `compile.html.correction` identify generation attempts and scheduled corrections; rejection/correction events include issue codes and the rejected AI request ID.
+- Rendering: job read/claim, artifact download/materialization, engine rendering, output validation/upload, job/version/event persistence, scratch cleanup, and abandoned-job reclamation.
+
+Filter terminal output by `projectId` to follow a preview through the API and worker, then by `requestId` or `jobId` to distinguish AI operations or render jobs. A `started` stage without its corresponding terminal status shows where an operation is still waiting or where the process stopped. Idle polling is not logged. Trace lines do not include brief contents, generated HTML, credentials, storage paths, or signed URLs. These guarantees apply to the new trace lines, not unrelated existing application or provider logs.
+
+For local AI-output debugging, set `AI_LOG_RESPONSES=true` in the backend environment and restart the API. The default is disabled; `.env.example` uses `false`. This emits separate `video_ai_response` events for `art_direction`, `composition_plan` (including correction results), and `composition_html` before application validation. The `response` field contains the complete generated object or HTML string, with `sourceFile`, `projectId`, and `requestId` for correlation. HTML newlines are JSON-escaped, not removed. These opt-in response logs can expose business copy, contact details, or any sensitive text returned by the model; unlike normal stage logs, they are not content-redacted. Keep them disabled in production and avoid sharing them without review. Requests that fail before returning an AI result have no response to log.
+
 ## Scope
 
 This is the server-side data, API, and render layer. It persists and validates everything a render
@@ -69,9 +104,9 @@ two spikes did not run, so the following is still true:
   (`apps/backend/src/infrastructure/ai-service/config.ts`, `registeredApiFormats`). Profiles using
   another `apiFormat` fail configuration validation (`AI_CONFIG_ERROR`).
 - **There are no `AI_9ROUTER_*` variables to set.** The 9Router profile references
-  `AI_OPENAI_API_KEY` and `AI_OPENAI_MODEL` by name. The current adapter is non-streaming, and
-  model-specific text, vision, and native structured-output support remains controlled by profile
-  capability flags.
+  `AI_OPENAI_API_KEY` and `AI_OPENAI_MODEL` by name. Structured interview calls use Responses SSE;
+  other calls remain buffered. The gateway/model must support strict structured Responses streaming,
+  in addition to the configured text, vision and structured-output capabilities.
 - `docs/decisions/2026-09-21-9router-api-format.md` and
   `docs/decisions/2026-09-21-media-providers.md` still do not exist. They are pending their spikes.
 
@@ -128,7 +163,7 @@ its absence is a configuration error.
 | `SUPABASE_ASSET_BUCKET` | `assets` | Name of the private Storage bucket that holds both the AI-service image assets and the project image assets and rendered versions. Read by `readAssetBucket` in `apps/backend/src/infrastructure/ai-service/supabase-asset-object-store.ts`. |
 | `VIDEO_MAX_ASSETS_PER_PROJECT` | `8` | Maximum live image assets per project. Read by `readAssetLimits` in `apps/backend/src/domain/video/limits.ts`. |
 | `VIDEO_MAX_PROJECT_ASSET_BYTES` | `41943040` (40 MiB) | Maximum total bytes across a project's live assets. |
-| `VIDEO_MIN_IMAGE_DIMENSION` | `200` | Minimum width and height, in pixels, of an accepted image. |
+| `VIDEO_MIN_IMAGE_DIMENSION` | `1` | Minimum width and height, in pixels, of an accepted image. Raise this per environment if later vision and render benchmarks require a larger source image. |
 | `VIDEO_MAX_IMAGE_DIMENSION` | `8000` | Maximum width and height, in pixels, of an accepted image. |
 | `VIDEO_MAX_RENDER_OUTPUT_BYTES` | `524288000` (500 MB) | Ceiling for one rendered MP4. Read by the render worker config in `apps/backend/src/domain/video/render-config.ts`, and it must match the bucket's `file_size_limit`. An output over it fails the job with `render_output_too_large`. |
 | `RENDER_FPS` | `30` | Frame rate frozen into every new job snapshot and used by the engine. The intake and the worker read the same value, so a change cannot make a queued job claim one rate and render another. |
@@ -228,7 +263,8 @@ string.
 | `GET` | `/video-projects` | Bearer | — | `200 { projects: [project] }` | 401 |
 | `GET` | `/video-projects/:projectId` | Bearer | — | `200 { project }` | 401, 404 |
 | `DELETE` | `/video-projects/:projectId` | Bearer | — | `200 { pendingObjectDeletions }` | 401, 404 |
-| `POST` | `/video-projects/:projectId/messages` | Bearer | `{ content, assetIds? }` (strict) | `201 { message, project }` | 401, 404, 422 |
+| `POST` | `/video-projects/:projectId/messages` | Bearer | `{ content, assetIds? }` (strict) | `200` SSE (below) | HTTP before commitment; SSE `error` afterward |
+| `POST` | `/video-projects/:projectId/messages/opening` | Bearer | no body | `200` SSE (below) | HTTP before commitment; SSE `error` afterward |
 | `GET` | `/video-projects/:projectId/messages` | Bearer | — | `200 { messages: [message] }` | 401, 404 |
 | `POST` | `/video-projects/:projectId/approve` | Bearer | — (no body) | `200 { project, approval }` | 401, 404, 409 |
 | `POST` | `/video-projects/:projectId/assets` | Bearer | raw image bytes + headers (below) | `201 { asset }` | 401, 404, 409, 422 |
@@ -254,6 +290,7 @@ The routes are assembled in `apps/backend/src/routes/video.ts` and mounted in
 - **`POST …/messages`** body: `{ content: string, assetIds?: string[] }`. `role`, `user_id`, and
   `created_at` are server-owned and rejected by the strict schema. `message` response:
   `{ id, role, content, assetIds, controls, createdAt }`.
+
 - **`POST …/approve`** takes no body and returns `{ project, approval }`, where `approval` is the
   frozen `ApprovalSnapshot` (`video-approval@v1`): schema version, `approvedAt`, the brief and
   storyboard revision ids and versions, `videoType`, `styleId`, `settings`, and the provenance
@@ -270,6 +307,37 @@ The routes are assembled in `apps/backend/src/routes/video.ts` and mounted in
   An idempotent replay returns `200` with the job the first request created; a new job returns `201`.
 - **`GET …/versions`** returns each version with a `playbackUrl`; **`…/download`** returns
   `{ url }`. Both URLs are signed per request after an ownership check.
+
+### Streamed interview responses
+
+Deploy the first-party frontend and backend POST changes together. Both chat POST routes now return
+`text/event-stream; charset=utf-8`; no buffered JSON success endpoint or automatic POST replay remains.
+Transcript, project and brief GET routes remain JSON. Streams use `Cache-Control: no-cache, no-transform`
+and `X-Accel-Buffering: no`; reverse proxies must not buffer them.
+
+Each named event has JSON `data`:
+
+| Event | Payload | Meaning |
+|---|---|---|
+| `message` | `{ message, project }` | Send only: the user's answer is durably saved. |
+| `text-delta` | `{ delta: string }` | Decoded provisional question additions, opening or send. |
+| `completed` | Send: `{ message, reply, project }`; opening: `{ messages }` | Terminal success after validation and persistence. |
+| `error` | `{ status, error, code?, requestId?, retryable?, retryAfterMs? }` | Terminal safe failure after commitment. |
+
+Only persisted public DTOs leave the service. There are no event IDs, reconnect, extra done event,
+stored fragments, raw draft JSON or provider diagnostics. The first meaningful callback, completion
+or failure determines commitment: send commits at saved-user acknowledgement, new opening at its first
+question fragment, existing opening at transcript completion. Earlier failures retain HTTP JSON errors.
+
+Preview text can differ from the saved reply when fact-confirmation or brief-completion rules select
+another question. Draft fields precede `turn` in structured output, so first visible text can arrive
+later than the first provider token. A null turn has no preview and keeps the preparing status.
+Concurrent openings complete with the actual saved winner's transcript.
+
+On disconnect the client discards partial assistant text and reconciles GET state, never repeats the
+answer. Only a known pre-stream HTTP rejection restores the submitted draft. An ambiguous failure
+leaves the composer empty and offers `Muat ulang percakapan`; already completed writes are not rolled
+back. Request abort and response-reader cancellation propagate to generation and guard new writes.
 
 ## State machine
 
@@ -529,9 +597,9 @@ native render.
   `allowed`** in the same change that adds the moderation provider call.
 - **Multi-image analysis is not implemented.** An asset is resolved one at a time by `assetId`; the
   provider contracts cap `maxImages`, but the video flow does not build a multi-image request.
-- **The current `openai-responses` adapter is non-streaming.** Streaming is outside the AI service
-  contract. Text, vision, and native structured-output support remains controlled by profile
-  capability flags for the configured gateway and model.
+- **Live Responses streaming requires gateway verification.** Deterministic gated HTTP fixtures prove
+  progressive publication and accounting; they do not prove a configured gateway/model supports strict
+  structured Responses SSE. The service does not simulate typing or silently buffer incompatible output.
 - **The interviewer answer is generated, but not by this plan's work.** The interviewer and planner
   tasks run through the AI service inside `POST /video-projects/:projectId/messages`, and they need a
   working `AI_PROFILES_JSON` / `AI_TASKS_JSON` configuration. The moderation call is still absent.

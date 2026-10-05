@@ -3668,123 +3668,6 @@
       "type": "component"
     },
     {
-      "description": "Text assembles from a seeded particle cloud (or dissolves into it): per-particle targets sampled once from the rendered text bitmap at mount, table-driven particles, zero per-particle tweens, one onUpdate painter.",
-      "name": "particle-text-dissolve",
-      "tags": [
-        "motion-primitive",
-        "text-effects",
-        "particles",
-        "canvas",
-        "deterministic",
-        "experiment"
-      ],
-      "title": "Particle Text Dissolve",
-      "type": "component"
-    },
-    {
-      "description": "Words gently fade into place with a short vertical drift for calm keynote rhythm.",
-      "name": "per-word-crossfade",
-      "tags": [
-        "motion-primitive",
-        "typography"
-      ],
-      "title": "Per-Word Crossfade",
-      "type": "component"
-    },
-    {
-      "description": "Words or characters rise into place in a controlled blur-to-sharp cascade, settle softly on landing, and hold still until the cut (optional fade or up exit).",
-      "name": "per-word-rise",
-      "tags": [
-        "motion-primitive",
-        "text-effects",
-        "typography",
-        "stagger",
-        "reveal"
-      ],
-      "title": "Per Word Rise",
-      "type": "component"
-    },
-    {
-      "description": "A 3D tilted marquee with depth feel as items roll toward the horizon.",
-      "name": "perspective-marquee",
-      "tags": [
-        "motion-primitive",
-        "typography"
-      ],
-      "title": "Perspective Marquee",
-      "type": "component"
-    },
-    {
-      "description": "A card exits with physical momentum in toss, drop, or slide mode, carrying acceleration and rotation through the final offscreen pose without fading.",
-      "name": "physical-exit",
-      "tags": [
-        "motion-primitive",
-        "exit",
-        "momentum",
-        "toss",
-        "drop",
-        "slide"
-      ],
-      "title": "Physical Exit",
-      "type": "component"
-    },
-    {
-      "description": "A cursor decel-arrives from off-stage, lands slightly off-center on a caller-positioned target, compresses with it in lockstep, releases with two small click rings while the label swaps to a check, then exits off-stage while the confirmed state holds.",
-      "name": "press-ripple",
-      "tags": [
-        "cursor",
-        "motion-primitive",
-        "product-demo",
-        "press",
-        "ripple",
-        "payoff"
-      ],
-      "title": "Press Ripple",
-      "type": "component"
-    },
-    {
-      "description": "A tight stat detail holds, then one decelerating camera pull-back reveals the headline and supporting cards that recontextualize it.",
-      "name": "pull-back-reveal",
-      "tags": [
-        "motion-primitive",
-        "camera",
-        "pull-back",
-        "reveal",
-        "recontextualize"
-      ],
-      "title": "Pull Back Reveal",
-      "type": "component"
-    },
-    {
-      "description": "A mobile list pulls through nonlinear rubber-band resistance, arms at a threshold, commits to a bounded loading indicator, then snaps exactly back to rest.",
-      "name": "pull-to-refresh",
-      "tags": [
-        "pointer",
-        "pointers",
-        "mobile",
-        "gesture",
-        "interaction",
-        "refresh",
-        "demonstrate"
-      ],
-      "title": "Pull to Refresh",
-      "type": "component"
-    },
-    {
-      "description": "A centered headline gains focus through one slow, continuous camera push and a gentle fade out.",
-      "name": "push-in",
-      "tags": [
-        "motion-primitive",
-        "camera",
-        "push-in",
-        "focus",
-        "emphasize",
-        "holdable"
-      ],
-      "title": "Push In",
-      "type": "component"
-    },
-    {
       "description": "A focus pull with real aperture bokeh: the focal plane travels from a near subject to a far one, so one resolves as the other blows into hard-edged polygon discs that clip to a cat's eye toward the corners. A focus pull only reads against content at two clearly separated depths, so this block carries its own depth-layered night exterior and puts both subject depths on variables.",
       "dimensions": {
         "height": 1080,
@@ -3804,20 +3687,6 @@
       "type": "block"
     },
     {
-      "description": "Labeled hairline chips assemble around a centered subject on an elliptical ring, then optionally converge inward with a subtle edge dim. The center never moves: surrounded, not zoomed.",
-      "name": "radial-surround",
-      "tags": [
-        "motion-primitive",
-        "problem-setup",
-        "radial",
-        "ring",
-        "surround",
-        "converge"
-      ],
-      "title": "Radial Surround",
-      "type": "component"
-    },
-    {
       "description": "Animated Reddit post card overlay with upvotes and comments",
       "dimensions": {
         "height": 1080,
@@ -3832,16 +3701,6 @@
       ],
       "title": "Reddit Post Card",
       "type": "block"
-    },
-    {
-      "description": "RGB-offset text copies jitter briefly for a controlled glitch window.",
-      "name": "rgb-glitch-text",
-      "tags": [
-        "motion-primitive",
-        "typography"
-      ],
-      "title": "RGB Glitch Text",
-      "type": "component"
     },
     {
       "description": "Shader transition with ridged turbulence burn effect",
@@ -3872,75 +3731,6 @@
       ],
       "title": "Ripple Waves",
       "type": "block"
-    },
-    {
-      "description": "An outgoing panel pulls against increasing resistance, holds at tension, then snaps past an edge with overshoot as the incoming panel settles behind it.",
-      "name": "rubber-band-bumper",
-      "tags": [
-        "motion-primitive",
-        "transition",
-        "rubber-band",
-        "resistance",
-        "overshoot"
-      ],
-      "title": "Rubber Band Bumper",
-      "type": "component"
-    },
-    {
-      "description": "A diagonal distortion band sweeps once across a clean wordmark, revealing clipped red and cyan offsets only inside the moving band.",
-      "name": "scan-band",
-      "tags": [
-        "motion-primitive",
-        "typography",
-        "scan",
-        "chromatic",
-        "distortion",
-        "wordmark"
-      ],
-      "title": "Scan Band",
-      "type": "component"
-    },
-    {
-      "description": "A deterministic hacker-style text reveal that cycles fixed glyph rows and locks the target string from left to right.",
-      "name": "scramble-reveal",
-      "tags": [
-        "motion-primitive",
-        "text-effects",
-        "scramble",
-        "reveal",
-        "deterministic"
-      ],
-      "title": "Scramble Reveal",
-      "type": "component"
-    },
-    {
-      "description": "Two to five app screens ride a horizontal rail: one primary at center, neighbors receded, advancing on cues with a velocity-matched throw and a smooth long-tail catch while a mono caption swaps with each advance. Screens are slots with token skeleton defaults.",
-      "name": "screen-flow-carousel",
-      "tags": [
-        "product-demo",
-        "feature-tour",
-        "carousel",
-        "rail",
-        "slot",
-        "screens"
-      ],
-      "title": "Screen Flow Carousel",
-      "type": "component"
-    },
-    {
-      "description": "A compressed forced-scroll cinematic pass: a tall scene of slotted sections travels past the camera top to bottom, depth layers parallax at different rates, each section rises as the camera reaches it, and the pass decelerates into a held final section.",
-      "name": "scroll-camera-story",
-      "tags": [
-        "camera",
-        "scroll",
-        "parallax",
-        "story",
-        "sections",
-        "slot",
-        "servo"
-      ],
-      "title": "Scroll Camera Story",
-      "type": "component"
     },
     {
       "description": "A loop-friendly column of varied skeleton post cards scrolls upward with subtle motion trails and an agitated pace.",
@@ -4393,20 +4183,6 @@
       "type": "component"
     },
     {
-      "description": "Text drawn as thread stitches: a single-stroke display alphabet draws via attribute-driven dashoffset with stitch-tuned dash patterns, seeded angle jitter, needle-hole dots, a leading needle, and a thread-tail overshoot per letter.",
-      "name": "stitched-text-draw",
-      "tags": [
-        "motion-primitive",
-        "experiment",
-        "type",
-        "craft",
-        "stitch",
-        "deterministic"
-      ],
-      "title": "Stitched Text Draw",
-      "type": "component"
-    },
-    {
       "description": "The stepped-time law as a demo primitive: one driver quantizes timeline time to floor(t * fps) / fps and feeds ALL motion; four token paper-cut shapes throw-and-land with squash on hits, 2-frame boil jitter seeded per step, and sparkle accents living exactly 2 to 3 frames.",
       "name": "stop-motion-cadence",
       "tags": [
@@ -4820,20 +4596,6 @@
       "type": "component"
     },
     {
-      "description": "A glowing dash follows one SVG path through three UI elements, lifting and brightening each element in sequence.",
-      "name": "tracing-beam",
-      "tags": [
-        "motion-primitive",
-        "product-demo",
-        "attention",
-        "beam",
-        "path",
-        "spotlight"
-      ],
-      "title": "Tracing Beam",
-      "type": "component"
-    },
-    {
       "description": "A precise letter-spacing reveal for premium headings and interface labels",
       "name": "tracking-in",
       "tags": [
@@ -5209,19 +4971,6 @@
       ],
       "title": "US Hex Grid Map",
       "type": "block"
-    },
-    {
-      "description": "A locked one-line headline whose weight or width axis morphs into a decisive emphasis beat.",
-      "name": "variable-axis-type",
-      "tags": [
-        "typography",
-        "variable-font",
-        "kinetic-type",
-        "axis",
-        "emphasize"
-      ],
-      "title": "Variable Axis Type",
-      "type": "component"
     },
     {
       "description": "A word lands while its variable-font weight and width axes flex from hairline-condensed to black-wide with per-character stagger; font-size eases inversely so the letterforms gain mass while the box holds.",

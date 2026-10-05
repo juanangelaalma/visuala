@@ -123,6 +123,15 @@ describe("runArtDirector", () => {
     });
   });
 
+  it("accepts a main message that rearranges brief words with different punctuation", async () => {
+    const result = await runArtDirector(await command(), {
+      ai: aiService(direction({ mainMessage: "Semua menu, diskon 20%!" })),
+      createRequestId: () => "r",
+    });
+
+    expect(result.artDirection.mainMessage).toBe("Semua menu, diskon 20%!");
+  });
+
   it("refuses a main message the brief cannot support", async () => {
     const promise = runArtDirector(await command(), {
       ai: aiService(direction({ mainMessage: "Diskon 50% hari ini" })),

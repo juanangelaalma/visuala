@@ -1,5 +1,5 @@
 import type { AIService } from "../../domain/ai-service/contracts";
-import { videoBriefSchema } from "../../domain/video/brief";
+import { isBriefDraftComplete, videoBriefSchema } from "../../domain/video/brief";
 import { VideoError } from "../../domain/video/errors";
 import type { ProjectAssetRepository, VideoBriefRevisionRepository, VideoProjectRepository } from "../../domain/video/contracts";
 import { BUILT_IN_DESIGN_PACK } from "../../domain/video-engine/design-pack";
@@ -17,9 +17,11 @@ import type { ValidationIssue } from "../../domain/video-engine/validators/types
 import type { DesignPackSource } from "../../infrastructure/video-engine/fs-design-pack-source";
 import { runArtDirector } from "./art-director";
 import { selectCatalogCandidates } from "./candidate-selector";
-import { assertFallbackValid, runCompositionPlanner } from "./composition-planner";
+import { runCompositionPlanner } from "./composition-planner";
 import type { CompileCommand, FrozenArtifact } from "./compile";
+import { COMPOSITION_AUTHOR_PROMPT_VERSION } from "./prompts";
 import { toValidationBrief } from "./validation-brief";
+import { processTrace } from "./process-trace";
 
 export type ComposeDependencies = {
   projects: VideoProjectRepository;
@@ -43,30 +45,32 @@ export type ComposeResult = {
   artifactId: string;
   compositionHash: string;
   isFallback: boolean;
-  /** Why the model's plan lost, when it did. Empty on a first-try success. */
   validationIssues: readonly ValidationIssue[];
 };
 
-/**
- * One planning pass end to end: direction, catalog shortlist, spec, validation, compile, freeze. Everything
- * it decided is stored before it returns, so a render later replays bytes rather than decisions.
- */
+/** Freezes the AI-authored composition before saving its revision, so failed HTML never becomes renderable. */
 export async function runComposition(command: ComposeCommand, dependencies: ComposeDependencies): Promise<ComposeResult> {
-  const project = await dependencies.projects.getOwned(command.projectId, command.userId);
+  const trace = processTrace({ projectId: command.projectId, sourceFile: "apps/backend/src/application/video-engine/compose.ts" });
+  return trace.run("composition", async () => {
+  const project = await trace.run("load_project", () => dependencies.projects.getOwned(command.projectId, command.userId));
   if (!project) throw new VideoError("video_project_not_found", "The video project does not exist.");
 
-  const briefRevision = await dependencies.briefRevisions.latestOwned(command.projectId, command.userId);
+  const briefRevision = await trace.run("load_brief", () => dependencies.briefRevisions.latestOwned(command.projectId, command.userId));
   if (!briefRevision?.isComplete) throw new VideoError("video_approval_incomplete", "The brief is not complete yet.");
 
   const parsedBrief = videoBriefSchema.safeParse(briefRevision.brief);
   if (!parsedBrief.success) throw new VideoError("video_input_invalid", "The stored brief is not readable.");
+  if (!isBriefDraftComplete(parsedBrief.data, project.videoType)) {
+    throw new VideoError("video_approval_incomplete", "The brief is missing information required for this video. Continue the interview before composing.");
+  }
   const brief = toValidationBrief(parsedBrief.data);
+  trace.event("validate_brief", "completed");
 
   const recipe = recipeById(project.videoType);
-  const designPack = await dependencies.designPack.load(BUILT_IN_DESIGN_PACK);
-  const catalog = await dependencies.loadCatalog();
-  const assets = (await dependencies.assets.listOwned(command.projectId, command.userId))
-    .filter((asset) => asset.deletedAt === undefined && asset.moderationStatus === "allowed")
+  const designPack = await trace.run("load_design_pack", () => dependencies.designPack.load(BUILT_IN_DESIGN_PACK));
+  const catalog = await trace.run("load_catalog", () => dependencies.loadCatalog());
+  const assets = (await trace.run("load_assets", () => dependencies.assets.listOwned(command.projectId, command.userId)))
+    .filter((asset) => asset.deletedAt === undefined && asset.moderationStatus !== "blocked")
     .map((asset) => ({
       id: asset.id,
       objectKey: asset.objectKey,
@@ -76,7 +80,7 @@ export async function runComposition(command: ComposeCommand, dependencies: Comp
     }));
   const assetIds = assets.map((asset) => asset.id);
 
-  const artDirection = await runArtDirector(
+  const artDirection = await trace.run("art_direction", () => runArtDirector(
     {
       userId: command.userId,
       projectId: command.projectId,
@@ -89,16 +93,16 @@ export async function runComposition(command: ComposeCommand, dependencies: Comp
       aspectRatio: project.settings.aspectRatio,
     },
     { ai: dependencies.ai, createRequestId: dependencies.createId },
-  );
+  ));
 
-  const artDirectionRevision = await dependencies.artDirectionRevisions.create({
+  const artDirectionRevision = await trace.run("save_art_direction", () => dependencies.artDirectionRevisions.create({
     projectId: command.projectId,
     userId: command.userId,
     schemaVersion: BUILT_IN_DESIGN_PACK.version,
     artDirection: artDirection.artDirection,
     generatedBy: artDirection.generatedBy,
     sourceMessageIds: briefRevision.sourceMessageIds,
-  });
+  }));
 
   const plannerCommand = {
     userId: command.userId,
@@ -122,14 +126,23 @@ export async function runComposition(command: ComposeCommand, dependencies: Comp
       durationSeconds: project.settings.durationSeconds,
     },
   };
+  trace.event("select_candidates", "completed");
 
-  const plan = assertFallbackValid(
-    await runCompositionPlanner(plannerCommand, { ai: dependencies.ai, createRequestId: dependencies.createId, catalog }),
-    plannerCommand,
-    catalog,
-  );
+  const plan = await trace.run("composition_plan", () => runCompositionPlanner(plannerCommand, { ai: dependencies.ai, createRequestId: dependencies.createId, catalog }));
 
-  const compositionRevision = await dependencies.compositionRevisions.create({
+  const frozen = await trace.run("compile", () => dependencies.compile({
+    userId: command.userId,
+    projectId: command.projectId,
+    brief,
+    artDirection: artDirection.artDirection,
+    spec: plan.spec,
+    designPack,
+    assets,
+    resolution: project.settings.resolution,
+    language: project.settings.language,
+  }));
+
+  const compositionRevision = await trace.run("save_composition", () => dependencies.compositionRevisions.create({
     projectId: command.projectId,
     userId: command.userId,
     schemaVersion: COMPOSITION_SPEC_VERSION,
@@ -138,22 +151,19 @@ export async function runComposition(command: ComposeCommand, dependencies: Comp
     designPackId: designPack.manifest.styleId,
     designPackVersion: designPack.manifest.version,
     spec: plan.spec,
-    validationReport: { ok: plan.issues.length === 0, issues: plan.issues },
+    validationReport: { ok: true, issues: [] },
     candidates: plannerCommand.candidates.map((candidate) => ({ name: candidate.name, score: candidate.score, beats: candidate.beats })),
-    isFallback: plan.isFallback,
-    generatedBy: plan.generatedBy,
-  });
+    isFallback: false,
+    generatedBy: {
+      profileId: frozen.author.profileId,
+      provider: frozen.author.provider,
+      model: frozen.author.model,
+      promptVersion: COMPOSITION_AUTHOR_PROMPT_VERSION,
+      requestId: frozen.author.requestId,
+    },
+  }));
 
-  const frozen = await dependencies.compile({
-    projectId: command.projectId,
-    spec: plan.spec,
-    designPack,
-    assets,
-    resolution: project.settings.resolution,
-    language: project.settings.language,
-  });
-
-  const artifact = await dependencies.artifacts.create({
+  const artifact = await trace.run("save_artifact", () => dependencies.artifacts.create({
     id: dependencies.createId(),
     projectId: command.projectId,
     userId: command.userId,
@@ -166,30 +176,33 @@ export async function runComposition(command: ComposeCommand, dependencies: Comp
     catalogComponents: frozen.catalogComponents,
     compositionHash: frozen.compositionHash,
     artifactPrefix: frozen.prefix,
-  });
+  }));
 
-  await dependencies.events.record({
+  await trace.run("record_composition_event", () => dependencies.events.record({
     projectId: command.projectId,
     userId: command.userId,
-    event: plan.isFallback ? "composition_fallback" : "composition_planned",
+    event: "composition_planned",
     compositionRevisionId: compositionRevision.id,
     recipe: recipe.id,
     designPackId: designPack.manifest.styleId,
     designPackVersion: designPack.manifest.version,
     catalogComponents: frozen.catalogComponents,
-    plannerLatencyMs: plan.ai?.latencyMs ?? null,
-    isFallback: plan.isFallback,
-    llmCostAmount: plan.ai?.estimatedCost?.amount ?? null,
-    llmCostCurrency: plan.ai?.estimatedCost?.currency ?? null,
-  });
+    plannerLatencyMs: plan.ai.latencyMs,
+    isFallback: false,
+    llmCostAmount: plan.ai.estimatedCost && frozen.author.estimatedCost?.currency === plan.ai.estimatedCost.currency
+      ? plan.ai.estimatedCost.amount + frozen.author.estimatedCost.amount : null,
+    llmCostCurrency: plan.ai.estimatedCost && frozen.author.estimatedCost?.currency === plan.ai.estimatedCost.currency
+      ? plan.ai.estimatedCost.currency : null,
+  }));
 
   return {
     compositionRevisionId: compositionRevision.id,
     artifactId: artifact.id,
     compositionHash: frozen.compositionHash,
-    isFallback: plan.isFallback,
+    isFallback: false,
     validationIssues: plan.issues,
   };
+  });
 }
 
 function extensionFor(mimeType: string): string {

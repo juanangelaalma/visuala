@@ -37,69 +37,19 @@ function spec(overrides: Partial<CompositionSpec> = {}): CompositionSpec {
 }
 
 function input(overrides: Partial<CompileInput> = {}): CompileInput {
-  return { spec: spec(), designPack, assets: ASSETS, blocks: new Map(), resolution: "1080p", language: "id", ...overrides };
-}
-
-function file(compiled: ReturnType<typeof buildComposition>, path: string): string {
-  const found = compiled.files.find((candidate) => candidate.path === path);
-  if (!found) throw new Error(`no file ${path}: ${compiled.files.map((candidate) => candidate.path).join(", ")}`);
-  return found.contents;
+  return { html: "<!doctype html>\n<html><body>AI composition</body></html>\n", spec: spec(), designPack, assets: ASSETS, blocks: new Map(), resolution: "1080p", language: "id", ...overrides };
 }
 
 describe("buildComposition", () => {
-  it("builds a sized, seekable document with one scene clip per scene", () => {
-    const compiled = buildComposition(input());
-    const html = file(compiled, "index.html");
-
-    expect(compiled.compositionId).toBe("main");
-    expect(html).toContain('data-composition-id="main"');
-    expect(html).toContain('data-width="1080"');
-    expect(html).toContain('data-height="1920"');
-    expect(html).toContain('data-duration="12"');
-    expect(html).toContain('data-start="0"');
-    expect(html).toContain('data-start="6"');
-    expect(html).toContain('data-scene="scene_2"');
-    expect(html).toContain("gsap.timeline({ paused: true })");
-    expect(html).toContain('window.__timelines["main"]');
+  it("packages AI HTML unchanged without generating CSS, scripts, or a ledger", () => {
+    const html = "<!DOCTYPE html>\r\n<html><head><style>body{color:red}</style></head><body><script>window.a=1</script></body></html>\n";
+    expect(buildComposition(input({ html })).files).toEqual([{ path: "index.html", contents: html }]);
   });
 
-  it("inlines the design tokens, the font faces, and each module's css", () => {
-    const css = file(buildComposition(input()), "styles.css");
-
-    expect(css).toContain("--hf-cream: #EFE9D9;");
-    expect(css).toContain('@font-face');
-    expect(css).toContain("archivo-black-latin-400-normal.woff2");
-    expect(css).toContain(".hf-Headline__text");
-    expect(css).toContain("container-type: size");
-    expect(css).not.toContain(".hf-CTA");
-  });
-
-  it("lists only the fonts and assets the composition actually uses", () => {
-    const compiled = buildComposition(input());
-
-    expect(compiled.fonts.map((font) => font.path)).toContain("fonts/archivo-black-latin-400-normal.woff2");
-    expect(compiled.assets.map((asset) => asset.path)).toEqual(["assets/asset-1.jpg"]);
-    expect(compiled.moduleVersions).toEqual({ ProductHero: "1.0.0", Headline: "1.0.0" });
-  });
-
-  it("wires a catalog item as a sub-composition host and carries its file and binaries", () => {
-    const compiled = buildComposition(
-      input({
-        spec: spec({
-          scenes: [
-            { id: "scene_1", durationFrames: 180, modules: [{ id: "ProductHero", kind: "internal", content: { assetId: "asset-1" } }] },
-            { id: "scene_2", durationFrames: 180, modules: [{ id: "heygen-avatar-promo-card", kind: "catalog", content: { titleLine1: "Julumpia" } }] },
-          ],
-        }),
-        blocks: new Map([["heygen-avatar-promo-card", BLOCK]]),
-      }),
-    );
-
-    expect(file(compiled, "index.html")).toContain('data-composition-src="compositions/heygen-avatar-promo-card.html"');
-    expect(file(compiled, "index.html")).toContain('data-composition-id="heygen-avatar-promo-card"');
-    expect(compiled.files.map((entry) => entry.path)).toContain("compositions/heygen-avatar-promo-card.html");
-    expect(compiled.binaries.map((entry) => entry.path)).toEqual(["assets/av_r1k1.mp4"]);
-    expect(compiled.moduleVersions).toEqual({ ProductHero: "1.0.0" });
+  it("packages every supplied approved asset, including those absent from the spec", () => {
+    expect(buildComposition(input()).assets).toEqual(ASSETS.map((asset) => ({
+      path: `assets/${asset.fileName}`, objectKey: asset.objectKey, sha256: asset.sha256,
+    })));
   });
 
   it("refuses a catalog instance that was not installed", () => {
@@ -121,8 +71,33 @@ describe("buildComposition", () => {
 
     expect(() =>
       buildComposition(input({ spec: both, blocks: new Map([["heygen-avatar-promo-card", BLOCK], ["other-block", other]]) })),
-    ).toThrow(/both provide/);
+    ).toThrow(/Multiple files provide/);
   });
+
+  it("rejects block files that overwrite the AI entry or approved assets", () => {
+    const withBlock = spec({
+      scenes: [{ id: "scene_1", durationFrames: 360, modules: [{ id: BLOCK.name, kind: "catalog", content: {} }] }],
+    });
+    expect(() => buildComposition(input({
+      spec: withBlock, blocks: new Map([[BLOCK.name, { ...BLOCK, entryPath: "index.html" }]]),
+    }))).toThrow(/Multiple files provide index.html/);
+    expect(() => buildComposition(input({
+      spec: withBlock, blocks: new Map([[BLOCK.name, { ...BLOCK, files: [{ ...BLOCK.files[0]!, path: "assets/asset-1.jpg" }] }]]),
+    }))).toThrow(/Multiple files provide assets\/asset-1.jpg/);
+  });
+
+  it("packages catalog entry HTML and binary files without writing hosts into AI HTML", () => {
+    const withBlock = spec({
+      scenes: [{ id: "scene_1", durationFrames: 360, modules: [{ id: BLOCK.name, kind: "catalog", content: {} }] }],
+    });
+    const compiled = buildComposition(input({ spec: withBlock, blocks: new Map([[BLOCK.name, BLOCK]]) }));
+    expect(compiled.files).toEqual([
+      { path: "index.html", contents: input().html },
+      { path: BLOCK.entryPath, contents: BLOCK.entryContents },
+    ]);
+    expect(compiled.binaries).toEqual(BLOCK.files);
+  });
+
 
   it("is content-addressed: the same input hashes the same, a changed input does not", () => {
     const first = buildComposition(input());
@@ -130,14 +105,33 @@ describe("buildComposition", () => {
     expect(second.compositionHash).toBe(first.compositionHash);
     expect(first.compositionHash).toMatch(/^[0-9a-f]{64}$/);
 
+    const changedHtml = buildComposition(input({ html: `${input().html}<!-- changed -->` }));
+    expect(changedHtml.compositionHash).not.toBe(first.compositionHash);
+
     const changedText = spec();
     changedText.scenes[1]!.modules[0]!.content.text = "Julumpia Baru";
     expect(buildComposition(input({ spec: changedText })).compositionHash).not.toBe(first.compositionHash);
 
-    const changedAsset = ASSETS.map((asset) => (asset.id === "asset-1" ? { ...asset, sha256: "d".repeat(64) } : asset));
+    const changedAsset = ASSETS.map((asset) => (asset.id === "asset-2" ? { ...asset, sha256: "d".repeat(64) } : asset));
     expect(buildComposition(input({ assets: changedAsset })).compositionHash).not.toBe(first.compositionHash);
 
-    const changedResolution = buildComposition(input({ resolution: "720p" }));
-    expect(changedResolution.compositionHash).not.toBe(first.compositionHash);
+    expect(buildComposition(input({ resolution: "720p" })).compositionHash).not.toBe(first.compositionHash);
+    expect(buildComposition(input({ assets: [...ASSETS].reverse() })).compositionHash).toBe(first.compositionHash);
+  });
+
+  it("hashes changes to pinned font and design metadata", () => {
+    const original = buildComposition(input()).compositionHash;
+    const changedPack = { ...designPack, fonts: designPack.fonts.map((font, index) => index === 0 ? { ...font, weight: font.weight === 400 ? 500 : 400 } : font) };
+    expect(buildComposition(input({ designPack: changedPack })).compositionHash).not.toBe(original);
+  });
+
+  it("hashes installed block entry and binary bytes", () => {
+    const withBlock = spec({
+      scenes: [{ id: "scene_1", durationFrames: 360, modules: [{ id: BLOCK.name, kind: "catalog", content: {} }] }],
+    });
+    const base = input({ spec: withBlock, blocks: new Map([[BLOCK.name, BLOCK]]) });
+    const original = buildComposition(base).compositionHash;
+    expect(buildComposition({ ...base, blocks: new Map([[BLOCK.name, { ...BLOCK, entryContents: "<template>changed</template>" }]]) }).compositionHash).not.toBe(original);
+    expect(buildComposition({ ...base, blocks: new Map([[BLOCK.name, { ...BLOCK, files: [{ ...BLOCK.files[0]!, sha256: "d".repeat(64) }] }]]) }).compositionHash).not.toBe(original);
   });
 });

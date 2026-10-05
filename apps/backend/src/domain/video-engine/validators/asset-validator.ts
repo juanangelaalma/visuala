@@ -7,6 +7,7 @@ import type { ValidationIssue } from "./types";
 export function validateAssets(spec: CompositionSpec, assets: readonly { id: string }[]): ValidationIssue[] {
   const known = new Set(assets.map((asset) => asset.id));
   const issues: ValidationIssue[] = [];
+  let usesKnownAsset = false;
 
   for (const scene of spec.scenes) {
     for (const instance of scene.modules) {
@@ -24,10 +25,16 @@ export function validateAssets(spec: CompositionSpec, assets: readonly { id: str
         for (const assetId of value.split(",").map((entry) => entry.trim()).filter((entry) => entry.length > 0)) {
           if (!known.has(assetId)) {
             issues.push({ code: "asset_unknown", message: `${instance.id}.${slot.name} names asset ${assetId}, which this render was not given.`, sceneId: scene.id, moduleId: instance.id });
+          } else {
+            usesKnownAsset = true;
           }
         }
       }
     }
+  }
+
+  if (assets.length > 0 && !usesKnownAsset) {
+    issues.push({ code: "asset_unused", message: "The composition does not use any of the uploaded assets." });
   }
 
   return issues;

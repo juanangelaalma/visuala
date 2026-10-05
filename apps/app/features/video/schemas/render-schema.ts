@@ -21,13 +21,12 @@ export const videoRenderJobSchema = z.object({
 export const videoRenderJobResponseSchema = z.object({ job: videoRenderJobSchema.nullable() });
 
 /**
- * Mirrors the backend's `VersionResponse`. `kind` matters to the UI: only a `final` version is a
- * deliverable, and a `preview` is what the user watches before approving.
+ * Mirrors the backend's `VersionResponse`, which is finals only: a preview never leaves the backend,
+ * it reaches the player through the composition's own signed url.
  */
 export const videoVersionSchema = z.object({
   id: z.string(),
   versionNumber: z.number().int(),
-  kind: outputKindSchema,
   // A whole number of seconds, inside the range the project may ask for.
   durationSeconds: z.number().int().positive(),
   aspectRatio: z.enum(VIDEO_ASPECT_RATIOS),

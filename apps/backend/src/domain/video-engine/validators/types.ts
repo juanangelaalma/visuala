@@ -26,11 +26,17 @@ export type ValidationCode =
   | "recipe_field_missing"
   | "asset_unknown"
   | "asset_slot_missing"
+  | "asset_unused"
   | "duration_exceeded"
   | "scene_too_short"
   | "ratio_unsupported"
   | "catalog_ratio_incompatible"
-  | "catalog_duration_exceeded";
+  | "catalog_duration_exceeded"
+  | "beat_order_invalid"
+  | "beat_focus_invalid"
+  | "copy_repeated"
+  | "cta_not_closing"
+  | "motion_incompatible";
 
 export type ValidationIssue = {
   code: ValidationCode;

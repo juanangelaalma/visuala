@@ -15,6 +15,7 @@ import {
   UnsupportedBillingGatewayError,
 } from "@/domain/billing/errors";
 import { classifyStorageError, errorPlugin } from "./errors";
+import { CompositionGenerationError, PlanningError } from "@/domain/video-engine/errors";
 
 function buildApp() {
   return new Elysia()
@@ -137,6 +138,52 @@ describe("error plugin", () => {
       }
     });
   });
+
+  it("handles an exhausted planner failure without exposing generated copy or logging an unhandled error", async () => {
+    const consoleError = vi.spyOn(console, "error").mockImplementation(() => {});
+    const app = new Elysia().use(errorPlugin).get("/plan", () => {
+      throw new PlanningError("composition_plan_invalid", "private generated copy", ["fact_untraceable", "beat_focus_invalid"]);
+    });
+    try {
+      const response = await app.handle(new Request("http://localhost/plan"));
+      expect(response.status).toBe(502);
+      await expect(response.json()).resolves.toEqual({
+        error: "The AI could not produce a valid video plan. Please try again.",
+        code: "composition_plan_invalid",
+        issueCodes: ["fact_untraceable", "beat_focus_invalid"],
+      });
+      expect(consoleError).not.toHaveBeenCalled();
+    } finally {
+      consoleError.mockRestore();
+    }
+  });
+
+  it.each(["composition_html_invalid", "composition_visual_check_failed"] as const)(
+    "redacts exhausted composition failures with code %s",
+    async (code) => {
+      const consoleError = vi.spyOn(console, "error").mockImplementation(() => undefined);
+      const consoleLog = vi.spyOn(console, "log").mockImplementation(() => undefined);
+      const privateDetail = '<html><div id="private-selector">private generated copy</div></html> /internal/composition.html';
+      const app = new Elysia().use(errorPlugin).get("/compile", () => {
+        throw new CompositionGenerationError(code, privateDetail, ["content_overlap"], 3);
+      });
+      try {
+        const response = await app.handle(new Request("http://localhost/compile"));
+        expect(response.status).toBe(502);
+        await expect(response.json()).resolves.toEqual({
+          error: "The AI could not produce a valid video composition. Please try again.",
+          code,
+          issueCodes: ["content_overlap"],
+          attempts: 3,
+        });
+        expect(consoleError).not.toHaveBeenCalled();
+        expect(consoleLog).not.toHaveBeenCalled();
+      } finally {
+        consoleError.mockRestore();
+        consoleLog.mockRestore();
+      }
+    },
+  );
 
   describe("ai domain errors", () => {
     function aiError(code: AIErrorCode, extra: Partial<ConstructorParameters<typeof AIError>[0]> = {}) {

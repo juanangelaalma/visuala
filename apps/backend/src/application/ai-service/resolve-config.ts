@@ -72,6 +72,7 @@ export function resolveAIConfig(
   try {
     return resolveValidatedConfig(task, options);
   } catch (error) {
+    console.log(error)
     if (error instanceof AIError) throw error;
     throw configError();
   }

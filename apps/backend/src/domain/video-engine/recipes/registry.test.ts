@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { BRIEF_FIELDS } from "../../video/brief";
+import { BRIEF_FIELDS, REQUIRED_BRIEF_FIELDS } from "../../video/brief";
 import { INTERNAL_MODULE_IDS } from "../modules/ids";
 import { RECIPES, recipeById } from "./registry";
 
@@ -32,6 +32,12 @@ describe("recipes", () => {
     for (const recipe of RECIPES) {
       expect(recipe.required.length).toBeGreaterThan(0);
       for (const field of recipe.required) expect(FIELDS.has(field)).toBe(true);
+    }
+  });
+
+  it("does not let the interview finish before every recipe field is present", () => {
+    for (const recipe of RECIPES) {
+      for (const field of recipe.required) expect(REQUIRED_BRIEF_FIELDS[recipe.id]).toContain(field);
     }
   });
 

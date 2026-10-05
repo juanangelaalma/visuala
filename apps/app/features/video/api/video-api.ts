@@ -8,8 +8,32 @@ import type {
   VideoRenderJob,
   VideoVersion,
 } from "@/domain/video/types";
-import { browserApiFetch, browserApiUpload } from "@/lib/api/browser-client";
+import { browserApiFetch, browserApiStream, browserApiUpload, type BrowserStreamEvent } from "@/lib/api/browser-client";
 import type { CreateVideoProjectInput } from "../schemas/video-project-schema";
+import {
+  videoMessagePersistedSchema,
+  videoOpeningResultSchema,
+  videoSendResultSchema,
+  videoTextDeltaSchema,
+} from "../schemas/video-chat-stream-schema";
+import type { z } from "zod";
+
+export type VideoSendResult = { message: VideoMessage; reply: VideoMessage; project: VideoProject };
+export type VideoOpeningResult = { messages: VideoMessage[] };
+export type VideoChatStreamOptions = {
+  signal?: AbortSignal;
+  onTextDelta?: (delta: string) => void;
+  onMessagePersisted?: (value: { message: VideoMessage; project: VideoProject }) => void;
+};
+export type VideoWorkspaceData = {
+  project: VideoProject;
+  assets: ProjectAsset[];
+  messages: VideoMessage[];
+  brief: VideoBriefRevision | null;
+  composition: VideoComposition | null;
+  renderJob: VideoRenderJob | null;
+  versions: VideoVersion[];
+};
 
 type SignalOption = { signal?: AbortSignal };
 
@@ -47,15 +71,42 @@ export const videoApi = {
   deleteAsset(projectId: string, assetId: string, signal?: AbortSignal) {
     return browserApiFetch<{ deleted: true }>(`${projectPath(projectId)}/assets/${encodeURIComponent(assetId)}`, { method: "DELETE", signal });
   },
-  sendMessage(projectId: string, content: string, assetIds?: string[], signal?: AbortSignal) {
-    return browserApiFetch<{ message: VideoMessage; reply: VideoMessage; project: VideoProject }>(`${projectPath(projectId)}/messages`, {
+  async sendMessage(projectId: string, content: string, assetIds?: string[], options: VideoChatStreamOptions = {}): Promise<VideoSendResult> {
+    let completed: VideoSendResult | undefined;
+    await browserApiStream<unknown>(`${projectPath(projectId)}/messages`, {
       method: "POST",
       body: { content, ...(assetIds === undefined ? {} : { assetIds }) },
-      signal,
+      signal: options.signal,
+      onEvent: (event) => {
+        if (event.event === "message") {
+          const persisted = parseChatEvent(videoMessagePersistedSchema, event.data);
+          options.onMessagePersisted?.(persisted);
+        } else if (event.event === "completed") {
+          completed = parseChatEvent(videoSendResultSchema, event.data);
+        } else {
+          publishQuestionDelta(event, options);
+        }
+      },
     });
+    if (!completed) throw new Error("Invalid video chat response.");
+    return completed;
   },
-  openInterview(projectId: string, signal?: AbortSignal) {
-    return browserApiFetch<{ messages: VideoMessage[] }>(`${projectPath(projectId)}/messages/opening`, { method: "POST", signal });
+  async openInterview(projectId: string, options: VideoChatStreamOptions = {}): Promise<VideoOpeningResult> {
+    let completed: VideoOpeningResult | undefined;
+    await browserApiStream<unknown>(`${projectPath(projectId)}/messages/opening`, {
+      method: "POST",
+      signal: options.signal,
+      onEvent: (event) => {
+        if (event.event === "message") throw new Error("Invalid video chat response.");
+        if (event.event === "completed") {
+          completed = parseChatEvent(videoOpeningResultSchema, event.data);
+        } else {
+          publishQuestionDelta(event, options);
+        }
+      },
+    });
+    if (!completed) throw new Error("Invalid video chat response.");
+    return completed;
   },
   listMessages(projectId: string, signal?: AbortSignal) {
     return browserApiFetch<{ messages: VideoMessage[] }>(`${projectPath(projectId)}/messages`, { signal });
@@ -95,7 +146,7 @@ export const videoApi = {
     if (downloadUrl.protocol !== "https:" && !isDevelopmentLoopbackUrl(downloadUrl)) throw new Error("Invalid download URL.");
     window.location.href = downloadUrl.toString();
   },
-  async loadVideoWorkspace(projectId: string, signal?: AbortSignal) {
+  async loadVideoWorkspace(projectId: string, signal?: AbortSignal): Promise<VideoWorkspaceData> {
     const options: SignalOption = { signal };
     const [project, assets, messages, brief, composition, renderJob, versions] = await Promise.all([
       videoApi.getProject(projectId, options.signal),
@@ -117,6 +168,18 @@ export const videoApi = {
     };
   },
 };
+
+function parseChatEvent<T>(schema: z.ZodType<T>, data: unknown): T {
+  const result = schema.safeParse(data);
+  if (!result.success) throw new Error("Invalid video chat response.");
+  return result.data;
+}
+
+function publishQuestionDelta(event: BrowserStreamEvent, options: VideoChatStreamOptions): void {
+  if (event.event !== "text-delta") return;
+  const { delta } = parseChatEvent(videoTextDeltaSchema, event.data);
+  options.onTextDelta?.(delta);
+}
 
 function parseDownloadUrl(value: string): URL {
   try {

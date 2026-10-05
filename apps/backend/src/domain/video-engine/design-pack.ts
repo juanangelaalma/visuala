@@ -116,26 +116,11 @@ function containsRemoteReference(manifest: DesignPackManifest): boolean {
   return JSON.stringify(manifest).includes("http");
 }
 
-/** The face declarations the artifact embeds; the files are copied in beside the composition. */
-export function localFontFaceCss(manifest: DesignPackManifest, baseDir = "fonts"): string {
-  return manifest.fonts
-    .map(
-      (font) => `@font-face {
-  font-family: "${font.family}";
-  font-style: normal;
-  font-weight: ${font.weight};
-  font-display: block;
-  src: url("${baseDir}/${font.file}") format("woff2");
-}`,
-    )
-    .join("\n");
-}
-
 /** The pack in words for a prompt: the planner may only use these tokens through a module slot. */
 export function designPackTokenSummary(manifest: DesignPackManifest): string {
   return [
     `style: ${manifest.styleId}@${manifest.version} (${manifest.motion.energy} motion, enter ${manifest.motion.enterSeconds}s, stagger ${manifest.motion.staggerSeconds}s)`,
-    `ground tones: ${Object.keys(GROUND_TONES).join(", ")}`,
+    `ground tones: ${GROUND_TONES.join(", ")}`,
     `colours: ${Object.entries(manifest.colors).map(([name, value]) => `${name}=${value}`).join(", ")}`,
     `type: display ${manifest.typography.displayFamily}, mono ${manifest.typography.monoFamily}, body ${manifest.typography.bodyFamily}`,
     `type ramp (cqw of frame width): ${Object.entries(manifest.typography.ramp)

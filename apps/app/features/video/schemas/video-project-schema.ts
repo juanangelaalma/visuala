@@ -14,7 +14,6 @@ import type { VideoAssetMimeType } from "@/domain/video/types";
 export const MAX_ASSET_BYTES = 10 * 1024 * 1024;
 export const MAX_ASSETS_PER_PROJECT = 8;
 export const MAX_PROJECT_ASSET_BYTES = 40 * 1024 * 1024;
-export const MIN_IMAGE_DIMENSION = 200;
 
 export const VIDEO_ASSET_MIME_TYPES = ["image/jpeg", "image/png", "image/webp"] as const satisfies readonly VideoAssetMimeType[];
 

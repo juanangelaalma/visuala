@@ -1,19 +1,20 @@
 import type { AIService } from "../../domain/ai-service/contracts";
 import type { AIResultMetadata } from "../../domain/ai-service/types";
-import { compositionSpecSchema, type CompositionFormat, type CompositionSpec } from "../../domain/video-engine/composition";
-import { designPackTokenSummary } from "../../domain/video-engine/design-pack";
-import { PlanningError } from "../../domain/video-engine/errors";
-import { buildFallbackSpec } from "../../domain/video-engine/fallback";
 import type { ArtDirection } from "../../domain/video-engine/art-direction";
 import type { Catalog } from "../../domain/video-engine/catalog";
+import { compositionSpecFromWire, compositionSpecWireSchema, type CompositionFormat, type CompositionSpec } from "../../domain/video-engine/composition";
+import { designPackTokenSummary } from "../../domain/video-engine/design-pack";
+import { PlanningError } from "../../domain/video-engine/errors";
 import type { VideoRecipe } from "../../domain/video-engine/recipes/types";
 import { validateComposition } from "../../domain/video-engine/validators";
-import type { ValidationBrief, ValidationIssue } from "../../domain/video-engine/validators/types";
+import { report, type ValidationBrief, type ValidationInput, type ValidationIssue } from "../../domain/video-engine/validators/types";
+import { validateStoryboard } from "../../domain/video-engine/validators/storyboard-validator";
 import type { GeneratedBy } from "../../domain/video/types";
 import type { LoadedDesignPack } from "../../infrastructure/video-engine/fs-design-pack-source";
 import { COMPOSITION_SPEC_SCHEMA_NAME, VIDEO_ENGINE_AI_SCHEMA_VERSION } from "./ai-schemas";
 import type { CatalogCandidate } from "./candidate-selector";
 import { COMPOSITION_PLANNER_PROMPT_VERSION, compositionPlannerInstructions } from "./prompts";
+import { processTrace } from "./process-trace";
 
 export type CompositionPlannerDependencies = {
   ai: AIService;
@@ -36,61 +37,89 @@ export type CompositionPlannerCommand = {
 
 export type CompositionPlanResult = {
   spec: CompositionSpec;
-  /** True when the model's plan was rejected and the deterministic fallback is what will be rendered. */
-  isFallback: boolean;
-  /** Why a plan was rejected. Empty on a first-try success, and the reason the fallback ran otherwise. */
   issues: readonly ValidationIssue[];
-  generatedBy: GeneratedBy | null;
-  ai: AIResultMetadata | null;
+  generatedBy: GeneratedBy;
+  ai: AIResultMetadata;
 };
 
-/** Plans one composition and gates it with the compiler's validators. A failed plan is replaced by the fallback, never retried, and the reasons come back with it. */
+/** Plans one composition and rejects any model plan that fails the compiler's validators. */
 export async function runCompositionPlanner(
   command: CompositionPlannerCommand,
   dependencies: CompositionPlannerDependencies,
 ): Promise<CompositionPlanResult> {
-  const requestId = dependencies.createRequestId();
+  let feedback = "";
+  for (let attempt = 0; ; attempt++) {
+    const requestId = dependencies.createRequestId();
+    const trace = processTrace({ projectId: command.projectId, requestId, sourceFile: "apps/backend/src/application/video-engine/composition-planner.ts" });
+    trace.event("planner_attempt", "started", { attempt: attempt + 1 });
+    const result = await trace.run("planner_ai", () => dependencies.ai.generateStructured({
+      requestId,
+      task: "composition_planner",
+      context: { userId: command.userId, projectId: command.projectId },
+      instructions: compositionPlannerInstructions({
+        recipe: command.recipe,
+        brief: command.brief,
+        artDirection: command.artDirection,
+        designPackTokens: designPackTokenSummary(command.designPack.manifest),
+        candidates: command.candidates,
+        assetIds: command.assetIds,
+        language: command.language,
+        fps: command.format.fps,
+        durationSeconds: command.format.durationSeconds,
+        aspectRatio: command.format.aspectRatio,
+      }),
+      messages: [{ role: "user", content: feedback || "Write the composition spec for this video." }],
+      promptVersion: COMPOSITION_PLANNER_PROMPT_VERSION,
+      schema: {
+        name: COMPOSITION_SPEC_SCHEMA_NAME,
+        version: VIDEO_ENGINE_AI_SCHEMA_VERSION,
+        schema: compositionSpecWireSchema,
+      },
+    }));
+    trace.response("composition_plan", result.data);
 
-  const result = await dependencies.ai.generateStructured({
-    requestId,
-    task: "composition_planner",
-    context: { userId: command.userId, projectId: command.projectId },
-    instructions: compositionPlannerInstructions({
+    const { data: _data, ...ai } = result;
+    const spec = compositionSpecFromWire(result.data);
+    const report = validatePlan({
+      spec,
+      catalog: dependencies.catalog,
       recipe: command.recipe,
+      designPack: command.designPack.manifest,
       brief: command.brief,
-      artDirection: command.artDirection,
-      designPackTokens: designPackTokenSummary(command.designPack.manifest),
-      candidates: command.candidates,
-      assetIds: command.assetIds,
-      language: command.language,
-      fps: command.format.fps,
-      durationSeconds: command.format.durationSeconds,
-      aspectRatio: command.format.aspectRatio,
-    }),
-    messages: [],
-    promptVersion: COMPOSITION_PLANNER_PROMPT_VERSION,
-    schema: {
-      name: COMPOSITION_SPEC_SCHEMA_NAME,
-      version: VIDEO_ENGINE_AI_SCHEMA_VERSION,
-      schema: compositionSpecSchema,
-    },
-  });
+      assets: command.assetIds.map((id) => ({ id })),
+      candidateIds: command.candidates.map((candidate) => candidate.name),
+    });
+    trace.event("planner_validation", report.ok ? "completed" : "rejected", {
+      attempt: attempt + 1,
+      issueCodes: report.issues.map((issue) => issue.code),
+    });
 
-  const { data: _data, ...ai } = result;
-  const report = validateComposition({
-    spec: result.data,
-    catalog: dependencies.catalog,
-    recipe: command.recipe,
-    designPack: command.designPack.manifest,
-    brief: command.brief,
-    assets: command.assetIds.map((id) => ({ id })),
-    candidateIds: command.candidates.map((candidate) => candidate.name),
-  });
+    if (!report.ok) {
+      if (attempt < 2 && !report.issues.some((issue) => issue.code === "recipe_field_missing")) {
+        feedback = [
+          "Correct this rejected composition. Return a complete replacement spec, preserving valid scenes.",
+          "Follow the confirmed brief and recipe instructions exactly. Do not invent teaser copy.",
+          "Previous spec:",
+          JSON.stringify(result.data),
+          "Validation errors to fix:",
+          JSON.stringify(report.issues),
+        ].join("\n");
+        trace.event("planner_correction", "scheduled", { attempt: attempt + 2 });
+        continue;
+      }
+      const issueCodes = report.issues.map((issue) => issue.code);
+      const issueLocations = report.issues.map(({ code, sceneId, moduleId }) =>
+        `${code}${sceneId ? ` at ${sceneId}` : ""}${moduleId ? `/${moduleId}` : ""}`,
+      );
+      throw new PlanningError(
+        "composition_plan_invalid",
+        `The model composition for ${command.recipe.id} is not valid: ${issueLocations.join(", ")}.`,
+        issueCodes,
+      );
+    }
 
-  if (report.ok) {
     return {
-      spec: result.data,
-      isFallback: false,
+      spec,
       issues: [],
       generatedBy: {
         profileId: result.profileId,
@@ -102,40 +131,10 @@ export async function runCompositionPlanner(
       ai,
     };
   }
-
-  return fallback(command, report.issues, ai);
 }
 
-function fallback(command: CompositionPlannerCommand, issues: readonly ValidationIssue[], ai: AIResultMetadata): CompositionPlanResult {
-  const spec = buildFallbackSpec({
-    designPack: command.designPack.manifest,
-    format: command.format,
-    brief: command.brief,
-    assets: command.assetIds.map((id) => ({ id })),
-  });
-
-  return { spec, isFallback: true, issues, generatedBy: null, ai };
-}
-
-/** The fallback is deterministic and must itself pass the gate; if it does not, the brief is unusable. */
-export function assertFallbackValid(
-  plan: CompositionPlanResult,
-  command: CompositionPlannerCommand,
-  catalog: Catalog,
-): CompositionPlanResult {
-  if (!plan.isFallback) return plan;
-
-  const report = validateComposition({
-    spec: plan.spec,
-    catalog,
-    recipe: command.recipe,
-    designPack: command.designPack.manifest,
-    brief: command.brief,
-    assets: command.assetIds.map((id) => ({ id })),
-  });
-
-  if (!report.ok) {
-    throw new PlanningError("fallback_invalid", `The fallback composition for ${command.recipe.id} is not valid: ${report.issues.map((issue) => issue.code).join(", ")}.`);
-  }
-  return plan;
+function validatePlan(input: ValidationInput) {
+  const validation = validateComposition(input);
+  if (validation.issues.some((issue) => issue.code === "schema_invalid")) return validation;
+  return report([...validation.issues, ...validateStoryboard(input)]);
 }

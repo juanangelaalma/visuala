@@ -15,8 +15,9 @@ import {
   UnsupportedBillingGatewayError,
 } from "@/domain/billing/errors";
 import { VideoError, type VideoErrorCode } from "@/domain/video/errors";
+import { CompositionGenerationError, PlanningError } from "@/domain/video-engine/errors";
 
-type MappedError = { status: number; body: Record<string, unknown> };
+export type MappedError = { status: number; body: Record<string, unknown> };
 
 const authErrorStatus: Record<AuthErrorCode, number> = {
   invalid_credentials: 401,
@@ -54,7 +55,7 @@ const videoErrorStatus: Record<VideoErrorCode, number> = {
   video_revision_quota_exhausted: 409,
 };
 
-function mapDomainError(error: unknown): MappedError | null {
+export function mapDomainError(error: unknown): MappedError | null {
   if (error instanceof AuthDomainError) return { status: authErrorStatus[error.code], body: { error: error.message } };
 
   if (error instanceof AIError) {
@@ -72,6 +73,29 @@ function mapDomainError(error: unknown): MappedError | null {
 
   if (error instanceof VideoError) {
     return { status: videoErrorStatus[error.code], body: { error: error.message, code: error.code } };
+  }
+
+  if (error instanceof PlanningError) {
+    return {
+      status: 502,
+      body: {
+        error: "The AI could not produce a valid video plan. Please try again.",
+        code: error.code,
+        issueCodes: error.issueCodes,
+      },
+    };
+  }
+
+  if (error instanceof CompositionGenerationError) {
+    return {
+      status: 502,
+      body: {
+        error: "The AI could not produce a valid video composition. Please try again.",
+        code: error.code,
+        issueCodes: error.issueCodes,
+        attempts: error.attempts,
+      },
+    };
   }
 
   if (error instanceof BillingPaymentNotFoundError || error instanceof PricingPlanUnavailableError) return { status: 404, body: { error: "Not found." } };
@@ -131,6 +155,8 @@ export const errorPlugin = new Elysia({ name: "errors" }).onError({ as: "global"
       ? { error: "Asset storage is not configured correctly.", code: storageCode }
       : { error: "Asset storage is unavailable.", code: storageCode };
   }
+
+  console.log(error)
 
   console.error("Unhandled backend error");
   set.status = 500;

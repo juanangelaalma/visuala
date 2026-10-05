@@ -2,13 +2,14 @@ import type { AIService } from "../../domain/ai-service/contracts";
 import type { AIResultMetadata } from "../../domain/ai-service/types";
 import { artDirectionBeatIssues, artDirectionSchema, type ArtDirection } from "../../domain/video-engine/art-direction";
 import { PlanningError } from "../../domain/video-engine/errors";
-import { briefValues, residual } from "../../domain/video-engine/facts";
+import { briefValues } from "../../domain/video-engine/facts";
 import type { LoadedDesignPack } from "../../infrastructure/video-engine/fs-design-pack-source";
 import type { VideoRecipe } from "../../domain/video-engine/recipes/types";
 import type { ValidationBrief } from "../../domain/video-engine/validators/types";
 import type { GeneratedBy } from "../../domain/video/types";
 import { ART_DIRECTION_SCHEMA_NAME, VIDEO_ENGINE_AI_SCHEMA_VERSION } from "./ai-schemas";
 import { ART_DIRECTOR_PROMPT_VERSION, artDirectorInstructions } from "./prompts";
+import { processTrace } from "./process-trace";
 
 export type ArtDirectorDependencies = {
   ai: AIService;
@@ -41,7 +42,8 @@ export async function runArtDirector(
 ): Promise<ArtDirectorResult> {
   const requestId = dependencies.createRequestId();
 
-  const result = await dependencies.ai.generateStructured({
+  const trace = processTrace({ projectId: command.projectId, requestId, sourceFile: "apps/backend/src/application/video-engine/art-director.ts" });
+  const result = await trace.run("art_director_ai", () => dependencies.ai.generateStructured({
     requestId,
     task: "art_director",
     context: { userId: command.userId, projectId: command.projectId },
@@ -49,19 +51,21 @@ export async function runArtDirector(
       recipe: command.recipe,
       brief: command.brief,
       frameMd: command.designPack.frameMd,
+      designMd: command.designPack.designMd,
       assets: command.assets,
       language: command.language,
       durationSeconds: command.durationSeconds,
       aspectRatio: command.aspectRatio,
     }),
-    messages: [],
+    messages: [{ role: "user", content: "Give the art direction for this video." }],
     promptVersion: ART_DIRECTOR_PROMPT_VERSION,
     schema: {
       name: ART_DIRECTION_SCHEMA_NAME,
       version: VIDEO_ENGINE_AI_SCHEMA_VERSION,
       schema: artDirectionSchema,
     },
-  });
+  }));
+  trace.response("art_direction", result.data);
 
   const artDirection = result.data;
   const { data: _data, ...ai } = result;
@@ -71,10 +75,12 @@ export async function runArtDirector(
     throw new PlanningError("art_direction_beat_mismatch", `The art direction does not match the ${command.recipe.id} recipe beats: ${beatIssues.join("; ")}.`);
   }
 
-  const leftover = residual(artDirection.mainMessage, briefValues(command.brief));
-  if (leftover.length > 0) {
-    throw new PlanningError("art_direction_untraceable", `The art direction main message contains text the brief does not support: "${leftover}".`);
+  const allowedWords = new Set(briefValues(command.brief).flatMap(words));
+  const unsupportedWords = words(artDirection.mainMessage).filter((word) => !allowedWords.has(word));
+  if (unsupportedWords.length > 0) {
+    throw new PlanningError("art_direction_untraceable", `The art direction main message contains words the brief does not support: "${unsupportedWords.join(" ")}".`);
   }
+  trace.event("art_direction_validation", "completed");
 
   return {
     artDirection,
@@ -87,4 +93,8 @@ export async function runArtDirector(
     },
     ai,
   };
+}
+
+function words(value: string): string[] {
+  return value.toLowerCase().match(/[\p{L}\p{N}]+/gu) ?? [];
 }

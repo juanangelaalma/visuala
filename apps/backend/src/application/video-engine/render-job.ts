@@ -14,6 +14,7 @@ import {
 } from "../../domain/video-engine/contracts";
 import type { RenderCompositionEngine } from "../../domain/video-engine/render-engine";
 import type { CompositionArtifactStore, RemoteArtifactFile } from "../../infrastructure/video-engine/composition-artifact-store";
+import { processTrace } from "./process-trace";
 
 export type RenderJobDependencies = {
   jobs: RenderJobRepository;
@@ -47,32 +48,36 @@ export type RenderJobOutcome =
  * drifted from what was approved.
  */
 export async function runRenderJob(jobId: string, dependencies: RenderJobDependencies): Promise<RenderJobOutcome> {
-  const found = await dependencies.jobs.getById(jobId);
+  const jobTrace = processTrace({ jobId, sourceFile: "apps/backend/src/application/video-engine/render-job.ts" });
+  const found = await jobTrace.run("render.job.read", () => dependencies.jobs.getById(jobId));
   if (!found) return { outcome: "not_found" };
   if (!isActiveRenderJobStatus(found.status)) return { outcome: "not_queued", status: found.status };
 
-  const job = await dependencies.jobs.begin(jobId);
+  const trace = processTrace({ jobId, projectId: found.projectId, sourceFile: "apps/backend/src/application/video-engine/render-job.ts" });
+  const job = await trace.run("render.job.claim", () => dependencies.jobs.begin(jobId));
   if (!job) {
-    const current = await dependencies.jobs.getById(jobId);
+    const current = await trace.run("render.job.read", () => dependencies.jobs.getById(jobId));
     return { outcome: "not_queued", status: current?.status ?? found.status };
   }
 
   const startedAt = Date.now();
   try {
-    const result = await render(job, dependencies);
-    await dependencies.events.record({
-      projectId: job.projectId,
-      userId: job.userId,
-      event: "render_succeeded",
-      renderJobId: job.id,
-      renderStatus: "succeeded",
-      renderDurationMs: Date.now() - startedAt,
+    return await trace.run<RenderJobOutcome>("render.job", async () => {
+      const result = await render(job, dependencies);
+      await trace.run("render.event.succeeded.persist", () => dependencies.events.record({
+        projectId: job.projectId,
+        userId: job.userId,
+        event: "render_succeeded",
+        renderJobId: job.id,
+        renderStatus: "succeeded",
+        renderDurationMs: Date.now() - startedAt,
+      }));
+      return { outcome: "succeeded", versionId: result.versionId, outputObjectKey: result.outputObjectKey };
     });
-    return { outcome: "succeeded", versionId: result.versionId, outputObjectKey: result.outputObjectKey };
   } catch (error) {
     const errorCode = failureCode(error);
-    await dependencies.jobs.fail(jobId, errorCode);
-    await dependencies.events.record({
+    await trace.run("render.job.failed.persist", () => dependencies.jobs.fail(jobId, errorCode));
+    await trace.run("render.event.failed.persist", () => dependencies.events.record({
       projectId: job.projectId,
       userId: job.userId,
       event: "render_failed",
@@ -80,7 +85,7 @@ export async function runRenderJob(jobId: string, dependencies: RenderJobDepende
       renderStatus: "failed",
       renderDurationMs: Date.now() - startedAt,
       renderErrorCode: errorCode,
-    });
+    }));
     return { outcome: "failed", errorCode };
   }
 }
@@ -106,24 +111,25 @@ export async function reclaimStaleJob(jobId: string, dependencies: Pick<RenderJo
 }
 
 async function render(job: RenderJob, dependencies: RenderJobDependencies): Promise<{ versionId: string; outputObjectKey: string }> {
+  const trace = processTrace({ jobId: job.id, projectId: job.projectId, sourceFile: "apps/backend/src/application/video-engine/render-job.ts" });
   const snapshot = renderInputSnapshotSchema.parse(job.inputSnapshot);
 
-  const artifact = await dependencies.artifacts.getById(job.compositionArtifactId);
+  const artifact = await trace.run("render.artifact.read", () => dependencies.artifacts.getById(job.compositionArtifactId));
   if (!artifact) throw new VideoError("video_render_job_not_found", "The composition this job renders is gone.");
 
-  const files = await dependencies.artifactStore.read(artifact.artifactPrefix, {
+  const files = await trace.run("render.artifact.download", () => dependencies.artifactStore.read(artifact.artifactPrefix, {
     compositionHash: artifact.compositionHash,
     maxBytesPerFile: dependencies.maxArtifactFileBytes,
-  });
+  }));
 
-  const scratchDir = await dependencies.createScratchDir();
+  const scratchDir = await trace.run("render.scratch.allocate", () => dependencies.createScratchDir());
   try {
     const artifactDir = join(scratchDir, "artifact");
-    await dependencies.materialize(files, artifactDir);
-    await dependencies.jobs.markRendering(job.id);
+    await trace.run("render.artifact.materialize", () => dependencies.materialize(files, artifactDir));
+    await trace.run("render.job.rendering.persist", () => dependencies.jobs.markRendering(job.id));
 
     const outputPath = join(scratchDir, "output.mp4");
-    const rendered = await dependencies.engine.render({
+    const rendered = await trace.run("render.engine.render", () => dependencies.engine.render({
       artifactDir,
       outputPath,
       width: snapshot.width,
@@ -131,21 +137,21 @@ async function render(job: RenderJob, dependencies: RenderJobDependencies): Prom
       fps: snapshot.fps,
       durationSeconds: snapshot.durationSeconds,
       quality: dependencies.qualityFor(job.kind),
-    });
+    }));
 
-    assertProbeMatchesSnapshot(rendered.probe, snapshot);
+    await trace.run("render.output.validate", async () => assertProbeMatchesSnapshot(rendered.probe, snapshot));
 
-    await dependencies.jobs.markUploading(job.id);
-    const bytes = await dependencies.readOutput(rendered.outputPath);
+    await trace.run("render.job.uploading.persist", () => dependencies.jobs.markUploading(job.id));
+    const bytes = await trace.run("render.output.read", () => dependencies.readOutput(rendered.outputPath));
     const versionId = dependencies.createId();
     const outputObjectKey = dependencies.outputKey(job.projectId, versionId);
-    await dependencies.upload(outputObjectKey, bytes, "video/mp4");
+    await trace.run("render.output.upload", () => dependencies.upload(outputObjectKey, bytes, "video/mp4"));
 
-    await dependencies.versions.create({
+    await trace.run("render.version.persist", async () => dependencies.versions.create({
       id: versionId,
       projectId: job.projectId,
       userId: job.userId,
-      versionNumber: await dependencies.versions.nextVersionNumber(job.projectId),
+      versionNumber: await trace.run("render.version.number.read", () => dependencies.versions.nextVersionNumber(job.projectId)),
       renderJobId: job.id,
       parentVersionId: job.parentVersionId,
       outputObjectKey,
@@ -154,12 +160,12 @@ async function render(job: RenderJob, dependencies: RenderJobDependencies): Prom
       aspectRatio: snapshot.aspectRatio,
       resolution: snapshot.resolution,
       compositionHash: artifact.compositionHash,
-    });
+    }));
 
-    await dependencies.jobs.succeed(job.id);
+    await trace.run("render.job.succeeded.persist", () => dependencies.jobs.succeed(job.id));
     return { versionId, outputObjectKey };
   } finally {
-    await dependencies.removeScratchDir(scratchDir);
+    await trace.run("render.scratch.cleanup", () => dependencies.removeScratchDir(scratchDir));
   }
 }
 

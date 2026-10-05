@@ -31,7 +31,8 @@ describe("video brief", () => {
     expect(findMissingBriefFields(baseBrief, "product_promo")).toEqual([]);
     expect(findMissingBriefFields({ ...baseBrief, callToAction: null }, "product_promo")).toEqual(["callToAction"]);
     expect(findMissingBriefFields({ ...baseBrief, offer: null }, "discount_promo")).toEqual(["offer"]);
-    expect(findMissingBriefFields({ ...baseBrief, menuItems: [{ name: "Kopi Susu", price: null }] }, "menu_showcase")).toEqual(["menuItems"]);
+    expect(findMissingBriefFields({ ...baseBrief, offer: { label: "Promo", detail: "Diskon 10%" }, callToAction: null }, "discount_promo")).toEqual(["callToAction"]);
+    expect(findMissingBriefFields({ ...baseBrief, menuItems: [{ name: "Kopi Susu", price: null }] }, "menu_showcase")).toEqual(["menuItems", "orderDestination"]);
   });
 
   it("flags a price the user never confirmed", () => {
@@ -99,6 +100,7 @@ describe("video brief draft", () => {
     expect(isBriefDraftComplete({ ...baseBrief, callToAction: null }, "product_promo")).toBe(false);
     expect(isBriefDraftComplete({ ...baseBrief, audience: null, ...confirmedOffer }, "discount_promo")).toBe(false);
     expect(isBriefDraftComplete({ ...baseBrief, ...confirmedOffer }, "discount_promo")).toBe(true);
+    expect(isBriefDraftComplete({ ...baseBrief, ...confirmedOffer, callToAction: null }, "discount_promo")).toBe(false);
     expect(isBriefDraftComplete({ ...baseBrief, ...confirmedOffer, facts: [] }, "discount_promo")).toBe(false);
   });
 });
