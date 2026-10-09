@@ -1,0 +1,24 @@
+{
+  "id": "product.zoom-reveal",
+  "name": "Product Zoom Reveal",
+  "category": "product",
+  "targets": ["product"],
+  "duration": 0.85,
+  "behavior": {
+    "description": "Reveal a slightly enlarged product as it eases back to its authored size. The reveal uses opacity, not a clipping mask.",
+    "iterations": 1,
+    "fill": "forwards",
+    "targetSelection": "Animate every product hook in the selected component together.",
+    "easing": "cubic-bezier(0.22, 1, 0.36, 1)",
+    "keyframeTiming": "at is seconds from start; easing applies from the current keyframe to the next.",
+    "transformOrigin": "center center",
+    "keyframes": [
+      {"at": 0, "x": 0, "y": 0, "scale": 1.24, "rotation": 0, "opacity": 0, "easing": "cubic-bezier(0.22, 1, 0.36, 1)"},
+      {"at": 0.25, "x": 0, "y": 0, "scale": 1.12, "rotation": 0, "opacity": 1, "easing": "cubic-bezier(0.22, 1, 0.36, 1)"},
+      {"at": 0.85, "x": 0, "y": 0, "scale": 1, "rotation": 0, "opacity": 1}
+    ]
+  },
+  "energy": "medium",
+  "recommendedFor": ["product-launch", "product-highlight", "flavor-highlight"],
+  "adaptation": "Scale multiplies the authored base scale, rotation is an additive degree offset, and x/y are offsets in design pixels at 1080x1920 scaled with the frame. Opacity is absolute. Preserve authored decorative clip-path, shadows and container cropping; use a composited motion layer rather than changing layout dimensions. Start from the initial keyframe only at the assigned start and hold the final pose. The product remains at its designed scale, including oversized variants."
+}

@@ -3,6 +3,7 @@ import type { AIConfigOptions, ConnectionProfile, TaskConfig } from "../../domai
 import { AIError } from "../../domain/ai-service/errors";
 
 export const GOOGLE_GENERATE_CONTENT_FORMAT = "google-generate-content";
+export const OPENAI_RESPONSES_FORMAT = "openai-responses";
 
 const environmentSchema = z.object({
   AI_PROFILES_JSON: z.string().min(1),
@@ -90,7 +91,7 @@ export function configOptions(
   return {
     profiles: configuration.profiles,
     tasks: configuration.tasks,
-    registeredApiFormats: [GOOGLE_GENERATE_CONTENT_FORMAT],
+    registeredApiFormats: [GOOGLE_GENERATE_CONTENT_FORMAT, OPENAI_RESPONSES_FORMAT],
     getEnvironmentValue: configuration.getEnvironmentValue,
     allowInsecureLoopback:
       configuration.getEnvironmentValue("AI_ALLOW_INSECURE_LOOPBACK")?.trim().toLowerCase() === "true",

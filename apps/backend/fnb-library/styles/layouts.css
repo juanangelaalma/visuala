@@ -1,0 +1,80 @@
+[data-layout] {
+  position:absolute;
+  inset:0;
+  z-index:1;
+  display:grid;
+  padding:8%;
+  gap:3%;
+  grid-template-columns:1fr;
+  grid-template-rows:25% 55% 14%;
+  align-items:center}
+[data-slot] {
+  position:relative;
+  min-width:0;
+  width:100%;
+  height:100%;
+  display:grid;
+  align-items:center}
+[data-slot]>[data-component] {
+  width:100%;
+  height:100%}
+.hf-layout-center-hero {
+  grid-template-rows:20% 60% 14%;
+  text-align:center}
+.hf-layout-split-screen {
+  grid-template-rows:47% 47%;
+  padding:0;
+  gap:0}
+.hf-layout-split-screen>[data-slot] {
+  padding:8%;
+  background:var(--brand-secondary)}
+.hf-layout-split-screen>[data-slot=secondary] {
+  background:var(--background)}
+.hf-layout-diagonal-split {
+  grid-template-rows:40% 54%;
+  background:linear-gradient(150deg,transparent 48%,var(--brand-secondary) 48%)}
+.hf-layout-full-bleed-product {
+  padding:0;
+  grid-template-rows:1fr}
+.hf-layout-full-bleed-product>[data-slot=primary] {
+  grid-area:1/1;
+  z-index:1;
+  align-self:start;
+  height:25%;
+  padding:8%}
+.hf-layout-full-bleed-product>[data-slot=secondary] {
+  grid-area:1/1;
+  --product-scale:1.6}
+.hf-layout-product-with-backdrop-text {
+  grid-template-rows:1fr}
+.hf-layout-product-with-backdrop-text>[data-slot] {
+  grid-area:1/1}
+.hf-layout-product-with-backdrop-text>[data-slot=secondary] {
+  z-index:2}
+.hf-layout-product-with-backdrop-text>[data-slot=accent] {
+  z-index:3;
+  height:15%;
+  align-self:end}
+.hf-layout-top-bottom-promo {
+  grid-template-rows:23% 51% 20%}
+.hf-layout-side-by-side-products {
+  grid-template-columns:1fr 1fr;
+  grid-template-rows:70% 24%}
+.hf-layout-side-by-side-products>[data-slot=accent] {
+  grid-column:1/-1}
+.hf-layout-editorial-grid {
+  grid-template-columns:1fr 1fr;
+  grid-template-rows:35% 59%}
+.hf-layout-editorial-grid>[data-slot=primary] {
+  grid-column:1/-1}
+.hf-layout-editorial-grid>[data-slot=accent] {
+  align-self:end;
+  height:45%}
+
+.hf-place {
+  position:absolute!important;
+  left:var(--x,8%);
+  top:var(--y,8%);
+  width:var(--w,84%);
+  height:var(--h,20%);
+  z-index:var(--z,2)}

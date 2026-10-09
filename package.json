@@ -7,6 +7,7 @@
     "dev": "turbo dev",
     "build": "turbo build",
     "lint": "turbo lint",
+    "lint:anti-slop": "oxlint --config .oxlintrc.json .",
     "web:dev": "turbo dev --filter=web",
     "web:build": "turbo build --filter=web",
     "web:lint": "turbo lint --filter=web",
@@ -19,6 +20,8 @@
     "backend:test:coverage": "turbo test:coverage --filter=backend"
   },
   "devDependencies": {
+    "@oxlint/plugins": "1.87.0",
+    "oxlint": "1.87.0",
     "turbo": "^2.5.8"
   }
 }

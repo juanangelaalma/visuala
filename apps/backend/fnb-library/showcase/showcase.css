@@ -1,0 +1,199 @@
+.skip {
+  position:absolute;
+  left:16px;
+  top:-100px}
+.skip:focus {
+  top:12px;
+  background:var(--background);
+  z-index:100}
+header,main,footer {
+  max-width:1440px;
+  margin:auto;
+  padding-inline:clamp(20px,4vw,64px)}
+header {
+  padding-top:30px}
+.masthead {
+  display:flex;
+  justify-content:space-between;
+  gap:20px;
+  align-items:center;
+  border-bottom:1px solid #ccc9bf;
+  padding-bottom:24px}
+.wordmark {
+  font:700 28px var(--font-display)}
+.eyebrow {
+  font-size:12px;
+  letter-spacing:.15em;
+  text-transform:uppercase}
+.intro {
+  display:grid;
+  grid-template-columns:1.6fr 1fr;
+  gap:48px;
+  padding:64px 0 48px}
+h1 {
+  font:normal clamp(44px,6.7vw,96px)/.98 var(--font-display);
+  letter-spacing:-.055em;
+  margin:14px 0 24px;
+  max-width:800px}
+h1 em {
+  color:var(--brand-accent)}
+p {
+  max-width:65ch;
+  text-wrap:pretty}
+.intro aside {
+  align-self:end}
+.stats {
+  display:flex;
+  gap:30px;
+  margin-top:24px}
+.stats strong {
+  display:block;
+  font:32px var(--font-display)}
+.stats span {
+  font-size:12px;
+  color:var(--text-secondary)}
+nav {
+  display:flex;
+  flex-wrap:wrap;
+  gap:6px 24px;
+  padding:20px 0;
+  border-block:1px solid #ccc9bf}
+nav a {
+  padding-block:8px;
+  font-size:14px;
+  text-decoration:none}
+nav a:hover {
+  text-decoration:underline}
+.debug-button {
+  border:1px solid #999e93;
+  background:none;
+  padding:10px 16px;
+  border-radius:var(--radius-small)}
+.debug-button[aria-pressed=true] {
+  background:var(--brand-primary);
+  color:var(--background)}
+section.catalogue {
+  padding-top:64px}
+h2 {
+  font:normal clamp(30px,4vw,46px)/1.1 var(--font-display);
+  letter-spacing:-.035em;
+  margin:0 0 12px}
+.section-note {
+  color:var(--text-secondary);
+  margin:0 0 32px}
+.component-group {
+  margin:36px 0 60px}
+.group-heading {
+  display:flex;
+  align-items:baseline;
+  gap:16px;
+  flex-wrap:wrap;
+  margin-bottom:16px}
+h3 {
+  margin:0;
+  font-size:18px}
+.group-heading p {
+  margin:0;
+  color:var(--text-secondary);
+  font-size:14px}
+.variant-grid {
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(min(100%,205px),1fr));
+  gap:24px 18px}
+.sample {
+  min-width:0;
+  margin:0}
+.sample figcaption {
+  display:flex;
+  justify-content:space-between;
+  font-size:13px;
+  padding:12px 0 8px}
+.sample figcaption span {
+  color:var(--text-secondary)}
+.preview {
+  position:relative;
+  aspect-ratio:4/5;
+  background:#e8e3d7;
+  overflow:hidden;
+  container-type:inline-size;
+  display:grid;
+  place-items:center}
+.preview>[data-component] {
+  width:85%;
+  height:80%}
+.preview>[data-component='BrandBackground'] {
+  width:100%;
+  height:100%}
+.preview>[data-component='LogoLockup'],.preview>[data-component='OrderNowCTA'],.preview>[data-component='FlavorCallout'],.preview>[data-component='OldNewPrice'] {
+  height:auto}
+.sample details {
+  font-size:12px}
+.sample summary {
+  padding-block:6px;
+  min-height:30px}
+pre {
+  white-space:pre-wrap;
+  overflow-wrap:anywhere;
+  margin:8px 0;
+  background:var(--surface);
+  padding:12px;
+  font:12px/1.6 monospace}
+.guide {
+  margin-top:40px;
+  padding:24px 0;
+  border-block:1px solid #ccc9bf;
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:32px}
+.guide h2 {
+  font-size:26px}
+.guide p {
+  font-size:14px}
+.example-grid {
+  display:grid;
+  grid-template-columns:repeat(4,minmax(0,1fr));
+  gap:24px}
+.example-grid figure {
+  margin:0}
+.example-grid figcaption {
+  margin-top:16px;
+  font-size:14px}
+.example-grid figcaption strong {
+  display:block}
+.example-grid figcaption p {
+  font-size:12px;
+  color:var(--text-secondary)}
+footer {
+  padding-block:48px;
+  font-size:13px;
+  color:var(--text-secondary)}
+
+@media(max-width:900px) {
+  .intro {
+  grid-template-columns:1fr;
+  gap:16px}
+.example-grid {
+  grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media(max-width:480px) {
+  .intro {
+  padding-top:40px}
+.masthead {
+  flex-wrap:wrap}
+.eyebrow {
+  font-size:11px}
+.guide {
+  grid-template-columns:1fr}
+.example-grid {
+  grid-template-columns:1fr}
+.variant-grid {
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:24px 12px}
+.sample figcaption {
+  flex-direction:column;
+  gap:2px}
+.stats {
+  gap:24px}
+section.catalogue {
+  padding-top:48px}
+}

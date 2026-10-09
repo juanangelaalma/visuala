@@ -2,7 +2,7 @@
 
 The AI provider service gives server code one interface for text, structured output, and image input. Import `createAIService` only from server code. Browser code must call an authenticated route or server action.
 
-The service currently has no production feature caller. The application-level analyze, storyboard, image/video generation, and worker routes have been removed. The scripts documented below remain available for configuration checks and explicitly authorized smoke tests.
+The active F&B creator calls `generateStructured` from `application/fnb/planner.ts`. The model selects factual copy fragments and an allowlisted visual preset; it never supplies executable HTML, CSS, or JavaScript. The legacy chat-storage routes do not generate assistant replies.
 
 ## Configuration
 
@@ -12,7 +12,7 @@ Get the AI service variables into the deployment environment by running `make -C
 `AI_PROFILES_JSON` is an array of connection profiles. Each profile contains:
 
 - `id`: stable profile name referenced by task mappings.
-- `apiFormat`: registered provider protocol. The current value is `google-generate-content`.
+- `apiFormat`: registered protocol: `google-generate-content` or `openai-responses`.
 - `baseUrl`: compatible API endpoint.
 - `apiKeyEnv`: name of the environment variable that stores the API key.
 - `modelIdEnv`: name of the environment variable that stores the model ID.
@@ -25,9 +25,11 @@ Get the AI service variables into the deployment environment by running `make -C
 
 `AI_MAX_CONCURRENCY` sets the initial process-wide request cap. Each profile also has `limits.maxConcurrency`, and a task can lower it. When an operation resolves a lower task/profile cap, the shared process limiter tightens to that value and never loosens until the process restarts or test state is reset.
 
-The example profile reads its credentials and model from `AI_GOOGLE_API_KEY` and `AI_GOOGLE_MODEL`. The service also needs these server-side variables for persistence and private image reads:
+Credentials and model names are resolved from each profile's `apiKeyEnv` and `modelIdEnv`; they are not hardcoded by provider. The existing local 9Router profile uses `openai-responses` and `http://127.0.0.1:20128/v1`, with the key entered separately. Plain HTTP requires the explicit loopback development setting; do not use it for remote endpoints.
 
-- `NEXT_PUBLIC_SUPABASE_URL`
+The service also needs these server-side variables for persistence and private image reads:
+
+- `SUPABASE_URL`
 - `SUPABASE_SERVICE_ROLE_KEY`
 
 The service stores and reads image assets through the private Supabase Storage bucket instead of a separate object store; `SUPABASE_ASSET_BUCKET` selects the bucket (default `assets`).
@@ -93,7 +95,7 @@ const plan = result.data;
 
 ## Image input
 
-Before sending an image request, register the asset from trusted server code with `registerAsset`. The use case validates the image, writes it to private object storage, and records ownership. Keep the returned `id` as the `assetId`. There is intentionally no public asset-upload route at this time.
+Before sending an image request, register the asset from trusted server code with `registerAsset`. The use case validates the image, writes it to private object storage, and records ownership. Keep the returned `id` as the `assetId`. The authenticated F&B upload route is `POST /fnb-campaigns/:id/assets`; its owner-scoped assets are used in composition, not sent to the current factual-fragment planner.
 
 Pass that ID on the message that refers to the image:
 
@@ -117,7 +119,7 @@ The service checks asset ownership before reading bytes. Do not pass object-stor
 Run the offline configuration check after changing profiles or task mappings:
 
 ```bash
-pnpm --filter app ai:check-config
+pnpm --filter backend ai:check-config
 ```
 
 This command parses and resolves configuration without creating the provider client or the Supabase client. It sends no provider request.
@@ -125,9 +127,9 @@ This command parses and resolves configuration without creating the provider cli
 The following commands send paid provider requests:
 
 ```bash
-pnpm --filter app ai:smoke:text
-pnpm --filter app ai:smoke:structured
-pnpm --filter app ai:smoke:vision
+pnpm --filter backend ai:smoke:text
+pnpm --filter backend ai:smoke:structured
+pnpm --filter backend ai:smoke:vision
 ```
 
 Add `-- --profile <profile-id>` to a smoke command to test a configured profile directly. Run paid smoke commands only with explicit authorization, valid credentials, and an owned test asset for vision.
@@ -136,6 +138,10 @@ Fixture tests use local HTTP servers and prove request translation, response par
 
 ## Video-flow independence
 
-The AI provider service does not depend on the removed video flow, Atlas, credits, or worker modules. Its contracts, service factory, adapter, asset storage, usage storage, configuration, and SQL tables are standalone.
+The provider service remains independent of credits and the renderer. The F&B planner registers `fnb-campaign-creative@1`, then passes validated choices to deterministic composition. Provider attempts use the existing usage/operation persistence, not billing integration.
 
 The retained surface is `domain/ai-service`, `application/ai-service`, `infrastructure/ai-service`, `scripts/ai-service*`, `ai_assets`, `ai_service_operations`, and `ai_service_attempts`.
+
+## Verified F&B caller
+
+A real authenticated local campaign generated four fixed scenes and a preset through the existing 9Router `/responses` profile. The composition was saved separately and checked in an actual browser by Hyperframes. This proves the exercised structured planner path; it is not a claim that the unused text/vision smoke commands or a production deployment were run.

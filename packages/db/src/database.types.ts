@@ -1,6 +1,24 @@
 export type Database = {
   public: {
     Tables: {
+      fnb_campaigns: {
+        Row: { id: string; user_id: string; title: string; revision: number; status: "draft" | "approved" | "rendering" | "completed" | "failed"; draft: unknown; initial_plan: unknown; composition_revision: number | null; composition_hash: string | null; validation_errors: unknown; approved_revision: number | null; created_at: string; updated_at: string };
+        Insert: { id: string; user_id: string; title: string; revision?: number; status?: "draft" | "approved" | "rendering" | "completed" | "failed"; draft?: unknown; initial_plan?: unknown; composition_revision?: number | null; composition_hash?: string | null; validation_errors?: unknown; approved_revision?: number | null; created_at?: string; updated_at?: string };
+        Update: Partial<Database["public"]["Tables"]["fnb_campaigns"]["Row"]>;
+        Relationships: [{ foreignKeyName: "fnb_campaigns_id_user_id_fkey"; columns: ["id", "user_id"]; isOneToOne: true; referencedRelation: "video_projects"; referencedColumns: ["id", "user_id"] }];
+      };
+      fnb_campaign_versions: {
+        Row: { campaign_id: string; user_id: string; revision: number; draft: unknown; composition_html: string | null; composition_hash: string | null; composition_spec: unknown; validated: boolean; approved_at: string | null; created_at: string };
+        Insert: { campaign_id: string; user_id: string; revision: number; draft: unknown; composition_html?: string | null; composition_hash?: string | null; composition_spec?: unknown; validated?: boolean; approved_at?: string | null; created_at?: string };
+        Update: { composition_html?: string | null; composition_hash?: string | null; composition_spec?: unknown; validated?: boolean; approved_at?: string | null };
+        Relationships: [{ foreignKeyName: "fnb_campaign_versions_campaign_id_user_id_fkey"; columns: ["campaign_id", "user_id"]; isOneToOne: false; referencedRelation: "fnb_campaigns"; referencedColumns: ["id", "user_id"] }];
+      };
+      fnb_render_jobs: {
+        Row: { id: string; campaign_id: string; user_id: string; revision: number; idempotency_key: string; status: "queued" | "rendering" | "completed" | "failed"; error: string | null; output_object_key: string | null; attempt_token: string; dispatch_token: string | null; dispatch_expires_at: string | null; render_expires_at: string | null; created_at: string; updated_at: string };
+        Insert: { id?: string; campaign_id: string; user_id: string; revision: number; idempotency_key: string; status?: "queued" | "rendering" | "completed" | "failed"; error?: string | null; output_object_key?: string | null; attempt_token?: string; dispatch_token?: string | null; dispatch_expires_at?: string | null; render_expires_at?: string | null; created_at?: string; updated_at?: string };
+        Update: Partial<Database["public"]["Tables"]["fnb_render_jobs"]["Row"]>;
+        Relationships: [{ foreignKeyName: "fnb_render_jobs_campaign_id_user_id_revision_fkey"; columns: ["campaign_id", "user_id", "revision"]; isOneToOne: false; referencedRelation: "fnb_campaign_versions"; referencedColumns: ["campaign_id", "user_id", "revision"] }];
+      };
       ai_assets: {
         Row: { id: string; user_id: string; object_key: string; mime_type: "image/jpeg" | "image/png" | "image/webp"; byte_size: number; sha256: string; width: number; height: number; validated: boolean; deleted_at: string | null; created_at: string };
         Insert: { id?: string; user_id: string; object_key: string; mime_type: "image/jpeg" | "image/png" | "image/webp"; byte_size: number; sha256: string; width: number; height: number; validated?: boolean; deleted_at?: string | null; created_at?: string };
@@ -169,6 +187,16 @@ export type Database = {
     };
     Views: Record<string, never>;
     Functions: {
+      create_fnb_campaign: { Args: { p_id: string; p_user_id: string; p_title: string }; Returns: Database["public"]["Tables"]["fnb_campaigns"]["Row"] };
+      save_fnb_campaign_draft: { Args: { p_id: string; p_user_id: string; p_expected_revision: number; p_draft: unknown; p_initial_plan?: unknown }; Returns: Database["public"]["Tables"]["fnb_campaigns"]["Row"] };
+      complete_fnb_campaign_composition: { Args: { p_id: string; p_user_id: string; p_revision: number; p_html: string | null; p_hash: string | null; p_spec: unknown; p_errors: string[] }; Returns: Database["public"]["Tables"]["fnb_campaigns"]["Row"] };
+      approve_fnb_campaign: { Args: { p_id: string; p_user_id: string; p_expected_revision: number }; Returns: Database["public"]["Tables"]["fnb_campaigns"]["Row"] };
+      intake_fnb_campaign_render: { Args: { p_id: string; p_user_id: string; p_revision: number; p_idempotency_key: string; p_job_id: string; p_dispatch_token: string }; Returns: Database["public"]["Tables"]["fnb_render_jobs"]["Row"] };
+      fail_fnb_queued_render: { Args: { p_id: string; p_user_id: string; p_job_id: string; p_dispatch_token: string; p_error: string }; Returns: Database["public"]["Tables"]["fnb_render_jobs"]["Row"] };
+      release_fnb_render_dispatch: { Args: { p_id: string; p_user_id: string; p_job_id: string; p_dispatch_token: string }; Returns: boolean };
+      claim_fnb_campaign_render: { Args: { p_job_id: string; p_attempt_token: string }; Returns: Database["public"]["Tables"]["fnb_render_jobs"]["Row"] | null };
+      finish_fnb_campaign_render: { Args: { p_job_id: string; p_attempt_token: string; p_output_object_key: string | null; p_error: string | null }; Returns: boolean };
+      recover_fnb_campaign_renders: { Args: { p_limit?: number }; Returns: Database["public"]["Tables"]["fnb_render_jobs"]["Row"][] };
       allocate_billing_provider_attempt: { Args: { p_billing_payment_id: string; p_provider: string; p_environment: string; p_provider_reference: string; p_provider_idempotency_key: string }; Returns: Database["public"]["Tables"]["billing_provider_attempts"]["Row"] };
       receive_billing_webhook: { Args: { p_provider: string; p_environment: string; p_deduplication_key: string; p_event_type: string; p_normalized_status: string; p_provider_reference: string; p_provider_payment_id: string; p_amount: number; p_currency: string; p_occurred_at: string }; Returns: string };
       fulfill_billing_webhook: { Args: { p_event_id: string; p_max_attempts?: number; p_verified_failed_settlement?: boolean }; Returns: "retryable" | "fulfilled" | "duplicate_paid" | "quarantined_requires_review" | "quarantined_paid_after_failed" | "quarantined_paid_after_cancelled" | "already_paid" | "stale_attempt_observation" | "terminal_observation" | "requires_action" | "no_op" };

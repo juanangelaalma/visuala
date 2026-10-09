@@ -1,0 +1,25 @@
+{
+  "id": "promo.badge-pop",
+  "name": "Promo Badge Pop",
+  "category": "promo",
+  "targets": ["badge", "discount"],
+  "duration": 0.58,
+  "behavior": {
+    "description": "Pop the selected badge label or discount value into view with a small rotational overshoot and one damped correction.",
+    "targetSelection": "badge and discount are alternatives. Choose one present hook name in the selected component and animate matching elements of that name only; do not require both or implicitly animate their component container.",
+    "iterations": 1,
+    "fill": "forwards",
+    "transformOrigin": "center center",
+    "easing": "cubic-bezier(0.22, 1, 0.36, 1)",
+    "keyframeTiming": "at is seconds from start; easing on a keyframe applies to the following interval.",
+    "keyframes": [
+      {"at": 0, "x": 0, "y": 0, "scale": 0.45, "rotation": -12, "opacity": 0, "easing": "cubic-bezier(0.16, 1, 0.3, 1)"},
+      {"at": 0.25, "x": 0, "y": 0, "scale": 1.12, "rotation": 6, "opacity": 1, "easing": "cubic-bezier(0.4, 0, 0.2, 1)"},
+      {"at": 0.42, "x": 0, "y": 0, "scale": 0.96, "rotation": -2, "opacity": 1, "easing": "cubic-bezier(0.22, 1, 0.36, 1)"},
+      {"at": 0.58, "x": 0, "y": 0, "scale": 1, "rotation": 0, "opacity": 1}
+    ]
+  },
+  "energy": "high",
+  "recommendedFor": ["discount", "flash-sale", "bundle"],
+  "adaptation": "Rotation is an additive degree offset and scale multiplies the selected hook's authored base scale; the enclosing sticker, stamp or corner pose remains unchanged. x/y use design pixels at 1080x1920 scaled with the frame; opacity is absolute. Use a layout-preserving motion layer for inline labels, keeping decorative badge clip-path and parent shapes intact. Initialize at assigned start, derive poses from local time, and hold the final state without looping."
+}

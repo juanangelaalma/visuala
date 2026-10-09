@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="description" content="Reusable, animation-ready food and beverage advertising components for AI Hyperframes compositions.">
+<title>Daily Objects — F&B Component Library</title>
+
+
+<link href="../styles/tokens.css" rel="stylesheet"><link href="../styles/base.css" rel="stylesheet"><link href="../styles/components.css" rel="stylesheet"><link href="../styles/layouts.css" rel="stylesheet"><link href="showcase.css" rel="stylesheet"><script defer src="showcase.js"></script></head>
+<body data-debug="false">
+<a class="skip" href="#main">Skip to components</a>
+<header>
+<div class="masthead">
+<div class="wordmark">daily objects<span style="color:var(--brand-accent)">.</span>
+</div>
+<span class="eyebrow">A visual toolkit for things worth tasting</span>
+<button class="debug-button" id="debug-toggle" type="button" aria-pressed="false">Safe area guides</button>
+</div>
+<div class="intro">
+<div>
+<div class="eyebrow">F&amp;B Component Library / Edition 001</div>
+<h1>Good taste.<br>
+<em>Great building blocks.</em>
+</h1>
+<p>A reusable visual language for food &amp; beverage films. Product-first components, expressive type, and offers that land — ready for your next composition.</p>
+</div>
+<aside>
+<p>Not an ad. Everything you need to make one.</p>
+<p style="color:var(--text-secondary)">Select a component. Replace the assets. Remix the brand tokens. Let Hyperframes take it from there.</p>
+<div class="stats"><div><strong>15</strong><span>Components</span></div><div><strong>64</strong><span>Variants</span></div><div><strong>18</strong><span>Motion presets</span></div></div>
+</aside>
+</div>
+<nav aria-label="Library sections">
+<a href="#product-components">Product</a>
+<a href="#promo-components">Promo</a>
+<a href="#typography-components">Typography</a>
+<a href="#brand-components">Brand</a>
+<a href="#cta-components">CTA</a>
+<a href="#layout-components">Layout</a>
+<a href="#motion-presets">Motion Presets</a><a href="#example-compositions">Example Compositions</a>
+</nav>
+</header>
+<main id="main"><noscript>Enable JavaScript to load the catalogue. Component fragments and CSS themselves do not need JavaScript.</noscript><p role="status" id="library-status">Loading component sources…</p>
+<div class="guide"><div><h2>Same visuals. Separate sources.</h2><p>Every preview loads its actual component fragment and the shared library styles. Open <b>Usage markup</b> to inspect its instantiated DOM. Set the variant, replace assets, then place the component in a sized <code>.hf-frame</code>.</p></div><div><h2>Visuals are not motion.</h2><p>Read <a href="../registry.json">registry.json</a> to select components and compatible motions. Read <a href="../motions/registry.json">motions/registry.json</a> to load only the behavior definitions you need. No permanent animations or runtime dependencies are attached to the components.</p></div></div>
+<section class="catalogue" id="product-components">
+<div class="eyebrow">01 / Building blocks</div>
+<h2>Product Components</h2>
+<p class="section-note">Keep the product in focus. Make space for appetite.</p>
+
+
+
+</section>
+<section class="catalogue" id="promo-components">
+<div class="eyebrow">02 / Building blocks</div>
+<h2>Promo Components</h2>
+<p class="section-note">The offer should be understood in a single glance.</p>
+
+
+
+
+</section>
+<section class="catalogue" id="typography-components">
+<div class="eyebrow">03 / Building blocks</div>
+<h2>Typography Components</h2>
+<p class="section-note">Words with presence, not interface labels.</p>
+
+
+
+
+</section>
+<section class="catalogue" id="brand-components">
+<div class="eyebrow">04 / Building blocks</div>
+<h2>Brand Components</h2>
+<p class="section-note">A recognizable world, with room for your brand.</p>
+
+
+</section>
+<section class="catalogue" id="cta-components">
+<div class="eyebrow">05 / Building blocks</div>
+<h2>CTA Components</h2>
+<p class="section-note">A clear closing thought. Built for video, not checkout.</p>
+
+
+</section>
+<section class="catalogue" id="layout-components">
+<div class="eyebrow">06 / Composition systems</div>
+<h2>Layout Components</h2>
+<p class="section-note">Eight spatial starting points. Replace the slot contents, not the layout.</p>
+<div class="variant-grid"></div>
+</section>
+<section id="motion-presets" class="catalogue"><div class="eyebrow">07 / Independent behavior</div><h2>Motion Presets</h2><p class="section-note">Choose the energy, not a fixed component-animation pairing. Runtime-neutral, finite behavior definitions.</p><div id="motion-list"></div></section><section class="catalogue" id="example-compositions">
+<div class="eyebrow">08 / Made from the same parts</div>
+<h2>One system. Many appetites.</h2>
+<p class="section-note">Four static 1080 × 1920 compositions. No new components. No timelines.</p>
+<div class="example-grid"></div>
+</section>
+<div class="guide"><div><h2>Composition notes</h2><p>Frames preserve 9:16 geometry. At 1080px wide they are 1920px tall. Set <code>body data-debug="true"</code> for safe-area and center guides. Override <code>--safe-*</code> for the delivery platform.</p><p>Load the four shared CSS files in registry order. Layout fragments expose empty <code>data-slot</code> containers. Free placement uses <code>.hf-place</code> and percentage variables <code>--x</code>, <code>--y</code>, <code>--w</code>, <code>--h</code>, plus <code>--z</code>.</p><p>Examples load <a href="compositions.json">composition recipes</a> and instantiate the same source fragments. They are static demonstrations, not video timelines.</p></div><div><h2>Agent handoff</h2><p>Read the main registry → select components and variants → select compatible motion IDs → load the named files → compose a scene → let Hyperframes supply timing and rendering.</p><p>Replace <code>img[data-asset]</code> sources and alt text. Set <code>--product-count</code> to 2–5 for stacks. Ingredient indices are stable animation selectors. Background images use <code>--background-image:url(...)</code>.</p><p>Motion definitions are intent, not executable adapters. Resolve targets within each instance, choose a compatible target, and preserve the authored static pose. Transitions act on incoming/outgoing scenes, not individual components. No motion preview runs automatically.</p><p>Serve the project over HTTP: <code>npx http-server . -p 4173</code>, then open <code>/fnb-library/showcase/</code>. Fetching fragments from <code>file://</code> is not supported by browsers.</p></div></div>
+</main>
+<footer>Daily Objects / F&amp;B Visual Systems — Modular sources. Independent motion. Ready to compose.</footer>
+
+</body>
+</html>

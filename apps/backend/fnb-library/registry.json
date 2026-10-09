@@ -1,0 +1,660 @@
+{
+  "version": "2.0",
+  "frame": {
+    "width": 1080,
+    "height": 1920,
+    "safeArea": {
+      "top": "8%",
+      "right": "8%",
+      "bottom": "12%",
+      "left": "8%"
+    }
+  },
+  "styles": [
+    "styles/tokens.css",
+    "styles/base.css",
+    "styles/components.css",
+    "styles/layouts.css"
+  ],
+  "motionRegistry": "motions/registry.json",
+  "contracts": {
+    "paths": "All main-registry paths are relative to fnb-library/. Motion-registry paths are relative to motions/.",
+    "fragments": "Parse a fragment, select its single root, set data-variant, and insert into a sized .hf-frame. No component JavaScript is required.",
+    "assets": "Replace img[data-asset] src/alt. Background artwork uses --background-image:url(...). Embedded SVG placeholders are portable.",
+    "animationTargets": "Resolve [data-animate] on the component root AND its descendants. Motion targets are alternatives unless behavior.targetSelection says otherwise; choose the intended compatible target, not every alternative.",
+    "motionPose": "Motion transforms are deltas from the authored visual pose; do not replace static scale/rotate/translate. Apply additive transforms or a temporary runtime wrapper.",
+    "composition": "Layout slots are empty containers for independent component roots. .hf-place accepts --x/--y/--w/--h percentages and --z.",
+    "runtime": "This library supplies static visuals and motion intent only. The consuming Hyperframes scene supplies deterministic timing and runtime adapters."
+  },
+  "components": {
+    "ProductHero": {
+      "file": "components/product-hero.html",
+      "selector": "[data-component='ProductHero']",
+      "purpose": "Dominant product image",
+      "variants": [
+        "clean",
+        "impact",
+        "floating",
+        "editorial",
+        "oversized"
+      ],
+      "defaultVariant": "clean",
+      "assets": [
+        "product"
+      ],
+      "animationTargets": [
+        "backdrop",
+        "shadow",
+        "product"
+      ],
+      "compatibleMotions": [
+        "product.impact-in",
+        "product.float-in",
+        "product.zoom-reveal",
+        "product.slide-up"
+      ],
+      "recommendedUse": [
+        "product-launch",
+        "discount",
+        "product-highlight"
+      ],
+      "cssVariables": [
+        "--product-scale",
+        "--product-rotation",
+        "--backdrop-color",
+        "--brand-secondary"
+      ]
+    },
+    "ProductStack": {
+      "file": "components/product-stack.html",
+      "selector": "[data-component='ProductStack']",
+      "purpose": "Two to five products",
+      "variants": [
+        "fan",
+        "stack",
+        "row",
+        "hero-secondary"
+      ],
+      "defaultVariant": "fan",
+      "assets": [
+        "product"
+      ],
+      "animationTargets": [
+        "product"
+      ],
+      "compatibleMotions": [
+        "product.impact-in",
+        "product.float-in",
+        "product.zoom-reveal",
+        "product.slide-up"
+      ],
+      "recommendedUse": [
+        "bundle",
+        "menu-highlight"
+      ],
+      "cssVariables": [
+        "--product-count"
+      ],
+      "itemCount": {
+        "min": 2,
+        "max": 5,
+        "cssVariable": "--product-count"
+      }
+    },
+    "IngredientBurst": {
+      "file": "components/ingredient-burst.html",
+      "selector": "[data-component='IngredientBurst']",
+      "purpose": "Individually positioned ingredients",
+      "variants": [
+        "radial",
+        "scatter",
+        "top-drop",
+        "side-burst"
+      ],
+      "defaultVariant": "radial",
+      "assets": [
+        "ingredient"
+      ],
+      "animationTargets": [
+        "ingredient"
+      ],
+      "compatibleMotions": [
+        "ingredients.radial-burst",
+        "ingredients.falling",
+        "ingredients.orbit"
+      ],
+      "recommendedUse": [
+        "product-launch",
+        "flavor-highlight"
+      ],
+      "cssVariables": [
+        "--ingredient-size",
+        "--ingredient-x",
+        "--ingredient-y",
+        "--ingredient-rotation"
+      ],
+      "itemIndex": "data-index (stable zero-based index)"
+    },
+    "BrandBackground": {
+      "file": "components/brand-background.html",
+      "selector": "[data-component='BrandBackground']",
+      "purpose": "Branded scene background",
+      "variants": [
+        "solid",
+        "split",
+        "radial",
+        "pattern",
+        "editorial"
+      ],
+      "defaultVariant": "solid",
+      "assets": [
+        "background"
+      ],
+      "animationTargets": [
+        "background"
+      ],
+      "compatibleMotions": [
+        "typography.mask-reveal",
+        "typography.kinetic-up"
+      ],
+      "recommendedUse": [
+        "product-launch",
+        "discount",
+        "bundle",
+        "product-highlight"
+      ],
+      "cssVariables": [
+        "--background-color",
+        "--brand-secondary",
+        "--background-secondary",
+        "--background",
+        "--background-image"
+      ]
+    },
+    "DiscountBadge": {
+      "file": "components/discount-badge.html",
+      "selector": "[data-component='DiscountBadge']",
+      "purpose": "Dominant discount",
+      "variants": [
+        "sticker",
+        "circle",
+        "stamp",
+        "giant-type",
+        "corner"
+      ],
+      "defaultVariant": "sticker",
+      "assets": [],
+      "animationTargets": [
+        "discount",
+        "badge"
+      ],
+      "compatibleMotions": [
+        "promo.badge-pop",
+        "typography.scale-punch"
+      ],
+      "recommendedUse": [
+        "discount",
+        "flash-sale"
+      ],
+      "cssVariables": [
+        "--badge-color",
+        "--brand-accent",
+        "--badge-ink",
+        "--background",
+        "--badge-size",
+        "--discount-size"
+      ]
+    },
+    "PriceSmash": {
+      "file": "components/price-smash.html",
+      "selector": "[data-component='PriceSmash']",
+      "purpose": "Hero promotional price",
+      "variants": [
+        "impact",
+        "minimal",
+        "editorial",
+        "flash-sale"
+      ],
+      "defaultVariant": "impact",
+      "assets": [],
+      "animationTargets": [
+        "prefix",
+        "price",
+        "suffix"
+      ],
+      "compatibleMotions": [
+        "promo.price-smash",
+        "typography.scale-punch"
+      ],
+      "recommendedUse": [
+        "discount",
+        "flash-sale",
+        "limited-time"
+      ],
+      "cssVariables": [
+        "--price-color",
+        "--brand-primary",
+        "--price-size",
+        "--font-display",
+        "--brand-accent",
+        "--background"
+      ]
+    },
+    "OldNewPrice": {
+      "file": "components/old-new-price.html",
+      "selector": "[data-component='OldNewPrice']",
+      "purpose": "Price reduction",
+      "variants": [
+        "horizontal",
+        "stacked",
+        "impact",
+        "minimal"
+      ],
+      "defaultVariant": "horizontal",
+      "assets": [],
+      "animationTargets": [
+        "old-price",
+        "price"
+      ],
+      "compatibleMotions": [
+        "promo.strike-price",
+        "promo.price-smash"
+      ],
+      "recommendedUse": [
+        "discount",
+        "bundle",
+        "flash-sale"
+      ],
+      "cssVariables": [
+        "--text-secondary",
+        "--brand-primary",
+        "--brand-accent"
+      ]
+    },
+    "BundleDeal": {
+      "file": "components/bundle-deal.html",
+      "selector": "[data-component='BundleDeal']",
+      "purpose": "Bundle quantity and offer",
+      "variants": [
+        "stacked",
+        "badge",
+        "split",
+        "giant-type"
+      ],
+      "defaultVariant": "stacked",
+      "assets": [],
+      "animationTargets": [
+        "headline",
+        "price"
+      ],
+      "compatibleMotions": [
+        "typography.scale-punch",
+        "typography.kinetic-up",
+        "promo.price-smash"
+      ],
+      "recommendedUse": [
+        "bundle",
+        "buy-one-get-one"
+      ],
+      "cssVariables": [
+        "--brand-accent",
+        "--brand-primary",
+        "--background",
+        "--brand-secondary"
+      ]
+    },
+    "BigStatement": {
+      "file": "components/big-statement.html",
+      "selector": "[data-component='BigStatement']",
+      "purpose": "Advertising headline",
+      "variants": [
+        "center",
+        "left",
+        "oversized",
+        "cropped",
+        "editorial"
+      ],
+      "defaultVariant": "center",
+      "assets": [],
+      "animationTargets": [
+        "headline"
+      ],
+      "compatibleMotions": [
+        "typography.scale-punch",
+        "typography.kinetic-up",
+        "typography.mask-reveal"
+      ],
+      "recommendedUse": [
+        "product-launch",
+        "menu-highlight",
+        "limited-time"
+      ],
+      "cssVariables": [
+        "--headline-size",
+        "--font-body",
+        "--font-display"
+      ]
+    },
+    "KineticWords": {
+      "file": "components/kinetic-words.html",
+      "selector": "[data-component='KineticWords']",
+      "purpose": "Individual sensory words",
+      "variants": [
+        "stack",
+        "horizontal",
+        "scatter",
+        "massive"
+      ],
+      "defaultVariant": "stack",
+      "assets": [],
+      "animationTargets": [
+        "word"
+      ],
+      "compatibleMotions": [
+        "typography.stagger-words",
+        "typography.kinetic-up",
+        "typography.scale-punch"
+      ],
+      "recommendedUse": [
+        "product-highlight",
+        "flavor-highlight"
+      ],
+      "cssVariables": [
+        "--brand-accent"
+      ]
+    },
+    "TextBehindProduct": {
+      "file": "components/text-behind-product.html",
+      "selector": "[data-component='TextBehindProduct']",
+      "purpose": "Layer type behind a product",
+      "variants": [
+        "single",
+        "repeat",
+        "vertical",
+        "cropped"
+      ],
+      "defaultVariant": "single",
+      "assets": [
+        "product"
+      ],
+      "animationTargets": [
+        "headline",
+        "product",
+        "foreground"
+      ],
+      "compatibleMotions": [
+        "typography.scale-punch",
+        "typography.mask-reveal",
+        "product.zoom-reveal",
+        "product.float-in"
+      ],
+      "recommendedUse": [
+        "product-highlight",
+        "product-launch"
+      ],
+      "cssVariables": [
+        "--backdrop-text-color",
+        "--brand-primary",
+        "--font-display"
+      ],
+      "options": {
+        "data-text-only": "true hides its product and foreground when a separate ProductHero is used"
+      }
+    },
+    "FlavorCallout": {
+      "file": "components/flavor-callout.html",
+      "selector": "[data-component='FlavorCallout']",
+      "purpose": "Flavor and ingredient highlights",
+      "variants": [
+        "label",
+        "editorial",
+        "floating",
+        "minimal"
+      ],
+      "defaultVariant": "label",
+      "assets": [],
+      "animationTargets": [
+        "headline",
+        "detail"
+      ],
+      "compatibleMotions": [
+        "typography.kinetic-up",
+        "typography.mask-reveal"
+      ],
+      "recommendedUse": [
+        "flavor-highlight",
+        "menu-highlight"
+      ],
+      "cssVariables": [
+        "--font-display",
+        "--brand-accent",
+        "--brand-secondary",
+        "--font-body"
+      ]
+    },
+    "LogoLockup": {
+      "file": "components/logo-lockup.html",
+      "selector": "[data-component='LogoLockup']",
+      "purpose": "Logo with clear space",
+      "variants": [
+        "simple",
+        "with-tagline",
+        "stamp",
+        "centered"
+      ],
+      "defaultVariant": "simple",
+      "assets": [
+        "logo"
+      ],
+      "animationTargets": [
+        "logo",
+        "tagline"
+      ],
+      "compatibleMotions": [
+        "typography.mask-reveal",
+        "typography.scale-punch"
+      ],
+      "recommendedUse": [
+        "brand-reveal",
+        "product-launch",
+        "end-card"
+      ],
+      "cssVariables": [
+        "--logo-width",
+        "--brand-primary"
+      ]
+    },
+    "OrderNowCTA": {
+      "file": "components/order-now-cta.html",
+      "selector": "[data-component='OrderNowCTA']",
+      "purpose": "Conversion statement",
+      "variants": [
+        "button",
+        "text-only",
+        "banner",
+        "editorial"
+      ],
+      "defaultVariant": "button",
+      "assets": [],
+      "animationTargets": [
+        "cta"
+      ],
+      "compatibleMotions": [
+        "typography.scale-punch",
+        "typography.kinetic-up",
+        "typography.mask-reveal"
+      ],
+      "recommendedUse": [
+        "end-card",
+        "limited-time",
+        "flash-sale"
+      ],
+      "cssVariables": [
+        "--cta-color",
+        "--brand-primary",
+        "--background",
+        "--radius-small",
+        "--brand-accent",
+        "--font-display"
+      ]
+    },
+    "PromoEndCard": {
+      "file": "components/promo-end-card.html",
+      "selector": "[data-component='PromoEndCard']",
+      "purpose": "Final product and offer scene",
+      "variants": [
+        "product-first",
+        "promo-first",
+        "minimal",
+        "bold"
+      ],
+      "defaultVariant": "product-first",
+      "assets": [
+        "logo",
+        "product"
+      ],
+      "animationTargets": [
+        "logo",
+        "backdrop",
+        "shadow",
+        "product",
+        "prefix",
+        "price",
+        "suffix",
+        "cta",
+        "date"
+      ],
+      "compatibleMotions": [
+        "product.impact-in",
+        "product.float-in",
+        "promo.price-smash",
+        "typography.mask-reveal"
+      ],
+      "recommendedUse": [
+        "end-card",
+        "discount",
+        "product-highlight"
+      ],
+      "cssVariables": [
+        "--logo-width",
+        "--product-scale",
+        "--price-size",
+        "--brand-primary",
+        "--brand-secondary"
+      ],
+      "composedOf": [
+        "LogoLockup",
+        "ProductHero",
+        "PriceSmash",
+        "OrderNowCTA"
+      ]
+    }
+  },
+  "layouts": {
+    "CenterHero": {
+      "file": "layouts/center-hero.html",
+      "selector": "[data-layout='CenterHero']",
+      "purpose": "Spatial composition wrapper with named slots",
+      "variants": [
+        "default"
+      ],
+      "slots": [
+        "primary",
+        "secondary",
+        "accent"
+      ]
+    },
+    "SplitScreen": {
+      "file": "layouts/split-screen.html",
+      "selector": "[data-layout='SplitScreen']",
+      "purpose": "Spatial composition wrapper with named slots",
+      "variants": [
+        "default"
+      ],
+      "slots": [
+        "primary",
+        "secondary"
+      ]
+    },
+    "DiagonalSplit": {
+      "file": "layouts/diagonal-split.html",
+      "selector": "[data-layout='DiagonalSplit']",
+      "purpose": "Spatial composition wrapper with named slots",
+      "variants": [
+        "default"
+      ],
+      "slots": [
+        "primary",
+        "secondary"
+      ]
+    },
+    "FullBleedProduct": {
+      "file": "layouts/full-bleed-product.html",
+      "selector": "[data-layout='FullBleedProduct']",
+      "purpose": "Spatial composition wrapper with named slots",
+      "variants": [
+        "default"
+      ],
+      "slots": [
+        "primary",
+        "secondary"
+      ]
+    },
+    "ProductWithBackdropText": {
+      "file": "layouts/product-with-backdrop-text.html",
+      "selector": "[data-layout='ProductWithBackdropText']",
+      "purpose": "Spatial composition wrapper with named slots",
+      "variants": [
+        "default"
+      ],
+      "slots": [
+        "primary",
+        "secondary",
+        "accent"
+      ]
+    },
+    "TopBottomPromo": {
+      "file": "layouts/top-bottom-promo.html",
+      "selector": "[data-layout='TopBottomPromo']",
+      "purpose": "Spatial composition wrapper with named slots",
+      "variants": [
+        "default"
+      ],
+      "slots": [
+        "primary",
+        "secondary",
+        "accent"
+      ]
+    },
+    "SideBySideProducts": {
+      "file": "layouts/side-by-side-products.html",
+      "selector": "[data-layout='SideBySideProducts']",
+      "purpose": "Spatial composition wrapper with named slots",
+      "variants": [
+        "default"
+      ],
+      "slots": [
+        "primary",
+        "secondary",
+        "accent"
+      ]
+    },
+    "EditorialGrid": {
+      "file": "layouts/editorial-grid.html",
+      "selector": "[data-layout='EditorialGrid']",
+      "purpose": "Spatial composition wrapper with named slots",
+      "variants": [
+        "default"
+      ],
+      "slots": [
+        "primary",
+        "secondary",
+        "accent"
+      ]
+    }
+  },
+  "examples": {
+    "file": "showcase/compositions.json",
+    "purpose": "Four static recipes using reusable components and generic placement; paths follow the main registry."
+  }
+}

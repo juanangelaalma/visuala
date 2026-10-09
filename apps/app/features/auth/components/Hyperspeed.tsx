@@ -1,6 +1,7 @@
 import { BloomEffect, EffectComposer, EffectPass, RenderPass, SMAAEffect, SMAAPreset } from 'postprocessing';
 import { useEffect, useRef, type FC } from 'react';
 import * as THREE from 'three';
+import WebGL from 'three/addons/capabilities/WebGL.js';
 
 
 interface Distortion {
@@ -1333,6 +1334,7 @@ const Hyperspeed: FC<HyperspeedProps> = ({ effectOptions = DEFAULT_EFFECT_OPTION
 
     const container = hyperspeed.current;
     if (!container) return;
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches || !WebGL.isWebGL2Available()) return;
 
     const options: HyperspeedOptions = {
       ...defaultOptions,

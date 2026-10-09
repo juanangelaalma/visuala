@@ -1,0 +1,32 @@
+{
+  "id": "promo.strike-price",
+  "name": "Promo Strike Price",
+  "category": "promo",
+  "targets": ["old-price"],
+  "duration": 0.6,
+  "behavior": {
+    "description": "Keep the old price readable while a decorative strike overlay draws across it from left to right, then hand the completed strike back to the authored deletion decoration.",
+    "targetSelection": "Only old-price is required. Apply to its matching elements within the selected component; price and every other hook remain unchanged. No new-price step is implied.",
+    "iterations": 1,
+    "fill": "forwards",
+    "easing": "cubic-bezier(0.22, 1, 0.36, 1)",
+    "keyframeTiming": "at is seconds from start; easing on a keyframe applies to the next interval. strikeReveal is the visible fraction of the fixed overlay line, not the target text.",
+    "strikeOverlay": {
+      "owner": "adapter-owned decorative overlay anchored to a layout-preserving motion layer around the existing old-price element",
+      "semantics": "Keep the original del element, its text and accessibility semantics unchanged throughout. The overlay is aria-hidden, has no text and ignores pointer events.",
+      "geometry": "At setup capture the authored text's inline bounds and deletion-line position, thickness and color. Place a fixed full-length horizontal line at that strike position, matching the authored decoration. For wrapped old-price text, capture each line fragment and reveal its strike in source reading order using cumulative line lengths.",
+      "reveal": "strikeReveal 0 conceals all overlay line length; 1 reveals all of it. Reveal left to right by an overlay-only mask or scaleX with left-center origin. Do not scale text, tween layout width or overwrite the target's decorative clip-path.",
+      "start": "At motion start temporarily suppress only the old-price element's visual line-through while leaving del semantics intact. Preserve any other authored text decorations and saved styles. Keep the text visible at opacity 1; create the overlay with strikeReveal 0.",
+      "completion": "After the fully drawn strike holds, atomically restore the authored line-through and remove the overlay at duration, leaving a permanent visible strike and the original del semantics. Restore only styles this motion temporarily owns. On a backward seek recreate the overlay and the temporary decoration state directly from local time; never rely on a prior completion callback."
+    },
+    "keyframes": [
+      {"at": 0, "x": 0, "y": 0, "scale": 1, "rotation": 0, "opacity": 1, "strikeReveal": 0, "easing": "linear"},
+      {"at": 0.12, "x": 0, "y": 0, "scale": 1, "rotation": 0, "opacity": 1, "strikeReveal": 0, "easing": "cubic-bezier(0.22, 1, 0.36, 1)"},
+      {"at": 0.46, "x": 0, "y": 0, "scale": 1, "rotation": 0, "opacity": 1, "strikeReveal": 1, "easing": "linear"},
+      {"at": 0.6, "x": 0, "y": 0, "scale": 1, "rotation": 0, "opacity": 1, "strikeReveal": 1}
+    ]
+  },
+  "energy": "medium",
+  "recommendedFor": ["discount", "flash-sale"],
+  "adaptation": "Translations use design pixels at 1080x1920 scaled with the frame; scale multiplies authored base scale, rotation is additive degrees, and opacity is absolute. Overlay geometry inherits the authored old-price styling, including rotated parent poses. Preserve layout, existing decorations other than the temporary line-through suppression, and all decorative masks or clip-paths. No framework or additional animation hook is required. Initialize at assigned start and derive text, overlay and cleanup state deterministically from local time."
+}

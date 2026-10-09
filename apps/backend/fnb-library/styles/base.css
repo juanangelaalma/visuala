@@ -1,0 +1,45 @@
+* {
+  box-sizing:border-box}
+body {
+  margin:0;
+  background:var(--background);
+  color:var(--text-primary);
+  font:16px/1.5 var(--font-body);
+  -webkit-font-smoothing:antialiased}
+a {
+  color:inherit;
+  text-underline-offset:4px}
+button,summary {
+  cursor:pointer}
+button {
+  font:inherit}
+a:focus-visible,button:focus-visible,summary:focus-visible {
+  outline:3px solid var(--brand-accent);
+  outline-offset:4px}
+
+.hf-frame {
+  position:relative;
+  aspect-ratio:9/16;
+  width:100%;
+  overflow:hidden;
+  isolation:isolate;
+  container-type:inline-size;
+  background:var(--background);
+  --safe-top:8%;
+  --safe-right:8%;
+  --safe-bottom:12%;
+  --safe-left:8%}
+.hf-frame::before,.hf-frame::after {
+  display:none;
+  position:absolute;
+  pointer-events:none;
+  z-index:99;
+  content:''}
+body[data-debug=true] .hf-frame::before {
+  display:block;
+  inset:var(--safe-top) var(--safe-right) var(--safe-bottom) var(--safe-left);
+  border:1px dashed #d22}
+body[data-debug=true] .hf-frame::after {
+  display:block;
+  inset:0;
+  background:linear-gradient(90deg,transparent calc(50% - .5px),#0089a8 50%,transparent calc(50% + .5px)),linear-gradient(transparent calc(50% - .5px),#0089a8 50%,transparent calc(50% + .5px))}

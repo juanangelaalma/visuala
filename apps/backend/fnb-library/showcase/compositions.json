@@ -1,0 +1,175 @@
+{
+  "examples": [
+    {
+      "name": "Discount Promo",
+      "components": [
+        {
+          "component": "BrandBackground",
+          "variant": "solid",
+          "style": "--background-color:#e9be7d;"
+        },
+        {
+          "component": "TextBehindProduct",
+          "variant": "repeat",
+          "placement": true,
+          "style": "--x:0%;--y:19%;--w:100%;--h:56%;--backdrop-text-color:#a06b3d;",
+          "attributes": {
+            "data-text-only": "true"
+          }
+        },
+        {
+          "component": "ProductHero",
+          "variant": "floating",
+          "placement": true,
+          "style": "--x:12%;--y:25%;--w:76%;--h:49%;--product-scale:1.12;"
+        },
+        {
+          "component": "DiscountBadge",
+          "variant": "sticker",
+          "placement": true,
+          "style": "--x:61%;--y:15%;--w:31%;--h:18%;--discount-size:14cqw;"
+        },
+        {
+          "component": "PriceSmash",
+          "variant": "impact",
+          "placement": true,
+          "style": "--x:10%;--y:76%;--w:80%;--h:16%;--price-size:24cqw;"
+        },
+        {
+          "component": "LogoLockup",
+          "variant": "simple",
+          "placement": true,
+          "style": "--x:5%;--y:5%;--w:50%;--h:9%;--logo-width:65%;"
+        }
+      ]
+    },
+    {
+      "name": "Product Launch",
+      "components": [
+        {
+          "component": "BrandBackground",
+          "variant": "editorial",
+          "style": "--background-color:#c9d1b1;"
+        },
+        {
+          "component": "BigStatement",
+          "variant": "editorial",
+          "placement": true,
+          "style": "--x:8%;--y:15%;--w:85%;--h:23%;--headline-size:23cqw;",
+          "content": [
+            {
+              "selector": ".hf-big-statement__headline",
+              "lines": [
+                "A fresh",
+                "daily ritual."
+              ]
+            }
+          ]
+        },
+        {
+          "component": "IngredientBurst",
+          "variant": "radial",
+          "placement": true,
+          "style": "--x:0%;--y:30%;--w:100%;--h:45%;"
+        },
+        {
+          "component": "ProductHero",
+          "variant": "editorial",
+          "placement": true,
+          "style": "--x:14%;--y:33%;--w:80%;--h:45%;--product-rotation:-9deg;"
+        },
+        {
+          "component": "FlavorCallout",
+          "variant": "label",
+          "placement": true,
+          "style": "--x:9%;--y:79%;--w:82%;--h:12%;"
+        },
+        {
+          "component": "LogoLockup",
+          "variant": "simple",
+          "placement": true,
+          "style": "--x:5%;--y:5%;--w:48%;--h:9%;--logo-width:60%;"
+        }
+      ]
+    },
+    {
+      "name": "Bundle Promo",
+      "components": [
+        {
+          "component": "BrandBackground",
+          "variant": "split",
+          "style": "--background-color:#e9be7d;--background-secondary:#e4decf;"
+        },
+        {
+          "component": "BundleDeal",
+          "variant": "stacked",
+          "placement": true,
+          "style": "--x:8%;--y:10%;--w:84%;--h:23%;"
+        },
+        {
+          "component": "ProductStack",
+          "variant": "fan",
+          "placement": true,
+          "style": "--x:2%;--y:33%;--w:96%;--h:39%;--product-count:2;",
+          "count": 2
+        },
+        {
+          "component": "OldNewPrice",
+          "variant": "horizontal",
+          "placement": true,
+          "style": "--x:10%;--y:73%;--w:80%;--h:8%;",
+          "content": [
+            {
+              "selector": ".hf-old-new-price__old",
+              "text": "Rp56K"
+            },
+            {
+              "selector": ".hf-old-new-price__new",
+              "text": "Rp39K"
+            }
+          ]
+        },
+        {
+          "component": "OrderNowCTA",
+          "variant": "banner",
+          "placement": true,
+          "style": "--x:8%;--y:84%;--w:84%;--h:8%;"
+        }
+      ]
+    },
+    {
+      "name": "Product Highlight",
+      "components": [
+        {
+          "component": "BrandBackground",
+          "variant": "solid",
+          "style": "--background-color:#e4e9dc;"
+        },
+        {
+          "component": "KineticWords",
+          "variant": "stack",
+          "placement": true,
+          "style": "--x:8%;--y:10%;--w:90%;--h:28%;"
+        },
+        {
+          "component": "ProductHero",
+          "variant": "clean",
+          "placement": true,
+          "style": "--x:39%;--y:17%;--w:62%;--h:38%;--product-rotation:9deg;"
+        },
+        {
+          "component": "FlavorCallout",
+          "variant": "minimal",
+          "placement": true,
+          "style": "--x:8%;--y:41%;--w:53%;--h:9%;"
+        },
+        {
+          "component": "PromoEndCard",
+          "variant": "product-first",
+          "placement": true,
+          "style": "--x:8%;--y:53%;--w:84%;--h:38%;"
+        }
+      ]
+    }
+  ]
+}

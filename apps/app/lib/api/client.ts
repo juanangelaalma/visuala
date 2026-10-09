@@ -34,13 +34,14 @@ async function resolveAccessToken(explicitToken?: string): Promise<string | null
 export async function apiFetch<T>(path: string, options: ApiRequestOptions = {}): Promise<T> {
   const env = getAppEnv();
   const accessToken = await resolveAccessToken(options.accessToken);
+  const isFormData = options.body instanceof FormData;
   const response = await fetch(new URL(path, env.NEXT_PUBLIC_API_URL), {
     method: options.method ?? "GET",
     headers: {
-      "content-type": "application/json",
+      ...(!isFormData ? { "content-type": "application/json" } : {}),
       ...(accessToken ? { authorization: `Bearer ${accessToken}` } : {}),
     },
-    body: options.body === undefined ? undefined : JSON.stringify(options.body),
+    body: options.body === undefined ? undefined : isFormData ? options.body as FormData : JSON.stringify(options.body),
     cache: options.cache ?? "no-store",
   });
 

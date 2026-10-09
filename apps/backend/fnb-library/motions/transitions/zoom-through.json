@@ -1,0 +1,48 @@
+{
+  "id": "transition.zoom-through",
+  "name": "Zoom Through",
+  "category": "transition",
+  "targets": ["incoming", "outgoing"],
+  "duration": 0.32,
+  "energy": "high",
+  "recommendedFor": ["scene-transition", "product-launch", "flash-sale"],
+  "behavior": {
+    "description": "The outgoing scene expands toward the viewer and fades away while the incoming scene behind it scales up into its normal authored presentation. The shared center creates one continuous forward move.",
+    "iterations": 1,
+    "fill": "forwards",
+    "easing": "cubic-bezier(0.22, 1, 0.36, 1)",
+    "stagger": 0,
+    "targetSemantics": "incoming and outgoing are whole-scene roles supplied by the consumer. Animate temporary scene presentation wrappers, not data-animate hooks or authored component transforms.",
+    "setup": "Align both scene wrappers to the frame. Put outgoing above incoming for the active interval. Set both wrapper transform origins to the frame center (540, 960 design pixels). Use a temporary frame-sized outer clipping wrapper so expanded content cannot spill outside the scene viewport; preserve all decorative masks inside the scenes.",
+    "tracks": [
+      {
+        "target": "incoming",
+        "keyframes": [
+          {"at": 0, "x": 0, "y": 0, "scale": 0.78, "rotation": 0, "opacity": 1, "easing": "cubic-bezier(0.22, 1, 0.36, 1)"},
+          {"at": 0.32, "x": 0, "y": 0, "scale": 1, "rotation": 0, "opacity": 1}
+        ]
+      },
+      {
+        "target": "outgoing",
+        "keyframes": [
+          {"at": 0, "x": 0, "y": 0, "scale": 1, "rotation": 0, "opacity": 1, "easing": "cubic-bezier(0.55, 0, 1, 0.45)"},
+          {"at": 0.1, "x": 0, "y": 0, "scale": 1.12, "rotation": 0, "opacity": 1, "easing": "cubic-bezier(0.55, 0, 1, 0.45)"},
+          {"at": 0.32, "x": 0, "y": 0, "scale": 1.8, "rotation": 0, "opacity": 0}
+        ]
+      }
+    ],
+    "before": {"incoming": {"opacity": 0}, "outgoing": {"opacity": 1}},
+    "after": {
+      "incoming": {"x": 0, "y": 0, "scale": 1, "rotation": 0, "opacity": 1},
+      "outgoing": {"x": 0, "y": 0, "scale": 1, "rotation": 0, "opacity": 0}
+    },
+    "restoration": "At completion, outgoing is already invisible; then restore its wrapper scale to 1. Leave incoming at identity wrapper pose, and stop applying temporary layering, origin and viewport mask overrides. Keep authored scene/component transforms intact. Seeking derives all active and boundary states directly from time, including restoring temporary wrappers when rewinding."
+  },
+  "adaptation": {
+    "referenceFrame": {"width": 1080, "height": 1920},
+    "coordinates": "x/y are additive design-pixel offsets; scale values multiply authored scale; rotation is additive degrees; opacity is absolute. The wrapper's center-origin zoom is independent of each component's rotation and scale.",
+    "resizing": "For another frame, resolve its center once at setup and use it for both origins. Scale multipliers and duration are dimensionless/time values and stay unchanged.",
+    "coverage": "Outgoing starts opaque above incoming, which is already presented beneath it during the active interval, avoiding a double-fade-to-empty handoff. Preserve authored transparency and scene backgrounds; do not insert a new color field or blur effect.",
+    "implementation": "Keyframe at values are seconds from transition start; easing applies to the following segment. Do not separately fade out components before the scene handoff, and do not add this transition to component compatibleMotions."
+  }
+}

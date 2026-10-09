@@ -1,0 +1,26 @@
+{
+  "id": "promo.price-smash",
+  "name": "Promo Price Smash",
+  "category": "promo",
+  "targets": ["price"],
+  "duration": 0.62,
+  "behavior": {
+    "description": "A large price drops toward its authored baseline, compresses through a brief undershoot, then rebounds once to its final readable size. Only the price moves.",
+    "targetSelection": "Animate matching price hooks within the selected component together; prefix, suffix, old-price and surrounding layout remain untouched.",
+    "iterations": 1,
+    "fill": "forwards",
+    "transformOrigin": "center center",
+    "easing": "cubic-bezier(0.22, 1, 0.36, 1)",
+    "keyframeTiming": "at is seconds from start; easing at a keyframe applies until the next keyframe.",
+    "keyframes": [
+      {"at": 0, "x": 0, "y": -90, "scale": 1.7, "rotation": 4, "opacity": 0, "easing": "cubic-bezier(0.4, 0, 1, 1)"},
+      {"at": 0.08, "x": 0, "y": -65, "scale": 1.45, "rotation": 3, "opacity": 1, "easing": "cubic-bezier(0.4, 0, 1, 1)"},
+      {"at": 0.3, "x": 0, "y": 8, "scale": 0.93, "rotation": -2, "opacity": 1, "easing": "cubic-bezier(0.22, 1, 0.36, 1)"},
+      {"at": 0.46, "x": 0, "y": -3, "scale": 1.035, "rotation": 0.6, "opacity": 1, "easing": "cubic-bezier(0.4, 0, 0.2, 1)"},
+      {"at": 0.62, "x": 0, "y": 0, "scale": 1, "rotation": 0, "opacity": 1}
+    ]
+  },
+  "energy": "high",
+  "recommendedFor": ["discount", "flash-sale", "bundle", "end-card"],
+  "adaptation": "x/y are offsets in design pixels at 1080x1920, scaled with the frame; positive y is down. Scale multiplies authored base scale and rotation adds a degree offset, preserving rotated impact variants. Opacity is absolute. Do not alter price text, number formatting, typography, decorative clipping or layout dimensions. Compose motion on a layout-preserving layer for inline prices. Initialize at scheduled start and sample from local time; the final price remains still and readable."
+}

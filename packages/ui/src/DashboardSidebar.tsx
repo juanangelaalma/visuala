@@ -284,6 +284,7 @@ function SidebarIcon({ name }: { name: IconName }) {
 
 function getDefaultIcon(item: DashboardSidebarItem) {
     const match = allDefaultItems.find((defaultItem) => defaultItem.id === item.id);
+
     return match ? <SidebarIcon name={match.iconName} /> : null;
 }
 
@@ -303,7 +304,9 @@ function SidebarItem({
         isCollapsed ? sidebarClassNames.itemCollapsed : sidebarClassNames.itemExpanded,
         isActive ? sidebarClassNames.itemActive : sidebarClassNames.itemInactive,
     );
+
     const icon = item.icon ?? getDefaultIcon(item);
+
     const content = (
         <>
             <span className={sidebarClassNames.itemIcon}>{icon}</span>
@@ -350,19 +353,23 @@ export default function DashboardSidebar({
     onItemSelect,
     onCollapse,
     creditBalance,
-    profileSettingsHref = "/dashboard/profile",
+    profileSettingsHref,
     onLogout,
 }: DashboardSidebarProps) {
     const [internalCollapsed, setInternalCollapsed] = useState(defaultCollapsed);
     const [isAccountMenuOpen, setIsAccountMenuOpen] = useState(false);
     const accountMenuRef = useRef<HTMLDivElement>(null);
     const accountMenuTriggerRef = useRef<HTMLButtonElement>(null);
+    const accountActionsRef = useRef<HTMLDivElement>(null);
     const isCollapsed = collapsed ?? internalCollapsed;
     const fullCreditBalance = creditBalance?.toLocaleString("id-ID");
     const compactCreditBalance = creditBalance === undefined ? undefined : new Intl.NumberFormat("id-ID", { notation: "compact" }).format(creditBalance);
 
     useEffect(() => {
         if (!isAccountMenuOpen) return;
+        const firstAction = accountActionsRef.current?.querySelector("a,button");
+
+        if (firstAction instanceof HTMLElement) firstAction.focus();
 
         function handleKeyDown(event: KeyboardEvent) {
             if (event.key !== "Escape") return;
@@ -371,11 +378,12 @@ export default function DashboardSidebar({
         }
 
         function handlePointerDown(event: PointerEvent) {
-            if (!accountMenuRef.current?.contains(event.target as Node)) setIsAccountMenuOpen(false);
+            if (event.target instanceof Node && !accountMenuRef.current?.contains(event.target)) setIsAccountMenuOpen(false);
         }
 
         document.addEventListener("keydown", handleKeyDown);
         document.addEventListener("pointerdown", handlePointerDown);
+
         return () => {
             document.removeEventListener("keydown", handleKeyDown);
             document.removeEventListener("pointerdown", handlePointerDown);
@@ -461,11 +469,13 @@ export default function DashboardSidebar({
                 )}
 
                 {isAccountMenuOpen ? (
-                    <div data-testid="account-actions" className={sidebarClassNames.accountMenu}>
-                        <Link href={profileSettingsHref} className={cx(sidebarClassNames.accountMenuItem, "text-white")} onClick={() => setIsAccountMenuOpen(false)}>
-                            <SidebarIcon name="profile" />
-                            <span>Profile Settings</span>
-                        </Link>
+                    <div ref={accountActionsRef} data-testid="account-actions" className={sidebarClassNames.accountMenu}>
+                        {profileSettingsHref ? (
+                            <Link href={profileSettingsHref} className={cx(sidebarClassNames.accountMenuItem, "text-white")} onClick={() => setIsAccountMenuOpen(false)}>
+                                <SidebarIcon name="profile" />
+                                <span>Profile Settings</span>
+                            </Link>
+                        ) : null}
                         {onLogout ? (
                             <button
                                 type="button"

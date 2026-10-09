@@ -1,0 +1,26 @@
+{
+  "id": "product.impact-in",
+  "name": "Product Impact In",
+  "category": "product",
+  "targets": ["product"],
+  "duration": 0.72,
+  "behavior": {
+    "description": "A compact product grows into place with a short upward overshoot and one damped landing. Hold the authored pose after the landing.",
+    "iterations": 1,
+    "fill": "forwards",
+    "targetSelection": "Animate every product hook in the selected component together; no stagger is required.",
+    "easing": "cubic-bezier(0.22, 1, 0.36, 1)",
+    "keyframeTiming": "at is seconds from this motion's start; easing on each keyframe applies to the interval ending at the next keyframe.",
+    "transformOrigin": "center center",
+    "keyframes": [
+      {"at": 0, "x": 0, "y": 120, "scale": 0.58, "rotation": -10, "opacity": 0, "easing": "cubic-bezier(0.16, 1, 0.3, 1)"},
+      {"at": 0.14, "x": 0, "y": 50, "scale": 0.85, "rotation": -4, "opacity": 1, "easing": "cubic-bezier(0.22, 1, 0.36, 1)"},
+      {"at": 0.38, "x": 0, "y": -16, "scale": 1.07, "rotation": 2, "opacity": 1, "easing": "cubic-bezier(0.4, 0, 0.2, 1)"},
+      {"at": 0.56, "x": 0, "y": 4, "scale": 0.98, "rotation": -0.6, "opacity": 1, "easing": "cubic-bezier(0.22, 1, 0.36, 1)"},
+      {"at": 0.72, "x": 0, "y": 0, "scale": 1, "rotation": 0, "opacity": 1}
+    ]
+  },
+  "energy": "high",
+  "recommendedFor": ["product-launch", "product-highlight", "flash-sale"],
+  "adaptation": "x/y are design-pixel offsets in a 1080x1920 frame, scaled with the frame. Rotation is an additive degree offset and scale multiplies the authored base scale; never replace variant rotation or product-scale. Opacity is absolute. Compose transforms on a motion layer without changing layout, shadows, backdrop, or decorative clip-path. Initialize from the first keyframe at the assigned start, not at page load; sample deterministically from local time and retain the final pose."
+}

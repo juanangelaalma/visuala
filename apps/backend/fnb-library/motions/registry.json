@@ -1,0 +1,314 @@
+{
+  "version": "1.0",
+  "contracts": {
+    "paths": "file paths are relative to fnb-library/motions/.",
+    "units": "Seconds for time; 1080x1920 design pixels for x/y; degrees for additive rotation; scale multiplies authored scale; opacity is absolute.",
+    "targetResolution": "For component motions include the instance root when matching data-animate, as well as matching descendants. Definitions specify alternatives or all-target selection in behavior.",
+    "sceneRoles": "Transition targets incoming/outgoing are scene presentation roles supplied by the composer, not data-animate hooks.",
+    "duration": "duration is local per-target motion duration for components, and complete handoff duration for transitions. With stagger, group span is duration + max(0,count-1)*behavior.stagger.",
+    "determinism": "Finite iterations only. Resolve target order, parameters and masks once at setup; derive pose from scene-local time for seeking.",
+    "visualSeparation": "No preset is applied automatically. Preserve static CSS transforms and decorative masks. Read each definition adaptation before translating intent to a runtime."
+  },
+  "motions": {
+    "product.impact-in": {
+      "file": "product/impact-in.json",
+      "category": "product",
+      "energy": "high",
+      "compatibleTargets": [
+        "product"
+      ],
+      "targetScope": "data-animate",
+      "duration": 0.72,
+      "recommendedFor": [
+        "product-launch",
+        "product-highlight",
+        "flash-sale"
+      ]
+    },
+    "product.float-in": {
+      "file": "product/float-in.json",
+      "category": "product",
+      "energy": "low",
+      "compatibleTargets": [
+        "product"
+      ],
+      "targetScope": "data-animate",
+      "duration": 1.6,
+      "recommendedFor": [
+        "product-highlight",
+        "flavor-highlight",
+        "end-card"
+      ]
+    },
+    "product.zoom-reveal": {
+      "file": "product/zoom-reveal.json",
+      "category": "product",
+      "energy": "medium",
+      "compatibleTargets": [
+        "product"
+      ],
+      "targetScope": "data-animate",
+      "duration": 0.85,
+      "recommendedFor": [
+        "product-launch",
+        "product-highlight",
+        "flavor-highlight"
+      ]
+    },
+    "product.slide-up": {
+      "file": "product/slide-up.json",
+      "category": "product",
+      "energy": "medium",
+      "compatibleTargets": [
+        "product"
+      ],
+      "targetScope": "data-animate",
+      "duration": 0.65,
+      "recommendedFor": [
+        "product-highlight",
+        "bundle",
+        "end-card"
+      ]
+    },
+    "typography.scale-punch": {
+      "file": "typography/scale-punch.json",
+      "category": "typography",
+      "energy": "high",
+      "compatibleTargets": [
+        "headline",
+        "word",
+        "cta",
+        "foreground",
+        "tagline",
+        "detail",
+        "date",
+        "background",
+        "logo",
+        "price",
+        "discount"
+      ],
+      "targetScope": "data-animate",
+      "duration": 0.5,
+      "recommendedFor": [
+        "flash-sale",
+        "discount",
+        "product-launch"
+      ]
+    },
+    "typography.kinetic-up": {
+      "file": "typography/kinetic-up.json",
+      "category": "typography",
+      "energy": "medium",
+      "compatibleTargets": [
+        "headline",
+        "word",
+        "cta",
+        "foreground",
+        "tagline",
+        "detail",
+        "date",
+        "background",
+        "logo"
+      ],
+      "targetScope": "data-animate",
+      "duration": 0.55,
+      "recommendedFor": [
+        "product-launch",
+        "flavor-highlight",
+        "end-card"
+      ]
+    },
+    "typography.stagger-words": {
+      "file": "typography/stagger-words.json",
+      "category": "typography",
+      "energy": "medium",
+      "compatibleTargets": [
+        "word"
+      ],
+      "targetScope": "data-animate",
+      "duration": 0.45,
+      "recommendedFor": [
+        "flavor-highlight",
+        "product-highlight",
+        "product-launch"
+      ]
+    },
+    "typography.mask-reveal": {
+      "file": "typography/mask-reveal.json",
+      "category": "typography",
+      "energy": "low",
+      "compatibleTargets": [
+        "headline",
+        "word",
+        "cta",
+        "foreground",
+        "tagline",
+        "detail",
+        "date",
+        "background",
+        "logo"
+      ],
+      "targetScope": "data-animate",
+      "duration": 0.65,
+      "recommendedFor": [
+        "product-highlight",
+        "flavor-highlight",
+        "end-card"
+      ]
+    },
+    "promo.badge-pop": {
+      "file": "promo/badge-pop.json",
+      "category": "promo",
+      "energy": "high",
+      "compatibleTargets": [
+        "badge",
+        "discount"
+      ],
+      "targetScope": "data-animate",
+      "duration": 0.58,
+      "recommendedFor": [
+        "discount",
+        "flash-sale",
+        "bundle"
+      ]
+    },
+    "promo.price-smash": {
+      "file": "promo/price-smash.json",
+      "category": "promo",
+      "energy": "high",
+      "compatibleTargets": [
+        "price"
+      ],
+      "targetScope": "data-animate",
+      "duration": 0.62,
+      "recommendedFor": [
+        "discount",
+        "flash-sale",
+        "bundle",
+        "end-card"
+      ]
+    },
+    "promo.strike-price": {
+      "file": "promo/strike-price.json",
+      "category": "promo",
+      "energy": "medium",
+      "compatibleTargets": [
+        "old-price"
+      ],
+      "targetScope": "data-animate",
+      "duration": 0.6,
+      "recommendedFor": [
+        "discount",
+        "flash-sale"
+      ]
+    },
+    "ingredients.radial-burst": {
+      "file": "ingredients/radial-burst.json",
+      "category": "ingredients",
+      "energy": "high",
+      "compatibleTargets": [
+        "ingredient"
+      ],
+      "targetScope": "data-animate",
+      "duration": 0.8,
+      "recommendedFor": [
+        "product-launch",
+        "product-highlight",
+        "flavor-highlight"
+      ]
+    },
+    "ingredients.falling": {
+      "file": "ingredients/falling.json",
+      "category": "ingredients",
+      "energy": "medium",
+      "compatibleTargets": [
+        "ingredient"
+      ],
+      "targetScope": "data-animate",
+      "duration": 1,
+      "recommendedFor": [
+        "product-launch",
+        "flavor-highlight",
+        "product-highlight"
+      ]
+    },
+    "ingredients.orbit": {
+      "file": "ingredients/orbit.json",
+      "category": "ingredients",
+      "energy": "low",
+      "compatibleTargets": [
+        "ingredient"
+      ],
+      "targetScope": "data-animate",
+      "duration": 2.4,
+      "recommendedFor": [
+        "product-highlight",
+        "flavor-highlight"
+      ]
+    },
+    "transition.hard-cut": {
+      "file": "transitions/hard-cut.json",
+      "category": "transition",
+      "energy": "high",
+      "compatibleTargets": [
+        "incoming",
+        "outgoing"
+      ],
+      "targetScope": "scene-roles",
+      "duration": 0,
+      "recommendedFor": [
+        "scene-transition",
+        "flash-sale",
+        "discount"
+      ]
+    },
+    "transition.slide-wipe": {
+      "file": "transitions/slide-wipe.json",
+      "category": "transition",
+      "energy": "medium",
+      "compatibleTargets": [
+        "incoming",
+        "outgoing"
+      ],
+      "targetScope": "scene-roles",
+      "duration": 0.45,
+      "recommendedFor": [
+        "scene-transition",
+        "bundle",
+        "discount"
+      ]
+    },
+    "transition.zoom-through": {
+      "file": "transitions/zoom-through.json",
+      "category": "transition",
+      "energy": "high",
+      "compatibleTargets": [
+        "incoming",
+        "outgoing"
+      ],
+      "targetScope": "scene-roles",
+      "duration": 0.32,
+      "recommendedFor": [
+        "scene-transition",
+        "product-launch",
+        "flash-sale"
+      ]
+    },
+    "transition.mask": {
+      "file": "transitions/mask-transition.json",
+      "category": "transition",
+      "energy": "medium",
+      "compatibleTargets": [
+        "incoming",
+        "outgoing"
+      ],
+      "targetScope": "scene-roles",
+      "duration": 0.55,
+      "recommendedFor": [
+        "scene-transition",
+        "product-launch",
+        "flavor-highlight"
+      ]
+    }
+  }
+}

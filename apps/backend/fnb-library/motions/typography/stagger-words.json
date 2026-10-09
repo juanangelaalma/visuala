@@ -1,0 +1,25 @@
+{
+  "id": "typography.stagger-words",
+  "name": "Typography Stagger Words",
+  "category": "typography",
+  "targets": ["word"],
+  "duration": 0.45,
+  "behavior": {
+    "description": "Existing word hooks rise and fade into their authored positions sequentially in stable reading order. Do not split or replace authored text.",
+    "iterations": 1,
+    "fill": "forwards",
+    "targetSelection": "Animate every existing word hook in the selected component. Use ascending numeric data-index when all hooks provide unique indices; otherwise use source DOM order captured at setup. Never use random order or visual positions measured during playback.",
+    "stagger": 0.09,
+    "staggerTiming": "The duration is the active duration of each word. For N present word hooks, word i starts at i * 0.09 seconds, using zero-based stable rank i. Total duration is 0.45 + max(0, N - 1) * 0.09 seconds; reserve that finite total in the containing scene. Earlier words hold their final pose while later words enter.",
+    "easing": "cubic-bezier(0.22, 1, 0.36, 1)",
+    "keyframeTiming": "at is seconds relative to each word's staggered start; each keyframe's easing applies to the next interval.",
+    "keyframes": [
+      {"at": 0, "x": 0, "y": 60, "scale": 1, "rotation": 0, "opacity": 0, "easing": "cubic-bezier(0.22, 1, 0.36, 1)"},
+      {"at": 0.16, "x": 0, "y": 18, "scale": 1, "rotation": 0, "opacity": 1, "easing": "cubic-bezier(0.22, 1, 0.36, 1)"},
+      {"at": 0.45, "x": 0, "y": 0, "scale": 1, "rotation": 0, "opacity": 1}
+    ]
+  },
+  "energy": "medium",
+  "recommendedFor": ["flavor-highlight", "product-highlight", "product-launch"],
+  "adaptation": "Translation uses design pixels at 1080x1920 scaled with the frame; rotation is additive degrees and scale multiplies each word's authored base scale. Opacity is absolute. Preserve scatter-variant rotations, line breaks, alignment, and text semantics through a layout-preserving motion layer. Apply each initial state at the motion start and keep not-yet-started words at it; reconstruct states deterministically when seeking rather than relying on previous playback. A single word is valid and requires no delay."
+}

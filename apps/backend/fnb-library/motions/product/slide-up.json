@@ -1,0 +1,23 @@
+{
+  "id": "product.slide-up",
+  "name": "Product Slide Up",
+  "category": "product",
+  "targets": ["product"],
+  "duration": 0.65,
+  "behavior": {
+    "description": "Move the product straight up from below with a quick fade, decelerating into its authored pose without bounce.",
+    "iterations": 1,
+    "fill": "forwards",
+    "targetSelection": "Animate all product hooks in the selected component together.",
+    "easing": "cubic-bezier(0.22, 1, 0.36, 1)",
+    "keyframeTiming": "at is seconds from start; easing at a keyframe applies to the following interval.",
+    "keyframes": [
+      {"at": 0, "x": 0, "y": 180, "scale": 1, "rotation": 0, "opacity": 0, "easing": "cubic-bezier(0.22, 1, 0.36, 1)"},
+      {"at": 0.18, "x": 0, "y": 65, "scale": 1, "rotation": 0, "opacity": 1, "easing": "cubic-bezier(0.22, 1, 0.36, 1)"},
+      {"at": 0.65, "x": 0, "y": 0, "scale": 1, "rotation": 0, "opacity": 1}
+    ]
+  },
+  "energy": "medium",
+  "recommendedFor": ["product-highlight", "bundle", "end-card"],
+  "adaptation": "x/y use design pixels in a 1080x1920 frame and scale with it; positive y is down. Rotation offsets are additive degrees and scale is a multiplier of the authored base scale. Opacity is absolute. Preserve authored rotations, clipping, layout, and other visual layers by composing motion separately. No requirement to start fully offscreen: the initial fade conceals the lower approach. Initialize at the assigned start, sample deterministically, and retain the final still pose."
+}

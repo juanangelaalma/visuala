@@ -1,0 +1,25 @@
+{
+  "id": "typography.scale-punch",
+  "name": "Typography Scale Punch",
+  "category": "typography",
+  "targets": ["headline", "word", "cta", "foreground", "tagline", "detail", "date", "background", "logo", "price", "discount"],
+  "duration": 0.5,
+  "behavior": {
+    "description": "A short scale punch reveals one selected type or brand layer with a restrained overshoot and a single settling correction.",
+    "targetSelection": "Targets are alternatives, not requirements or a combined selection. Choose one present data-animate hook name in the selected component and animate its matching elements together; leave other hook names untouched.",
+    "iterations": 1,
+    "fill": "forwards",
+    "transformOrigin": "center center",
+    "easing": "cubic-bezier(0.22, 1, 0.36, 1)",
+    "keyframeTiming": "at is seconds from start; each easing applies to the interval ending at the next keyframe.",
+    "keyframes": [
+      {"at": 0, "x": 0, "y": 0, "scale": 0.78, "rotation": 0, "opacity": 0, "easing": "cubic-bezier(0.16, 1, 0.3, 1)"},
+      {"at": 0.2, "x": 0, "y": 0, "scale": 1.1, "rotation": 0, "opacity": 1, "easing": "cubic-bezier(0.4, 0, 0.2, 1)"},
+      {"at": 0.36, "x": 0, "y": 0, "scale": 0.98, "rotation": 0, "opacity": 1, "easing": "cubic-bezier(0.22, 1, 0.36, 1)"},
+      {"at": 0.5, "x": 0, "y": 0, "scale": 1, "rotation": 0, "opacity": 1}
+    ]
+  },
+  "energy": "high",
+  "recommendedFor": ["flash-sale", "discount", "product-launch"],
+  "adaptation": "Compose scale as a multiplier of authored base scale and rotation as an additive degree offset. Translation offsets use design pixels at 1080x1920 scaled with the frame; opacity is absolute. Do not replace rotated word variants, layout, fonts, decorative clip-path or authored background treatment. Transform inline text through a layout-preserving motion layer. A selected background or logo receives the same motion without implying a scene transition. Initialize at scheduled start and retain the final authored pose."
+}

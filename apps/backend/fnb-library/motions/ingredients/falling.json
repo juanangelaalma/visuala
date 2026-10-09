@@ -1,0 +1,39 @@
+{
+  "id": "ingredients.falling",
+  "name": "Falling Ingredients",
+  "category": "ingredients",
+  "targets": ["ingredient"],
+  "duration": 1,
+  "energy": "medium",
+  "recommendedFor": ["product-launch", "flavor-highlight", "product-highlight"],
+  "behavior": {
+    "description": "Ingredients enter from above with deterministic alternating lateral drift and a small landing rebound, returning to their authored arrangement.",
+    "iterations": 1,
+    "fill": "forwards",
+    "easing": "cubic-bezier(0.55, 0, 1, 0.45)",
+    "stagger": 0.06,
+    "delay": "i * stagger seconds",
+    "totalDuration": "duration + max(0, n - 1) * stagger seconds; 0 when n = 0",
+    "indexing": "At setup, order targets by numeric data-index, breaking ties by authored DOM order; missing data-index targets follow in DOM order. Assign stable zero-based ordinal i and freeze count n. Reuse these values when seeking; never use randomness.",
+    "parameters": {
+      "direction": "1 if i modulo 2 = 0 else -1",
+      "drop": "240 + 32 * (i modulo 4) design pixels",
+      "drift": "direction * (24 + 8 * (i modulo 3)) design pixels",
+      "spin": "direction * (18 + 6 * (i modulo 3)) degrees"
+    },
+    "keyframes": [
+      {"at": 0, "x": "-drift", "y": "-drop", "scale": 0.92, "rotation": "-spin", "opacity": 0, "easing": "linear"},
+      {"at": 0.12, "x": "-0.9 * drift", "y": "-0.95 * drop", "scale": 0.94, "rotation": "-0.9 * spin", "opacity": 1, "easing": "cubic-bezier(0.55, 0, 1, 0.45)"},
+      {"at": 0.7, "x": 0, "y": 10, "scale": 1, "rotation": "0.08 * spin", "opacity": 1, "easing": "cubic-bezier(0.22, 1, 0.36, 1)"},
+      {"at": 0.84, "x": 0, "y": -5, "scale": 1, "rotation": "-0.04 * spin", "opacity": 1, "easing": "cubic-bezier(0.37, 0, 0.63, 1)"},
+      {"at": 1, "x": 0, "y": 0, "scale": 1, "rotation": 0, "opacity": 1}
+    ],
+    "restoration": "Hold the first keyframe before each target's delay. After its one landing cycle, hold zero additive translation/rotation, scale multiplier 1 and absolute opacity 1. The authored ingredient positions remain unchanged; no wrapping, recycling or infinite rain is implied. Derive every state directly from local time for reversible seeking."
+  },
+  "adaptation": {
+    "referenceFrame": {"width": 1080, "height": 1920},
+    "coordinates": "Translations are design pixels in scene axes; rotation is additive degrees, scale multiplies authored scale, and opacity is absolute. Preserve existing left/top/rotate values and image sizing.",
+    "resizing": "Use the scene's reference-coordinate scale. If the ingredient container is shallow, reduce drop and rebound distances together at setup while preserving their signs and deterministic index variation. This is an above-rest entrance, not a guarantee of starting beyond the viewport edge.",
+    "implementation": "Formula strings describe runtime-independent math. Resolve parameters once; keyframe at values are seconds after the target's stagger delay. Each keyframe's easing applies to the segment leading to the next keyframe."
+  }
+}

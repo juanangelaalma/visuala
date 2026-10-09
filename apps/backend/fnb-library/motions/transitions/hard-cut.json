@@ -1,0 +1,33 @@
+{
+  "id": "transition.hard-cut",
+  "name": "Hard Cut",
+  "category": "transition",
+  "targets": ["incoming", "outgoing"],
+  "duration": 0,
+  "energy": "high",
+  "recommendedFor": ["scene-transition", "flash-sale", "discount"],
+  "behavior": {
+    "description": "Replace the outgoing scene with the incoming scene at one explicit timeline boundary. There is no interpolated frame or blank interval.",
+    "iterations": 1,
+    "fill": "forwards",
+    "easing": "step-end",
+    "stagger": 0,
+    "targetSemantics": "incoming and outgoing are complete scene roles supplied by the consumer, not data-animate hooks or component selectors. Apply state to temporary scene presentation wrappers; preserve component animation state inside each scene.",
+    "from": {
+      "incoming": {"x": 0, "y": 0, "scale": 1, "rotation": 0, "opacity": 0},
+      "outgoing": {"x": 0, "y": 0, "scale": 1, "rotation": 0, "opacity": 1}
+    },
+    "to": {
+      "incoming": {"x": 0, "y": 0, "scale": 1, "rotation": 0, "opacity": 1},
+      "outgoing": {"x": 0, "y": 0, "scale": 1, "rotation": 0, "opacity": 0}
+    },
+    "boundary": "For time strictly before the transition boundary use from; at the boundary and afterward use to. Set both role states atomically. Zero duration requires a state switch, not division by duration or a zero-length progress calculation.",
+    "restoration": "No transform or mask is left on either scene. Incoming remains fully presented; outgoing remains hidden until its next scheduled scene lifecycle. Seeking before the boundary restores from without completion callbacks."
+  },
+  "adaptation": {
+    "referenceFrame": {"width": 1080, "height": 1920},
+    "coordinates": "x/y are additive design-pixel offsets, rotation is additive degrees, scale is an authored-scale multiplier and opacity is absolute. The identity transforms refer to the transition wrapper, not a reset of authored component poses.",
+    "sceneLifecycle": "Keep both scenes available for deterministic seek. Let the consuming timeline own activation; this definition does not change layout display, remove scenes, or create component compatibleMotions entries.",
+    "implementation": "Implement this explicit boundary state in any runtime. Do not use asynchronous completion callbacks or a separate fade."
+  }
+}

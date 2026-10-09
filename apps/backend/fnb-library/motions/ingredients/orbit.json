@@ -1,0 +1,49 @@
+{
+  "id": "ingredients.orbit",
+  "name": "Ingredient Orbit",
+  "category": "ingredients",
+  "targets": ["ingredient"],
+  "duration": 2.4,
+  "energy": "low",
+  "recommendedFor": ["product-highlight", "flavor-highlight"],
+  "behavior": {
+    "description": "Each ingredient traces one small elliptical orbit around an index-defined local center, beginning and ending exactly at its authored rest pose. This does not relocate ingredients around a shared product center.",
+    "iterations": 1,
+    "fill": "forwards",
+    "easing": "linear",
+    "stagger": 0.04,
+    "delay": "i * stagger seconds",
+    "totalDuration": "duration + max(0, n - 1) * stagger seconds; 0 when n = 0",
+    "indexing": "At setup, order targets by numeric data-index, breaking ties by authored DOM order; missing data-index targets follow in DOM order. Assign stable zero-based ordinal i and freeze count n. No frame-time randomness or DOM remeasurement is permitted.",
+    "parameters": {
+      "theta": "2 * pi * i / max(1, n) radians",
+      "rx": "22 + 6 * (i modulo 3) design pixels",
+      "ry": "12 + 4 * (i modulo 3) design pixels",
+      "direction": "1 if i modulo 2 = 0 else -1"
+    },
+    "path": {
+      "progress": "p = clamp((sceneLocalTime - i * stagger) / duration, 0, 1)",
+      "angle": "theta + direction * 2 * pi * p",
+      "x": "rx * (cos(angle) - cos(theta))",
+      "y": "ry * (sin(angle) - sin(theta))",
+      "rotation": "direction * 6 * sin(2 * pi * p) degrees",
+      "scale": 1,
+      "opacity": 1,
+      "evaluation": "Evaluate these continuous equations at local progress p, or encode an equivalent elliptical path. Do not linearly connect the four quarter samples into a diamond. At p=0 or p=1, use exact zero translation/rotation to remove numerical residue."
+    },
+    "keyframes": [
+      {"at": 0, "pathProgress": 0, "x": 0, "y": 0, "rotation": 0, "scale": 1, "opacity": 1, "easing": "linear"},
+      {"at": 0.6, "pathProgress": 0.25, "easing": "linear"},
+      {"at": 1.2, "pathProgress": 0.5, "easing": "linear"},
+      {"at": 1.8, "pathProgress": 0.75, "easing": "linear"},
+      {"at": 2.4, "pathProgress": 1, "x": 0, "y": 0, "rotation": 0, "scale": 1, "opacity": 1}
+    ],
+    "restoration": "Hold rest pose before the stagger delay and after the single complete orbit. End at x=0, y=0, rotation=0, scale=1 and absolute opacity=1; do not restart. The parametric path makes direct seeking and rewind deterministic."
+  },
+  "adaptation": {
+    "referenceFrame": {"width": 1080, "height": 1920},
+    "coordinates": "x/y are additive scene-axis design-pixel offsets. Rotation is added to authored rotation in degrees; scale multiplies authored scale; opacity is absolute. The existing radial/scatter layout stays intact.",
+    "resizing": "Map rx and ry through the consuming scene's reference-coordinate scale, or reduce both at setup for tighter ingredient clusters. Keep the same index phase and direction for the whole application.",
+    "implementation": "Math strings specify intent, not a runtime API. Keyframes mark path progress in seconds; the path equations define positions between them. Duration is one target's finite cycle, with stagger extending only the group span."
+  }
+}

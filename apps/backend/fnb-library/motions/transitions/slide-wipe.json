@@ -1,0 +1,47 @@
+{
+  "id": "transition.slide-wipe",
+  "name": "Slide Wipe",
+  "category": "transition",
+  "targets": ["incoming", "outgoing"],
+  "duration": 0.45,
+  "energy": "medium",
+  "recommendedFor": ["scene-transition", "bundle", "discount"],
+  "behavior": {
+    "description": "The incoming scene slides from the right while the outgoing scene moves left by exactly one frame width. Both share one eased progress so their touching edges stay aligned throughout the handoff.",
+    "iterations": 1,
+    "fill": "forwards",
+    "easing": "cubic-bezier(0.65, 0, 0.35, 1)",
+    "stagger": 0,
+    "targetSemantics": "incoming and outgoing represent whole scenes, not component animation hooks. Move scene presentation wrappers so component transforms and decorative clip-paths remain untouched.",
+    "setup": "At transition start, place both opaque scene wrappers in the same frame-sized coordinate plane. Clip the common transition stage to the frame with a temporary outer mask; do not replace either scene's existing decorative clip-path.",
+    "tracks": [
+      {
+        "target": "incoming",
+        "keyframes": [
+          {"at": 0, "x": 1080, "y": 0, "scale": 1, "rotation": 0, "opacity": 1, "easing": "cubic-bezier(0.65, 0, 0.35, 1)"},
+          {"at": 0.45, "x": 0, "y": 0, "scale": 1, "rotation": 0, "opacity": 1}
+        ]
+      },
+      {
+        "target": "outgoing",
+        "keyframes": [
+          {"at": 0, "x": 0, "y": 0, "scale": 1, "rotation": 0, "opacity": 1, "easing": "cubic-bezier(0.65, 0, 0.35, 1)"},
+          {"at": 0.45, "x": -1080, "y": 0, "scale": 1, "rotation": 0, "opacity": 1}
+        ]
+      }
+    ],
+    "before": {"incoming": {"opacity": 0}, "outgoing": {"opacity": 1}},
+    "after": {
+      "incoming": {"x": 0, "y": 0, "scale": 1, "rotation": 0, "opacity": 1},
+      "outgoing": {"x": 0, "y": 0, "scale": 1, "rotation": 0, "opacity": 0}
+    },
+    "restoration": "At the end boundary, hide outgoing before clearing its off-frame translation, leave incoming at its identity wrapper pose, and stop applying the temporary outer stage mask. During the handoff preserve both opaque tracks. Reconstruct before, active and after states directly from timeline time, so cleanup is reversible when seeking."
+  },
+  "adaptation": {
+    "referenceFrame": {"width": 1080, "height": 1920},
+    "coordinates": "Translations are additive scene-axis design pixels; scale multiplies authored scale; rotation is additive degrees; opacity is absolute. Component rest poses are never rewritten.",
+    "resizing": "For another design frame, replace both 1080 travel distances with the same frame width resolved at setup. For a vertical variation, use frame height on y for both scenes; reverse both signs together to reverse direction. Never use different distances or easing for the two roles.",
+    "coverage": "Scenes should include their intended full-frame backgrounds. This handoff preserves authored transparency rather than manufacturing an opaque background. Keep their common viewport aligned to avoid seams.",
+    "implementation": "Keyframe at values are seconds from transition start, and each easing governs its following segment. Role lifecycle belongs to the consuming scene timeline; transitions are not component compatibleMotions."
+  }
+}

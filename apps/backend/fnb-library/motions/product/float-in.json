@@ -1,0 +1,25 @@
+{
+  "id": "product.float-in",
+  "name": "Product Float In",
+  "category": "product",
+  "targets": ["product"],
+  "duration": 1.6,
+  "behavior": {
+    "description": "Lift gently from below, drift once above the resting position, then settle. This is a finite entrance, not an idle loop.",
+    "iterations": 1,
+    "fill": "forwards",
+    "targetSelection": "Animate all product hooks within the selected component together.",
+    "easing": "cubic-bezier(0.45, 0, 0.55, 1)",
+    "keyframeTiming": "at is seconds from start; a keyframe's easing controls the interval to the following keyframe.",
+    "transformOrigin": "center center",
+    "keyframes": [
+      {"at": 0, "x": 0, "y": 88, "scale": 0.94, "rotation": -2, "opacity": 0, "easing": "cubic-bezier(0.22, 1, 0.36, 1)"},
+      {"at": 0.55, "x": 0, "y": -10, "scale": 1, "rotation": 0.8, "opacity": 1, "easing": "cubic-bezier(0.45, 0, 0.55, 1)"},
+      {"at": 1.05, "x": 0, "y": -22, "scale": 1, "rotation": -0.8, "opacity": 1, "easing": "cubic-bezier(0.45, 0, 0.55, 1)"},
+      {"at": 1.6, "x": 0, "y": 0, "scale": 1, "rotation": 0, "opacity": 1}
+    ]
+  },
+  "energy": "low",
+  "recommendedFor": ["product-highlight", "flavor-highlight", "end-card"],
+  "adaptation": "Translations are design pixels at 1080x1920 and scale with the frame; positive y is down. Scale is a multiplier of the authored base scale and rotation is additive in degrees, preserving fan and floating variant poses. Opacity is absolute. Use a composited motion layer without changing layout or decorative clipping. Initialize at the scheduled start and derive poses solely from local time; the final still pose replaces further drifting."
+}

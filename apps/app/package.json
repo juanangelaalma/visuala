@@ -16,6 +16,7 @@
     "test:install": "playwright install"
   },
   "dependencies": {
+    "@hyperframes/player": "0.8.141",
     "@supabase/ssr": "^0.12.0",
     "@supabase/supabase-js": "^2.108.2",
     "@visuala/db": "workspace:*",

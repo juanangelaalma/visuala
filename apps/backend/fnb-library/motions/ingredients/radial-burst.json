@@ -1,0 +1,38 @@
+{
+  "id": "ingredients.radial-burst",
+  "name": "Ingredient Radial Burst",
+  "category": "ingredients",
+  "targets": ["ingredient"],
+  "duration": 0.8,
+  "energy": "high",
+  "recommendedFor": ["product-launch", "product-highlight", "flavor-highlight"],
+  "behavior": {
+    "description": "Ingredients spring outward along evenly spaced index-based rays and settle at their existing authored positions, without rearranging the layout.",
+    "iterations": 1,
+    "fill": "forwards",
+    "easing": "cubic-bezier(0.22, 1, 0.36, 1)",
+    "stagger": 0.04,
+    "delay": "i * stagger seconds",
+    "totalDuration": "duration + max(0, n - 1) * stagger seconds; 0 when n = 0",
+    "indexing": "At setup, order targets by numeric data-index, breaking ties by authored DOM order; missing data-index targets follow in DOM order. Assign each target a stable zero-based ordinal i and freeze count n for this application. Reuse this ordering when seeking; do not reindex per frame.",
+    "parameters": {
+      "theta": "-pi / 2 + 2 * pi * i / max(1, n) radians",
+      "radius": "120 + 24 * (i modulo 3) design pixels",
+      "dx": "radius * cos(theta)",
+      "dy": "radius * sin(theta)",
+      "spin": "24 * (1 if i modulo 2 = 0 else -1) degrees"
+    },
+    "keyframes": [
+      {"at": 0, "x": "-dx", "y": "-dy", "scale": 0.6, "rotation": "-spin", "opacity": 0, "easing": "cubic-bezier(0.22, 1, 0.36, 1)"},
+      {"at": 0.58, "x": "0.08 * dx", "y": "0.08 * dy", "scale": 1.04, "rotation": "0.08 * spin", "opacity": 1, "easing": "cubic-bezier(0.37, 0, 0.63, 1)"},
+      {"at": 0.8, "x": 0, "y": 0, "scale": 1, "rotation": 0, "opacity": 1}
+    ],
+    "restoration": "At each target's end, hold x=0, y=0, scale=1 and rotation=0 relative to the authored pose, with absolute opacity=1. No residual displacement or spin remains. Before its delay, hold the first keyframe. All state is derived from local time, including rewind."
+  },
+  "adaptation": {
+    "referenceFrame": {"width": 1080, "height": 1920},
+    "coordinates": "x/y are additive design-pixel offsets in scene axes. Scale is a multiplier of authored scale; rotation is added to authored rotation in degrees; opacity is absolute. Preserve static placement and independent decorative transforms.",
+    "resizing": "Map design pixels through the consuming scene's existing 1080x1920 coordinate scale. For a different design frame, choose radius at setup proportional to its smaller dimension and retain the same deterministic index equations.",
+    "implementation": "Formulas are mathematical intent, not executable source. Resolve i, n and parameters once at setup and interpolate the explicit local-time keyframes using the named cubic-bezier curves in any runtime."
+  }
+}

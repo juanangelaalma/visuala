@@ -1,0 +1,24 @@
+{
+  "id": "typography.kinetic-up",
+  "name": "Typography Kinetic Up",
+  "category": "typography",
+  "targets": ["headline", "word", "cta", "foreground", "tagline", "detail", "date", "background", "logo"],
+  "duration": 0.55,
+  "behavior": {
+    "description": "Drive the selected layer upward into place, slightly overshoot its baseline, then settle with no repeated oscillation.",
+    "targetSelection": "Choose one present hook name from targets within the selected component. These names are compatible alternatives, not an all-target dependency; matching elements of the chosen name move together.",
+    "iterations": 1,
+    "fill": "forwards",
+    "easing": "cubic-bezier(0.22, 1, 0.36, 1)",
+    "keyframeTiming": "at is local seconds; easing on a keyframe applies to the following interval.",
+    "keyframes": [
+      {"at": 0, "x": 0, "y": 96, "scale": 1, "rotation": 0, "opacity": 0, "easing": "cubic-bezier(0.16, 1, 0.3, 1)"},
+      {"at": 0.15, "x": 0, "y": 28, "scale": 1, "rotation": 0, "opacity": 1, "easing": "cubic-bezier(0.22, 1, 0.36, 1)"},
+      {"at": 0.36, "x": 0, "y": -6, "scale": 1, "rotation": 0, "opacity": 1, "easing": "cubic-bezier(0.4, 0, 0.2, 1)"},
+      {"at": 0.55, "x": 0, "y": 0, "scale": 1, "rotation": 0, "opacity": 1}
+    ]
+  },
+  "energy": "medium",
+  "recommendedFor": ["product-launch", "flavor-highlight", "end-card"],
+  "adaptation": "x/y are design-pixel offsets at 1080x1920, scaled with the frame; positive y is down. Scale multiplies authored base scale; rotation is additive degrees; opacity is absolute. Preserve variant rotation, typography wrapping, container cropping and decorative clip-path; use a layout-preserving motion layer for inline targets. Background and logo are valid chosen hooks, not scene roles. Do not add masking or change layout height. Initialize only at assigned start, sample from local time, and hold the final pose."
+}

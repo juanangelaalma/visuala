@@ -1,0 +1,60 @@
+{
+  "id": "transition.mask",
+  "name": "Circular Mask Transition",
+  "category": "transition",
+  "targets": ["incoming", "outgoing"],
+  "duration": 0.55,
+  "energy": "medium",
+  "recommendedFor": ["scene-transition", "product-launch", "flavor-highlight"],
+  "behavior": {
+    "description": "Reveal the incoming scene above the outgoing scene through one expanding circular aperture. The outgoing scene remains at rest and fully presented until the reveal covers the complete frame.",
+    "iterations": 1,
+    "fill": "forwards",
+    "easing": "cubic-bezier(0.22, 1, 0.36, 1)",
+    "stagger": 0,
+    "targetSemantics": "incoming and outgoing are complete scene roles, not data-animate hooks or component selectors. The mask belongs only to a temporary scene-presentation wrapper around incoming.",
+    "setup": "Place incoming above outgoing with matching frame-sized presentation bounds. Wrap incoming in a neutral frame-aligned masking layer without changing scene layout. Keep incoming's own clip-path, transforms, opacity and all decorative child clip-paths unchanged. The reveal aperture intersects those existing shapes rather than replacing them.",
+    "mask": {
+      "owner": "temporary incoming wrapper",
+      "shape": "circle",
+      "center": {"x": 540, "y": 960},
+      "radiusUnits": "design pixels",
+      "from": {"radius": 0},
+      "to": {"radius": 1102},
+      "coverage": "1102 design pixels exceeds the distance from frame center to every corner of the 1080x1920 frame. At full radius the temporary aperture no longer clips any frame pixel.",
+      "keyframes": [
+        {"at": 0, "radius": 0, "easing": "cubic-bezier(0.22, 1, 0.36, 1)"},
+        {"at": 0.55, "radius": 1102}
+      ]
+    },
+    "tracks": [
+      {
+        "target": "incoming",
+        "keyframes": [
+          {"at": 0, "x": 0, "y": 0, "scale": 1, "rotation": 0, "opacity": 1, "easing": "linear"},
+          {"at": 0.55, "x": 0, "y": 0, "scale": 1, "rotation": 0, "opacity": 1}
+        ]
+      },
+      {
+        "target": "outgoing",
+        "keyframes": [
+          {"at": 0, "x": 0, "y": 0, "scale": 1, "rotation": 0, "opacity": 1, "easing": "linear"},
+          {"at": 0.55, "x": 0, "y": 0, "scale": 1, "rotation": 0, "opacity": 1}
+        ]
+      }
+    ],
+    "before": {"incoming": {"opacity": 0}, "outgoing": {"opacity": 1}},
+    "after": {
+      "incoming": {"x": 0, "y": 0, "scale": 1, "rotation": 0, "opacity": 1},
+      "outgoing": {"x": 0, "y": 0, "scale": 1, "rotation": 0, "opacity": 0},
+      "temporaryMask": "inactive"
+    },
+    "restoration": "At the end boundary, hide outgoing only after the aperture covers the whole frame, then stop applying the temporary wrapper mask and stacking override. Restore no decorative clip-path because none was overwritten. Both role transforms remain at identity relative to authored scene poses. Mask presence and radius are timeline-derived, so rewinding reactivates the wrapper with the correct radius rather than relying on an irreversible completion callback."
+  },
+  "adaptation": {
+    "referenceFrame": {"width": 1080, "height": 1920},
+    "coordinates": "Translations and circle center/radius are scene design pixels. Rotation is additive degrees, scale multiplies authored scale, and opacity is absolute on presentation wrappers, not on nested component poses.",
+    "resizing": "Map the reference geometry through the scene's coordinate scale. For a different frame or chosen aperture center (cx, cy), resolve final radius at setup as max distance from (cx, cy) to the four frame corners plus 1 design pixel. Do not assume a percentage circle radius covers a tall frame.",
+    "implementation": "Any renderer may supply the temporary aperture, but it must be an extra masking layer around incoming and must preserve existing decorative shapes. Keyframe at values are seconds from transition start; easing applies to the next segment. These scene roles are excluded from component compatibleMotions."
+  }
+}

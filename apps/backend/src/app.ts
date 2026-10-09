@@ -10,6 +10,7 @@ import { healthRoutes } from "@/routes/health";
 import { meRoutes } from "@/routes/me";
 import { pricingRoutes } from "@/routes/pricing";
 import { videoProjectRoutes } from "@/routes/video";
+import { fnbCampaignRoutes } from "@/routes/fnb";
 import { webhookRoutes } from "@/routes/webhooks";
 
 export function createApp() {
@@ -25,7 +26,8 @@ export function createApp() {
     .use(webhookRoutes)
     .use(authRoutes)
     .use(aiRoutes)
-    .use(videoProjectRoutes);
+    .use(videoProjectRoutes)
+    .use(fnbCampaignRoutes);
 }
 
 export const app = createApp();

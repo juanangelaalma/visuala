@@ -1,0 +1,29 @@
+{
+  "id": "typography.mask-reveal",
+  "name": "Typography Mask Reveal",
+  "category": "typography",
+  "targets": ["headline", "word", "cta", "foreground", "tagline", "detail", "date", "background", "logo"],
+  "duration": 0.65,
+  "behavior": {
+    "description": "Reveal the selected layer from bottom to top through a temporary external mask while its content eases upward into the authored pose.",
+    "targetSelection": "Targets are alternatives. Choose one present hook name in the selected component and apply this reveal to each matching element together; never require every listed name.",
+    "iterations": 1,
+    "fill": "forwards",
+    "easing": "cubic-bezier(0.22, 1, 0.36, 1)",
+    "keyframeTiming": "at is seconds from start; easing applies to the interval from the current keyframe to the next.",
+    "mask": {
+      "owner": "temporary layout-preserving wrapper outside the target's authored visual layer",
+      "direction": "bottom-to-top",
+      "progressMeaning": "maskReveal 0 hides the entire wrapper; 1 reveals its complete bounds. Between them reveal the bottom maskReveal fraction of those fixed bounds.",
+      "bounds": "Capture the authored visual bounds and required glyph-accent, shadow, and motion-travel padding once at setup; do not measure during playback.",
+      "completion": "At duration remove or fully bypass only the temporary mask, preserving the target's decorative clip-path, mask and normal overflow behavior. Reconstruct the wrapper and mask state when seeking back into the motion."
+    },
+    "keyframes": [
+      {"at": 0, "x": 0, "y": 28, "scale": 1, "rotation": 0, "opacity": 1, "maskReveal": 0, "easing": "cubic-bezier(0.22, 1, 0.36, 1)"},
+      {"at": 0.65, "x": 0, "y": 0, "scale": 1, "rotation": 0, "opacity": 1, "maskReveal": 1}
+    ]
+  },
+  "energy": "low",
+  "recommendedFor": ["product-highlight", "flavor-highlight", "end-card"],
+  "adaptation": "x/y are design pixels at 1080x1920 scaled with the frame. Scale multiplies authored base scale, rotation is additive degrees, and opacity is absolute. Keep wrapper insertion neutral to grid/flex placement, absolute positioning, text wrapping, accessibility semantics and stacking order; an equivalent offscreen mask layer is also valid. Never animate clip-path on the target itself or erase its decorative shape. Initialize only at the assigned start and sample the mask and content from local time."
+}
